@@ -79,6 +79,14 @@ export default async function BuilderPage({ searchParams }: {
             <button className="w-full rounded-lg bg-orange-500 p-2 text-xs font-bold text-white">Tạo sản phẩm</button></form>
           </div>
         </details>
+        <details className="relative">
+          <summary title="Dịch vụ SaaS" className="flex cursor-pointer list-none items-center rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-2.5 text-sm text-slate-200 hover:text-orange-300 [&::-webkit-details-marker]:hidden">Dịch vụ</summary>
+          <nav className="absolute right-0 z-50 mt-2 w-48 space-y-1 rounded-xl border border-slate-700 bg-[#1e293b] p-2 shadow-2xl">
+            <Link href="/domains" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🌐 Tên miền & thương hiệu</Link>
+            <Link href="/sign" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">✍️ Ký tài liệu PDF</Link>
+            <Link href="/pricing" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">💳 Bảng giá</Link>
+          </nav>
+        </details>
         {profile?.role === "admin" && <Link href="/settings" title="Cài đặt quản trị" aria-label="Cài đặt quản trị" className="rounded-lg border border-slate-700 bg-slate-800 p-2.5 text-slate-300 transition hover:text-orange-300"><Settings2 size={16}/></Link>}
         <form action={signOut}><button title="Đăng xuất" aria-label="Đăng xuất" className="rounded-lg border border-slate-700 bg-slate-800 p-2.5 text-slate-300 transition hover:text-white"><LogOut size={16}/></button></form>
       </div>

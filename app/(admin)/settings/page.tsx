@@ -14,5 +14,10 @@ export default async function AdminSettingsPage() {
     <Link href="/builder" className="brand-text text-sm underline">← Quay lại Builder</Link>
     <h1 className="my-6 text-3xl font-bold">Admin Settings</h1>
     <AdminSettingsForm title={siteTitle} color={primaryColor} />
+    <nav aria-label="Tính năng SaaS" className="mt-6 grid gap-3 sm:grid-cols-3">
+      <Link href="/domains" className="rounded-xl border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-800 shadow-sm hover:border-orange-500">🌐 Tên miền riêng</Link>
+      <Link href="/sign" className="rounded-xl border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-800 shadow-sm hover:border-orange-500">✍️ Ký PDF</Link>
+      <Link href="/pricing" className="rounded-xl border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-800 shadow-sm hover:border-orange-500">💳 Bảng giá SaaS</Link>
+    </nav>
   </main>;
 }
