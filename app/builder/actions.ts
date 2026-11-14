@@ -20,7 +20,7 @@ export async function createProject(formData: FormData) {
     if (templateError || !template || !Array.isArray(template.pages)) throw new Error("Không thể tải mẫu.");
     kind=template.kind;
     templatePages=template.pages;
-    if(!templatePages.length || templatePages.length>20 || !templatePages.every(p => /^\\/[a-z0-9/_-]*$/i.test(p.path) && validateUiTree(p.ui_tree))) throw new Error("Nội dung mẫu không hợp lệ.");
+    if(!templatePages.length || templatePages.length>20 || !templatePages.every(p => new RegExp("^/[a-z0-9/_-]*$","i").test(p.path) && validateUiTree(p.ui_tree))) throw new Error("Nội dung mẫu không hợp lệ.");
   }
   const { data: project, error } = await supabase.from("projects")
     .insert({ owner_id: user.id, name, kind }).select("id").single();
