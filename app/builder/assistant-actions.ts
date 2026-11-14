@@ -56,6 +56,26 @@ export async function askStudioAssistant(input:Input):Promise<AssistantResponse>
   const {data:game}=await db.from("game_projects").select("scene").eq("project_id",project.id).maybeSingle();
   if(!game||!validateGameScene(game.scene))return {ok:false,error:"Hãy lưu màn game vào Supabase để trợ lý hiểu ngữ cảnh."};
   const scene=game.scene;
+  if(scene.mode==="moba"){
+   const {data:arena}=await db.from("moba_maps").select("name").eq("code",scene.mobaCode??"").eq("is_active",true).maybeSingle();
+   const mapName=arena?.name??scene.mobaCode??"chưa xác định";
+   const context="Dự án "+project.id+", MOBA 5v5 PvE trên bản đồ "+mapName+", 3 đường (top/mid/bot), 2 đội 5 hero AI, 12 trụ, 2 nhà chính";
+   const q=input.question.trim().toLocaleLowerCase("vi-VN").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d");
+   let answer="";
+   if(/^(alo|hello|hi|chao|xin chao|hey)[!?. ]*$/.test(q))
+    answer="Chào bạn. Tôi đang đọc bản đồ MOBA "+mapName+" của dự án đang lưu. Bạn có thể hỏi về chiến thuật 3 đường, cách chạy thử, thay bản đồ hay xuất bản.";
+   else if(/ban la ai|may la ai|tro ly la ai/.test(q))
+    answer="Tôi là Trợ lý Studio chạy theo dữ liệu đã lưu và quy tắc nội bộ; không phải Gemini đang hoạt động. Tôi có thể hướng dẫn về MOBA "+mapName+" nhưng chưa thể tự tạo hình ảnh hoặc tự điều khiển game cho bạn.";
+   else if(/(ban do|map|cach choi|may cot|tru|jungle|rung|lane|duong)/.test(q))
+    answer="Bản đồ "+mapName+" có 3 đường top/mid/bot, hai vùng rừng, bụi rậm, sông và 12 trụ. Bên xanh có một người chơi cùng 4 AI; bên đỏ có 5 AI. Hạ trụ đối phương để tiếp cận nhà chính. Đổi map trong Game Builder → Chọn chiến trường. Bạn không cần xây map từ các ô emoji.";
+   else if(/(hero|tuong|skill|ky nang|danh|mau|coi|thao tac|android|dieu khien|joystick|buff)/.test(q))
+    answer="Trên Android: xoay joystick bên trái để di chuyển, chạm mặt đất để tự chạy, nút ĐÁNH để đánh thường. Ba kỹ năng: Lốc kiếm Q (6s), Lướt W (5s), Hồi máu E (12s). Máu về 0 sẽ hồi sinh. Lính và trụ tự chiến đấu. Đây là 5v5 PvE, không phải multiplayer online.";
+   else if(/(luu|xuat|cong khai|publish|web|link|chia se)/.test(q))
+    answer="Chọn bản đồ, kiểm tra trạng thái đã lưu vào Supabase, bấm Xuất bản. Đường dẫn /play/[mã dự án] sẽ mở trận MOBA công khai không cần đăng nhập. Khi thay map, cần lưu và xuất bản lại.";
+   else
+    answer="Tôi đang làm việc ở chế độ MOBA trên "+mapName+". Trận có 10 hero, lính, trụ và kỹ năng. Hãy hỏi cụ thể về đường top/mid/bot, nhân vật, thao tác Android hoặc cách xuất bản. Tôi không tự nhận có hiểu biết như một AI tổng quát.";
+   return {ok:true,mode:"guidance",answer:answer+"\n\nNgữ cảnh đã lưu: "+context,context};
+  }
   const enemies=scene.objects.filter(o=>o.kind==="enemy").length;
   const stars=scene.objects.filter(o=>o.kind==="coin").length;
   const selected=scene.objects.find(o=>o.id===input.selectedId);
