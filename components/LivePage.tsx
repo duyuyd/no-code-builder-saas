@@ -2,7 +2,8 @@
 import { createElement, useMemo, useState, type CSSProperties, type ReactNode, type FormEvent, type MouseEvent } from "react";
 import { ArrowRight, RotateCcw, Trophy } from "lucide-react";
 import { getDefinition, nodeCss, safeUrl, sanitizeNumeric, type BuilderNode } from "@/lib/component-registry";
-import MemoryMatchGame from "./MemoryMatchGame";
+import dynamic from "next/dynamic";
+const MemoryMatchGame = dynamic(() => import("./MemoryMatchGame"), { ssr: false, loading: () => <div className="rounded-2xl bg-slate-900 p-6 text-sm text-slate-300">Đang tải trò chơi...</div> });
 
 function Quiz({node}:{node:BuilderNode}) {
  const questions=useMemo(()=>(node.props.questions??"").split(/\r?\n/).map(row=>row.split("|").map(s=>s.trim()))
