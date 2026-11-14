@@ -19,12 +19,12 @@ export default async function AdminAiPage(){
  ]);
  if(setting.error)throw new Error(setting.error.message);
  const config=readAiConfig(setting.data?.value);
- const keys:Record<AiProvider,boolean>={gemini:!!providerKey("gemini"),deepseek:!!providerKey("deepseek"),openai:!!providerKey("openai")};
+ const keys:Record<AiProvider,boolean>={gemini:!!providerKey("gemini"),deepseek:!!providerKey("deepseek"),openai:!!providerKey("openai"),orcarouter:!!providerKey("orcarouter")};
  const today=usage.data?.[0] as {usage_date?:string;global_requests?:number;total_users?:number}|undefined;
  const variables:[AiProvider,string,string,string][]=[
   ["gemini","GEMINI_API_KEY","https://aistudio.google.com/apikey","Google AI Studio"],
   ["deepseek","DEEPSEEK_API_KEY","https://platform.deepseek.com/api_keys","DeepSeek Platform"],
-  ["openai","OPENAI_API_KEY","https://platform.openai.com/api-keys","OpenAI Platform"]
+  ["openai","OPENAI_API_KEY","https://platform.openai.com/api-keys","OpenAI Platform"],\n  ["orcarouter","ORCAROUTER_API_KEY","https://www.orcarouter.ai/console","OrcaRouter (Free)"]
  ];
  return <main className="min-h-dvh bg-[#0f172a] px-4 py-7 text-slate-100 sm:px-6">
   <div className="mx-auto max-w-5xl">
@@ -35,12 +35,12 @@ export default async function AdminAiPage(){
    <header className="mt-8">
     <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[.16em] text-orange-400"><BrainCircuit size={19}/> Tính năng do Admin kiểm soát</p>
     <h1 className="mt-2 text-2xl font-black sm:text-4xl">Trợ lý AI đa nhà cung cấp</h1>
-    <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-400">Thay trả lời mẫu bằng hội thoại Gemini, DeepSeek hoặc OpenAI. AI đọc cấu trúc trang, khối đang chọn, bản đồ và các lượt chat gần đây từ dự án thật; không dùng dữ liệu giả và không tự sửa công trình.</p>
+    <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-400">Thay trả lời mẫu bằng hội thoại Gemini, DeepSeek, OpenAI hoặc OrcaRouter Free. AI đọc cấu trúc trang, khối đang chọn, bản đồ và các lượt chat gần đây từ dự án thật; không dùng dữ liệu giả và không tự sửa công trình.</p>
    </header>
    <div className="mt-6 grid gap-3 sm:grid-cols-3">
     <div className="rounded-2xl border border-slate-700 bg-[#1e293b] p-5"><Activity className="mb-3 text-orange-300" size={22}/><p className="text-xs text-slate-400">Lượt AI hôm nay (UTC)</p><p className="mt-2 text-2xl font-black">{usage.error?"—":today?.global_requests??0}</p></div>
     <div className="rounded-2xl border border-slate-700 bg-[#1e293b] p-5"><ShieldCheck className="mb-3 text-orange-300" size={22}/><p className="text-xs text-slate-400">Tài khoản đã dùng AI hôm nay</p><p className="mt-2 text-2xl font-black">{usage.error?"—":today?.total_users??0}</p></div>
-    <div className="rounded-2xl border border-slate-700 bg-[#1e293b] p-5"><KeyRound className="mb-3 text-orange-300" size={22}/><p className="text-xs text-slate-400">Khóa API đã cấu hình</p><p className="mt-2 text-2xl font-black">{Object.values(keys).filter(Boolean).length}/3</p></div>
+    <div className="rounded-2xl border border-slate-700 bg-[#1e293b] p-5"><KeyRound className="mb-3 text-orange-300" size={22}/><p className="text-xs text-slate-400">Khóa API đã cấu hình</p><p className="mt-2 text-2xl font-black">{Object.values(keys).filter(Boolean).length}/4</p></div>
    </div>
    <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(260px,.75fr)]">
     <div><AdminAiForm initial={config} keys={keys}/></div>
