@@ -88,7 +88,7 @@ export async function getStudioAssistantStatus():Promise<AssistantStatus>{
   const cfg=readAiConfig(data?.value);
   const active=aiIsAvailable(cfg);
   return {active,provider:active?cfg.provider:"offline",model:active?cfg.model:"",
-   notice:active?"AI "+cfg.provider+" đã kết nối • "+cfg.model:
+   notice:active?"AI "+cfg.provider+" đã bật và phát hiện khóa (chưa xác minh phản hồi API) • "+cfg.model:
     cfg.enabled?"Chưa có API key trên máy chủ; đang ở chế độ offline":"Admin chưa bật AI; đang ở chế độ offline"};
  }catch{return {active:false,provider:"offline",model:"",notice:"Không kiểm tra được kết nối AI"};}
 }

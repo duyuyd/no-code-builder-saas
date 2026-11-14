@@ -48,7 +48,7 @@ export default async function AdminAiPage(){
      <h2 className="text-base font-black">Lấy API key và cấu hình an toàn</h2>
      <p className="text-xs leading-6 text-slate-300">Chỉ cần chọn <strong>một</strong> nhà cung cấp. Bạn chủ động tạo khóa trong tài khoản nhà cung cấp và quản lý hạn mức thanh toán ở đó.</p>
      <div className="space-y-3">{variables.map(([provider,key,url,name])=><div key={provider} className="rounded-xl border border-slate-600 bg-[#0e1a2d] p-3">
-      <div className="flex items-center justify-between gap-2 text-xs"><strong>{name}</strong><span className={keys[provider]?"text-emerald-300":"text-amber-300"}>{keys[provider]?"Đã kết nối khóa":"Chưa có khóa"}</span></div>
+      <div className="flex items-center justify-between gap-2 text-xs"><strong>{name}</strong><span className={keys[provider]?"text-emerald-300":"text-amber-300"}>{keys[provider]?"Đã cấu hình biến khóa":"Chưa có khóa"}</span></div>
       <code className="mt-2 block break-all text-[11px] text-orange-200">{key}</code>
       <a href={url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-xs text-sky-300 underline">Tạo khóa tại nhà cung cấp <ExternalLink size={13}/></a>
      </div>)}</div>
