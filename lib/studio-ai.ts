@@ -43,7 +43,7 @@ function parseResponse(provider:AiProvider,value:unknown):string{
   const candidates=v.candidates as Array<{content?:{parts?:Array<{text?:string}>}}>|undefined;
   return candidates?.[0]?.content?.parts?.map(p=>p.text??"").join("\n").trim()??"";
  }
- if(provider==="deepseek"){
+ if(provider==="deepseek"||provider==="orcarouter"){
   const choices=v.choices as Array<{message?:{content?:string}}>|undefined;
   return choices?.[0]?.message?.content?.trim()??"";
  }
