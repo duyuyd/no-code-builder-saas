@@ -9,6 +9,7 @@ import ComponentPalette from "./ComponentPalette";
 import BuilderCanvas from "./BuilderCanvas";
 import PropertiesPanel from "./PropertiesPanel";
 import { createBuilderNode, getDefinition, validateUiTree, type BuilderNode } from "@/lib/component-registry";
+import type { ComponentPreset } from "@/lib/component-presets";
 import { mergeUiTrees } from "@/lib/merge-ui-tree";
 import { findLocation, findNode, insertNode, moveNode, removeNode, updateNode, type DropTarget } from "@/lib/builder-tree";
 import { generateHtmlCode, generateReactCode } from "@/lib/code-generator";
@@ -21,6 +22,7 @@ type Action =
   | { type: "select"; id: string | null }
   | { type: "add"; node: BuilderNode; target: DropTarget }
   | { type: "edit"; id: string; field: "props" | "style"; key: string; value: string }
+  | { type: "preset"; id: string; preset: ComponentPreset }
   | { type: "delete"; id: string }
   | { type: "move"; id: string; target: DropTarget }
   | { type: "undo" } | { type: "redo" };
@@ -35,6 +37,21 @@ function reducer(state: History, action: Action): History {
     case "select": return { ...state, selectedId: action.id };
     case "add": return commit(state, insertNode(state.nodes, action.target, action.node), action.node.id);
     case "edit": return commit(state, updateNode(state.nodes, action.id, action.field, action.key, action.value));
+    case "preset": {
+      const current = findNode(state.nodes, action.id);
+      const definition = current ? getDefinition(current.type) : null;
+      if (!current || !definition || action.preset.component_type !== current.type) return state;
+      let next = state.nodes;
+      for (const [key,value] of Object.entries(action.preset.props_override)) {
+        if (typeof value === "string" && key in definition.propsSchema)
+          next = updateNode(next, action.id, "props", key, value);
+      }
+      for (const [key,value] of Object.entries(action.preset.style_override)) {
+        if (typeof value === "string" && key in definition.styleSchema)
+          next = updateNode(next, action.id, "style", key, value);
+      }
+      return validateUiTree(next) ? commit(state,next,action.id) : state;
+    }
     case "delete": {
       const nodes = removeNode(state.nodes, action.id);
       return commit(state, nodes, state.selectedId && findNode(nodes, state.selectedId) ? state.selectedId : null);
@@ -111,8 +128,9 @@ function MobileSheet({ open, onOpenChange, title, children }: {
   </Dialog.Root>;
 }
 
-export default function BuilderWorkspace({ pageId, projectId, projectKind, previewPages, initiallyPublished, pagePath, projectName, initialNodes, initialVersion }: {
+export default function BuilderWorkspace({ pageId, projectId, userId, projectKind, previewPages, initiallyPublished, pagePath, projectName, initialNodes, initialVersion }: {
   projectId: string;
+  userId: string;
   projectKind: string;
   previewPages: {path:string;ui_tree:BuilderNode[]}[];
   initiallyPublished: boolean;
@@ -298,6 +316,7 @@ export default function BuilderWorkspace({ pageId, projectId, projectKind, previ
       <div className="hidden items-center gap-1 rounded-lg border border-slate-700 bg-slate-900 p-1 sm:flex">
        {([{id:"mobile",Icon:Smartphone},{id:"tablet",Icon:Tablet},{id:"desktop",Icon:Monitor}] as const).map(({id,Icon})=><button key={id} type="button" title={id} aria-label={"Xem "+id} aria-pressed={device===id} onClick={()=>setDevice(id)} className={"rounded-lg p-2 "+(device===id?"bg-orange-500 text-white":"text-slate-400 hover:bg-slate-700")}><Icon size={16}/></button>)}
       </div>
+      <a href="/assets" target="_blank" rel="noopener noreferrer" title="Kho ảnh và nguồn tài nguyên" className="flex h-9 items-center gap-1 rounded-xl border border-slate-600 bg-slate-800 px-2 text-xs font-semibold text-slate-200 hover:border-orange-400 sm:h-10">🖼️<span className="hidden lg:inline">Tài nguyên</span></a>
       {projectKind === "game" && <a href={"/game-builder?project="+projectId} title="Thiết kế game 2D có màn chơi" className="flex h-9 items-center gap-1 rounded-xl border border-orange-500/50 bg-orange-500/10 px-3 text-xs font-bold text-orange-300 hover:bg-orange-500/20 sm:h-10"><span className="text-base">🎮</span><span className="hidden sm:inline">Game 2D</span></a>}
       <button type="button" title="Chạy thử tương tác" onClick={()=>{setPreviewPath(pagePath);setPreviewError("");setPreviewOpen(true);}} className="flex size-9 items-center justify-center rounded-xl border border-slate-600 bg-slate-700 text-white sm:size-10"><Eye size={18}/></button>
       <button type="button" title="Xuất bản website thật" onClick={()=>void publish()} disabled={publishing} className="flex size-9 items-center justify-center rounded-xl bg-orange-500 text-white disabled:opacity-50 sm:size-10">{publishing?<LoaderCircle size={17} className="animate-spin"/>:<Rocket size={17}/>}</button>
@@ -324,7 +343,7 @@ export default function BuilderWorkspace({ pageId, projectId, projectKind, previ
       <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[270px_minmax(0,1fr)_320px]">
         <div className="hidden min-h-0 lg:block"><ComponentPalette onAdd={onAdd}/></div>
         <BuilderCanvas device={device} onPreview={()=>{setPreviewPath(pagePath);setPreviewOpen(true);}} nodes={state.nodes} selectedId={state.selectedId} onSelect={onSelect} onRequestAdd={() => setMobilePaletteOpen(true)}/>
-        <div className="hidden min-h-0 lg:block"><PropertiesPanel node={selectedNode} onChange={(id, field, key, value) => dispatch({ type: "edit", id, field, key, value })} onDelete={onDelete}/></div>
+        <div className="hidden min-h-0 lg:block"><PropertiesPanel userId={userId} onApplyPreset={(id,preset)=>dispatch({type:"preset",id,preset})} node={selectedNode} onChange={(id, field, key, value) => dispatch({ type: "edit", id, field, key, value })} onDelete={onDelete}/></div>
       </div>
       <DragOverlay dropAnimation={null} zIndex={70}>
         {dragging && <motion.div initial={{ scale: 0.95, opacity: 0.75 }} animate={{ scale: 1.02, opacity: 0.94 }} className="rounded-xl border border-orange-400 bg-[#1e293b] px-5 py-3 text-sm font-semibold text-white shadow-[0_20px_50px_rgba(0,0,0,0.45)]">{dragging}</motion.div>}
@@ -356,7 +375,7 @@ export default function BuilderWorkspace({ pageId, projectId, projectKind, previ
         <ComponentPalette onAdd={onAdd}/>
       </MobileSheet>
       <MobileSheet open={mobilePropertiesOpen} onOpenChange={setMobilePropertiesOpen} title="Chỉnh sửa thành phần">
-        <PropertiesPanel node={selectedNode} onChange={(id, field, key, value) => dispatch({ type: "edit", id, field, key, value })} onDelete={onDelete}/>
+        <PropertiesPanel userId={userId} onApplyPreset={(id,preset)=>dispatch({type:"preset",id,preset})} node={selectedNode} onChange={(id, field, key, value) => dispatch({ type: "edit", id, field, key, value })} onDelete={onDelete}/>
       </MobileSheet>
     </DndContext>
   </section>;

@@ -16,11 +16,15 @@ export default async function BuilderPage({ searchParams }: {
   if (!user || authError) redirect("/login");
 
   const query = await searchParams;
-  const { siteTitle } = await getSiteSettings();
-  const {data:templates,error:templatesError}=await supabase.from("starter_templates").select("id,name,kind,description").eq("is_active",true).order("name");
+  const [settings, templateResult, projectResult] = await Promise.all([
+    getSiteSettings(),
+    supabase.from("starter_templates").select("id,name,kind,description").eq("is_active",true).order("name"),
+    supabase.from("projects").select("id,name,kind").eq("owner_id",user.id).is("archived_at",null).order("created_at", { ascending: false })
+  ]);
+  const {siteTitle}=settings;
+  const {data:templates,error:templatesError}=templateResult;
   if(templatesError)throw new Error(templatesError.message);
-  const { data: projects, error: projectsError } = await supabase.from("projects")
-    .select("id,name,kind").eq("owner_id",user.id).is("archived_at",null).order("created_at", { ascending: false });
+  const {data:projects,error:projectsError}=projectResult;
   if (projectsError) throw new Error(projectsError.message);
   const project = query.project ? projects?.find(p => p.id === query.project) : projects?.[0];
   if (query.project && !project) notFound();
@@ -53,8 +57,12 @@ export default async function BuilderPage({ searchParams }: {
   if (query.page && !page) notFound();
   if (!page) throw new Error("Dự án chưa có trang. Hãy kiểm tra dữ liệu hoặc tạo trang đầu tiên.");
   if (!validateUiTree(page.ui_tree)) throw new Error("Cấu trúc giao diện đã lưu không hợp lệ.");
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  const {data:published}=await supabase.from("published_pages").select("path").eq("project_id",project.id).eq("is_live",true).limit(1);
+  const [profileResult,publishedResult]=await Promise.all([
+    supabase.from("profiles").select("role").eq("id",user.id).single(),
+    supabase.from("published_pages").select("path").eq("project_id",project.id).eq("is_live",true).limit(1)
+  ]);
+  const {data:profile}=profileResult;
+  const {data:published}=publishedResult;
 
   return <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-[#0f172a] text-slate-100">
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-slate-700/75 bg-[#0f172a] px-3 sm:px-5">
@@ -85,6 +93,8 @@ export default async function BuilderPage({ searchParams }: {
           <nav className="absolute right-0 z-50 mt-2 w-48 space-y-1 rounded-xl border border-slate-700 bg-[#1e293b] p-2 shadow-2xl">
             <Link href="/domains" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🌐 Tên miền & thương hiệu</Link>
             <Link href="/sign" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">✍️ Ký tài liệu PDF</Link>
+            <Link href="/assets" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🖼️ Kho ảnh của tôi</Link>
+            <Link href="/resources" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🧩 Game Asset / Icon / Thời trang</Link>
             <Link href="/pricing" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">💳 Bảng giá</Link>
           </nav>
         </details>
@@ -99,6 +109,6 @@ export default async function BuilderPage({ searchParams }: {
         <form action={createPage} className="absolute right-0 z-50 mt-2 flex w-64 gap-2 rounded-xl border border-slate-700 bg-slate-800 p-3 shadow-2xl"><input type="hidden" name="project_id" value={project.id}/><input name="path" required placeholder="/trang-moi" aria-label="Đường dẫn trang mới" className="min-w-0 flex-1 rounded-lg border border-slate-600 bg-slate-900 px-2 py-2 text-xs outline-none focus:border-orange-500"/><button className="rounded-lg bg-orange-500 px-2 text-white" title="Thêm trang" aria-label="Thêm trang"><Plus size={16}/></button></form>
       </details>
     </div>
-    <BuilderWorkspace key={page.id} pageId={page.id} projectId={project.id} projectKind={project.kind} pagePath={page.path} previewPages={(pages??[]).map(p=>({path:p.path,ui_tree:p.ui_tree}))} initiallyPublished={Boolean(published?.length)} projectName={project.name} initialNodes={page.ui_tree} initialVersion={page.version}/>
+    <BuilderWorkspace key={page.id} userId={user.id} pageId={page.id} projectId={project.id} projectKind={project.kind} pagePath={page.path} previewPages={(pages??[]).map(p=>({path:p.path,ui_tree:p.ui_tree}))} initiallyPublished={Boolean(published?.length)} projectName={project.name} initialNodes={page.ui_tree} initialVersion={page.version}/>
   </div>;
 }

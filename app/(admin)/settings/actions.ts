@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 export type SettingsFormState = { message: string; ok: boolean };
 export async function updateSettings(_previous: SettingsFormState, formData: FormData): Promise<SettingsFormState> {
@@ -18,6 +18,7 @@ export async function updateSettings(_previous: SettingsFormState, formData: For
     { key: "primary_color", value: primaryColor }
   ], { onConflict: "key" });
   if (error) return { ok: false, message: error.message };
+  revalidateTag("platform-settings");
   revalidatePath("/", "layout");
   return { ok: true, message: "Đã lưu cấu hình toàn hệ thống." };
 }

@@ -13,6 +13,9 @@ export async function middleware(request: NextRequest) {
    url.pathname="/host-site"+path;
    return NextResponse.rewrite(url);
  }
+ // Public product pages never need to refresh a user session. This avoids an Auth network call per page view.
+ if(path==="/"||path==="/pricing"||path.startsWith("/s/")||path.startsWith("/play/")||
+    path.startsWith("/host-site/")||path.startsWith("/_next/")||path.startsWith("/.well-known/"))return NextResponse.next();
  const url=process.env.NEXT_PUBLIC_SUPABASE_URL;
  const key=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
  if(!url||!key)return NextResponse.next({request});

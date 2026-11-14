@@ -1,7 +1,7 @@
-export type FieldType = "text" | "textarea" | "url" | "color" | "number" | "boolean";
+export type FieldType = "text" | "textarea" | "url" | "color" | "number" | "boolean" | "select";
 export type ComponentCategory = "basic" | "layout" | "form" | "media" | "data";
 export type RenderKind = "text" | "button" | "link" | "image" | "video" | "audio" | "divider" | "input" | "textarea" | "select" | "checkbox" | "range" | "table" | "chart" | "progress" | "list" | "iframe" | "container" | "quiz" | "memory";
-export type FieldSchema = { label: string; type: FieldType; defaultValue: string };
+export type FieldSchema = { label: string; type: FieldType; defaultValue: string; options?: readonly string[] };
 export type ComponentDefinition = {
   type: string;
   label: string;
@@ -20,7 +20,7 @@ export type BuilderNode = {
   children: BuilderNode[];
 };
 
-const field = (label: string, type: FieldType, defaultValue = ""): FieldSchema => ({ label, type, defaultValue });
+const field = (label: string, type: FieldType, defaultValue = "", options?: readonly string[]): FieldSchema => ({ label, type, defaultValue, options });
 const propsByKind: Record<RenderKind, Record<string, FieldSchema>> = {
   text: { text: field("Nội dung", "textarea", "Nội dung") },
   button: { text: field("Nhãn nút", "text", "Nút bấm"), href: field("Liên kết khi nhấn (/trang hoặc URL)", "text", "") },
@@ -50,6 +50,15 @@ const baseStyles = {
   padding: field("Padding (px)", "number", "12"),
   borderRadius: field("Bo góc (px)", "number", "8"),
   gap: field("Khoảng cách (px)", "number", "8"),
+  gridColumns: field("Số cột trong lưới", "number", "2"),
+  textAlign: field("Căn chữ", "select", "left", ["left","center","right"]),
+  justifyContent: field("Phân bố khối", "select", "start", ["start","center","end","space-between"]),
+  alignItems: field("Căn khối", "select", "stretch", ["stretch","start","center","end"]),
+  widthPct: field("Rộng (% - 0 tự động)", "number", "0"),
+  borderWidth: field("Viền (px)", "number", "0"),
+  borderColor: field("Màu viền", "color", "#e2e8f0"),
+  fontWeight: field("Độ đậm", "select", "normal", ["normal","semibold","bold"]),
+  shadow: field("Đổ bóng", "select", "none", ["none","sm","md","lg"]),
 };
 function define(type: string, label: string, category: ComponentCategory, kind: RenderKind, tag = "div", allowsChildren = false): ComponentDefinition {
   return {
@@ -138,6 +147,50 @@ export const COMPONENT_REGISTRY: readonly ComponentDefinition[] = [
   define("details", "Chi tiết mở rộng", "layout", "container", "details", true),
   define("dialog-shell", "Khung hộp thoại", "layout", "container", "div", true),
   define("toolbar", "Thanh công cụ", "layout", "container", "div", true),
+  define("announcement", "Thông báo nổi", "basic", "text", "aside", false),
+  define("alert", "Cảnh báo", "basic", "text", "div", false),
+  define("price-label", "Nhãn giá bán", "basic", "text", "span", false),
+  define("discount-badge", "Giảm giá", "basic", "text", "span", false),
+  define("rating-badge", "Đánh giá sao", "basic", "text", "span", false),
+  define("breadcrumb", "Đường dẫn phân cấp", "basic", "text", "nav", false),
+  define("eyebrow", "Chữ dẫn tiêu đề", "basic", "text", "span", false),
+  define("subtitle", "Tiêu đề phụ", "basic", "text", "h3", false),
+  define("cta-button", "Nút hành động CTA", "basic", "button", "button", false),
+  define("outline-button", "Nút viền", "basic", "button", "button", false),
+  define("download-link", "Liên kết tải xuống", "basic", "link", "a", false),
+  define("feature-grid", "Lưới tính năng", "layout", "container", "div", true),
+  define("product-grid", "Lưới sản phẩm", "layout", "container", "div", true),
+  define("portfolio-grid", "Lưới dự án", "layout", "container", "div", true),
+  define("game-hud", "HUD trò chơi", "layout", "container", "section", true),
+  define("game-menu", "Menu game", "layout", "container", "nav", true),
+  define("game-inventory", "Túi đồ nhân vật", "layout", "container", "section", true),
+  define("quest-board", "Bảng nhiệm vụ RPG", "layout", "container", "section", true),
+  define("team-lineup", "Đội hình bóng đá", "layout", "container", "section", true),
+  define("match-scoreboard", "Bảng tỉ số", "layout", "container", "section", true),
+  define("fashion-lookbook", "Lookbook thời trang", "layout", "container", "section", true),
+  define("mobile-navigation", "Thanh điều hướng mobile", "layout", "container", "nav", true),
+  define("pricing-grid", "Bảng gói giá", "layout", "container", "section", true),
+  define("testimonial-panel", "Khách hàng nhận xét", "layout", "container", "section", true),
+  define("faq-panel", "Khối câu hỏi FAQ", "layout", "container", "section", true),
+  define("dashboard-panel", "Dashboard", "layout", "container", "section", true),
+  define("login-panel", "Khối đăng nhập", "layout", "container", "section", true),
+  define("landing-banner", "Banner landing page", "layout", "container", "section", true),
+  define("contact-form", "Form liên hệ", "form", "container", "form", true),
+  define("newsletter-form", "Form đăng ký tin", "form", "container", "form", true),
+  define("phone-input", "Ô số điện thoại", "form", "input", "input", false),
+  define("currency-input", "Ô tiền tệ", "form", "input", "input", false),
+  define("fashion-photo", "Ảnh thời trang", "media", "image", "img", false),
+  define("product-photo", "Ảnh sản phẩm", "media", "image", "img", false),
+  define("character-sprite", "Sprite nhân vật", "media", "image", "img", false),
+  define("background-scene", "Ảnh bối cảnh game", "media", "image", "img", false),
+  define("video-hero", "Video giới thiệu", "media", "video", "video", false),
+  define("game-audio", "Âm thanh game", "media", "audio", "audio", false),
+  define("icon-grid", "Bộ sưu tập icon", "media", "container", "div", true),
+  define("fashion-gallery", "Bộ sưu tập thời trang", "media", "container", "div", true),
+  define("inventory-list", "Danh sách vật phẩm", "data", "list", "ul", false),
+  define("match-fixtures", "Lịch thi đấu", "data", "table", "table", false),
+  define("sales-report", "Bảng doanh thu", "data", "table", "table", false),
+  define("player-stats", "Thống kê nhân vật", "data", "chart", "div", false),
 ];
 
 const REGISTRY_MAP = new Map(COMPONENT_REGISTRY.map((def) => [def.type, def]));
@@ -172,6 +225,7 @@ export function validateUiTree(value: unknown): value is BuilderNode[] {
         for (const [key, val] of Object.entries(obj)) {
           if (!(key in schema) || typeof val !== "string" || val.length > 12000) return false;
           if (schema[key].type === "color" && !SAFE_HEX.test(val)) return false;
+          if (schema[key].type === "select" && schema[key].options && !schema[key].options.includes(val)) return false;
           if (schema[key].type === "number" && (val.trim() !== "" && (!Number.isFinite(Number(val)) || Math.abs(Number(val)) > 10000))) return false;
         }
       }
@@ -214,11 +268,26 @@ export function nodeCss(node: BuilderNode): Record<string, string | number> {
     fontSize: sanitizeNumeric(s.fontSize ?? "", 16, 8, 120),
     padding: sanitizeNumeric(s.padding ?? "", 0, 0, 200),
     borderRadius: sanitizeNumeric(s.borderRadius ?? "", 0, 0, 200),
+    textAlign: ["left","center","right"].includes(s.textAlign??"") ? s.textAlign : "left",
+    fontWeight: s.fontWeight==="bold" ? 700 : s.fontWeight==="semibold" ? 600 : 400,
+    borderWidth: sanitizeNumeric(s.borderWidth??"", 0, 0, 12),
+    borderColor: SAFE_HEX.test(s.borderColor??"") ? s.borderColor : "#e2e8f0",
+    borderStyle: sanitizeNumeric(s.borderWidth??"", 0, 0, 12) > 0 ? "solid" : "none",
   };
+  const shadows: Record<string,string>={sm:"0 2px 6px rgba(15,23,42,.08)",md:"0 8px 16px rgba(15,23,42,.12)",lg:"0 20px 38px rgba(15,23,42,.2)"};
+  if(s.shadow && shadows[s.shadow])css.boxShadow=shadows[s.shadow];
+  const width=sanitizeNumeric(s.widthPct??"",0,0,100);
+  if(width>0)css.width=width+"%";
   if (def?.allowsChildren) {
-    css.display = node.type === "grid" ? "grid" : "flex";
+    const align=s.alignItems??"stretch";
+    css.alignItems=["stretch","start","center","end"].includes(align) ? (align==="start"?"flex-start":align==="end"?"flex-end":align) : "stretch";
+    const justify=s.justifyContent??"start";
+    css.justifyContent=["start","center","end","space-between"].includes(justify) ? (justify==="start"?"flex-start":justify==="end"?"flex-end":justify) : "flex-start";
+  }
+  if (def?.allowsChildren) {
+    css.display = node.type === "grid" || node.type.endsWith("-grid") ? "grid" : "flex";
     css.flexDirection = node.type === "row" || node.type === "flex" || node.type === "navigation" || node.type === "toolbar" ? "row" : "column";
-    if (node.type === "grid") css.gridTemplateColumns = "repeat(2, minmax(0,1fr))";
+    if (node.type === "grid" || node.type.endsWith("-grid")) css.gridTemplateColumns = "repeat("+sanitizeNumeric(s.gridColumns??"",2,1,6)+", minmax(0,1fr))";
     css.gap = sanitizeNumeric(s.gap ?? "", 8, 0, 200);
     if (css.flexDirection === "row") css.flexWrap = "wrap";
   }
