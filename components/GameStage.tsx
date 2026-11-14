@@ -78,7 +78,7 @@ export default function GameStage({scene,mode,onMoveObject,onMoveEnd,onAddObject
    </div>}
   <div ref={stageRef} onPointerDown={handleStageDown}
    className={"relative isolate mx-auto aspect-[3/2] w-full touch-none select-none overflow-hidden rounded-2xl border-2 border-slate-600 shadow-2xl "+(mode==="edit"?"cursor-crosshair":"")}
-   style={{background:scene.background}}>
+   style={{background:scene.background,backgroundImage:scene.backgroundImageUrl?`url("${scene.backgroundImageUrl}")`:undefined,backgroundSize:"cover",backgroundPosition:"center"}}>
    <div aria-hidden className="pointer-events-none absolute inset-0 opacity-20" style={{backgroundImage:"linear-gradient(#fff2 1px,transparent 1px),linear-gradient(90deg,#fff2 1px,transparent 1px)",backgroundSize:"10% 10%"}}/>
    {scene.objects.filter(o=>mode==="edit"||o.kind!=="coin"||!state.collected.includes(o.id)).map(o=>
     <div key={o.id} data-kind={o.kind}
@@ -93,12 +93,12 @@ export default function GameStage({scene,mode,onMoveObject,onMoveEnd,onAddObject
      onPointerUp={()=>{dragging.current=null;onMoveEnd?.();}}
      onPointerCancel={()=>{dragging.current=null;onMoveEnd?.();}}
      className={"absolute z-10 flex items-center justify-center rounded-md border text-center leading-none "+(mode==="edit"?"cursor-grab active:cursor-grabbing ":"pointer-events-none ")+(selectedId===o.id&&mode==="edit"?"border-orange-400 bg-orange-500/30 ring-2 ring-orange-400":"border-white/20 bg-white/10")}
-     style={{left:o.x+"%",top:o.y+"%",width:o.w+"%",height:o.h+"%",fontSize:"clamp(15px,2.6vw,38px)"}}>{o.label|| (o.kind==="coin"?"⭐":o.kind==="goal"?"🏁":"🧱")}
+     style={{left:o.x+"%",top:o.y+"%",width:o.w+"%",height:o.h+"%",fontSize:"clamp(15px,2.6vw,38px)"}}>{o.imageUrl?<img src={o.imageUrl} alt={o.label} draggable={false} className="pointer-events-none h-full w-full object-contain"/>:o.label|| (o.kind==="coin"?"⭐":o.kind==="goal"?"🏁":"🧱")}
     </div>
    )}
    <div className="pointer-events-none absolute z-20 flex items-center justify-center text-3xl sm:text-4xl" style={{
     left:(mode==="edit"?scene.player.x:state.x)+"%",top:(mode==="edit"?scene.player.y:state.y)+"%",
-    width:gameSize.playerW+"%",height:gameSize.playerH+"%"}}>{scene.player.emoji}</div>
+    width:gameSize.playerW+"%",height:gameSize.playerH+"%"}}>{scene.player.imageUrl?<img src={scene.player.imageUrl} alt="Nhân vật của người chơi" draggable={false} className="h-full w-full object-contain"/>:scene.player.emoji}</div>
    {mode==="play"&&state.won&&<div role="status" className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-slate-950/80 p-4 text-center text-white">
     <Trophy size={44} className="text-amber-400"/><h2 className="text-2xl font-black sm:text-4xl">Bạn đã chiến thắng! 🎉</h2><p className="text-sm">{coins} sao · {state.seconds} giây · {Math.max(0,coins*100-state.seconds*2)} điểm</p>
     <button onClick={()=>setState(initial(scene))} className="rounded-xl bg-orange-500 px-6 py-3 font-bold">Chơi ván mới</button>

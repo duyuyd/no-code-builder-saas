@@ -39,6 +39,6 @@ export default async function GameBuilderPage({searchParams}:{searchParams:Promi
     </form>
    </div>
   </div>
-  <GameWorkspace key={project.id} templates={(templateResult.data??[]).filter(t=>validateGameScene(t.scene)) as GameSceneTemplate[]} projectId={project.id} projectName={project.name} initialScene={scene as GameScene} initialVersion={game?.version??0} initialPublished={publication?.is_live===true}/>
+  <GameWorkspace key={project.id} userId={user.id} templates={(templateResult.data??[]).filter(t=>validateGameScene(t.scene)) as GameSceneTemplate[]} projectId={project.id} projectName={project.name} initialScene={scene as GameScene} initialVersion={game?.version??0} initialPublished={publication?.is_live===true}/>
  </div>;
 }

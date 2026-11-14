@@ -1,15 +1,18 @@
 "use client";
 import {useCallback,useEffect,useRef,useState} from "react";
 import Link from "next/link";
-import {ArrowLeft,CloudUpload,ExternalLink,Eye,EyeOff,Gamepad2,Plus,Redo2,Save,Trash2,Undo2} from "lucide-react";
+import dynamic from "next/dynamic";
+import * as Dialog from "@radix-ui/react-dialog";
+import {ArrowLeft,CloudUpload,ExternalLink,Eye,EyeOff,Gamepad2,ImagePlus,Plus,Redo2,Save,Trash2,Undo2,X} from "lucide-react";
 import GameStage from "@/components/GameStage";
 import {validateGameScene,type GameObjectKind,type GameScene,type GameSceneTemplate} from "@/lib/game-scene";
 import {saveGameScene,publishGameScene,unpublishGameScene} from "@/app/game-builder/actions";
 
+const AssetBrowser = dynamic(() => import("./AssetBrowser"), {ssr:false,loading:()=> <p className="p-6 text-sm text-slate-300">Đang tải kho ảnh...</p>});
 const field="mt-2 w-full rounded-xl border border-slate-600 bg-slate-900 p-3 text-sm text-white outline-none focus:border-orange-500";
 const round=(v:number)=>Math.round(v*10)/10;
-export default function GameWorkspace({projectId,projectName,initialScene,initialVersion,initialPublished,templates}:{
- projectId:string;projectName:string;initialScene:GameScene;initialVersion:number;initialPublished:boolean;templates:GameSceneTemplate[]
+export default function GameWorkspace({projectId,projectName,userId,initialScene,initialVersion,initialPublished,templates}:{
+ projectId:string;projectName:string;userId:string;initialScene:GameScene;initialVersion:number;initialPublished:boolean;templates:GameSceneTemplate[]
 }){
  const [scene,setScene]=useState<GameScene>(initialScene);
  const sceneRef=useRef(scene);
@@ -27,6 +30,7 @@ export default function GameWorkspace({projectId,projectName,initialScene,initia
  const [past,setPast]=useState<GameScene[]>([]);
  const [future,setFuture]=useState<GameScene[]>([]);
  const [templateChoice,setTemplateChoice]=useState(templates[0]?.code??"");
+ const [assetTarget,setAssetTarget]=useState<"background"|"player"|"object"|null>(null);
  const pendingDrag=useRef<GameScene|null>(null);
  useEffect(()=>{sceneRef.current=scene;},[scene]);
  const commit=useCallback((next:GameScene)=>{
@@ -84,6 +88,12 @@ export default function GameWorkspace({projectId,projectName,initialScene,initia
   setMessage("Đã tải mẫu "+template.name+". Màn chơi sẽ tự lưu sau 2 giây.");
  };
  const chosen=scene.objects.find(o=>o.id===selected);
+ const applyImage=(url:string)=>{
+  if(assetTarget==="background")commit({...sceneRef.current,backgroundImageUrl:url});
+  else if(assetTarget==="player")commit({...sceneRef.current,player:{...sceneRef.current.player,imageUrl:url}});
+  else if(assetTarget==="object"&&selected)updateObject(selected,{imageUrl:url});
+  setAssetTarget(null);
+ };
  const addObject=(x:number,y:number)=>{
   if(tool==="select"){setSelected(null);return;}
   if(sceneRef.current.objects.length>=80){setMessage("Mỗi màn chơi tối đa 80 vật thể.");return;}
@@ -166,17 +176,45 @@ export default function GameWorkspace({projectId,projectName,initialScene,initia
     <h2 className="text-sm font-bold">Thuộc tính màn chơi</h2>
     <label className="block text-xs text-slate-300">Tên game<input value={scene.title} maxLength={120} onChange={e=>commit({...scene,title:e.target.value})} className={field}/></label>
     <label className="flex items-center justify-between gap-3 text-xs text-slate-300">Nền<input type="color" value={scene.background} onChange={e=>commit({...scene,background:e.target.value})} className="h-10 w-20 rounded-md border border-slate-600 bg-transparent"/></label>
+    <div className="space-y-2 rounded-xl border border-slate-700 p-3">
+     <p className="text-xs font-bold text-slate-200">Ảnh nền màn chơi</p>
+     {scene.backgroundImageUrl&&<img src={scene.backgroundImageUrl} alt="Ảnh nền màn chơi" loading="lazy" className="max-h-28 w-full rounded-lg object-cover"/>}
+     <div className="flex flex-wrap gap-2"><button type="button" onClick={()=>setAssetTarget("background")} className="flex items-center gap-2 rounded-lg bg-orange-500 px-3 py-2 text-xs font-bold text-white"><ImagePlus size={15}/> Chọn ảnh nền</button>{scene.backgroundImageUrl&&<button type="button" onClick={()=>commit({...scene,backgroundImageUrl:""})} className="rounded-lg border border-slate-600 px-3 py-2 text-xs">Gỡ ảnh</button>}</div>
+    </div>
     <label className="block text-xs text-slate-300">Nhân vật<input value={scene.player.emoji} maxLength={16} onChange={e=>commit({...scene,player:{...scene.player,emoji:e.target.value}})} className={field}/></label>
+    <div className="flex flex-wrap gap-2">
+      <button type="button" onClick={()=>setAssetTarget("player")} className="inline-flex items-center gap-2 rounded-lg border border-orange-500 px-3 py-2 text-xs font-bold text-orange-200"><ImagePlus size={15}/> Chọn ảnh nhân vật</button>
+      {scene.player.imageUrl&&<button type="button" onClick={()=>commit({...scene,player:{...scene.player,imageUrl:""}})} className="rounded-lg border border-slate-600 px-3 py-2 text-xs">Dùng emoji</button>}
+     </div>
     <label className="block text-xs text-slate-300">Tốc độ di chuyển (0.4–5)<input type="number" step=".2" min=".4" max="5" value={scene.player.speed} onChange={e=>commit({...scene,player:{...scene.player,speed:Number(e.target.value)}})} className={field}/></label>
     {chosen&&<div className="space-y-3 border-t border-slate-700 pt-4">
      <h3 className="text-sm font-bold">Đang chọn: {chosen.kind}</h3>
      <label className="block text-xs text-slate-300">Biểu tượng<input value={chosen.label} maxLength={16} onChange={e=>updateObject(chosen.id,{label:e.target.value})} className={field}/></label>
+     <div className="flex flex-wrap gap-2">
+      <button type="button" onClick={()=>setAssetTarget("object")} className="inline-flex items-center gap-2 rounded-lg border border-orange-500 px-3 py-2 text-xs font-bold text-orange-200"><ImagePlus size={15}/> Chọn ảnh vật thể</button>
+      {chosen.imageUrl&&<button type="button" onClick={()=>updateObject(chosen.id,{imageUrl:""})} className="rounded-lg border border-slate-600 px-3 py-2 text-xs">Dùng biểu tượng</button>}
+     </div>
      <div className="grid grid-cols-2 gap-2">{(["x","y","w","h"] as const).map(key=><label key={key} className="text-xs text-slate-400">{key.toUpperCase()} (%)<input type="number" min={key==="w"||key==="h"?2:0} max={100} step=".5" value={chosen[key]} onChange={e=>updateObject(chosen.id,{[key]:Number(e.target.value)})} className={field}/></label>)}</div>
      <button onClick={deleteSelected} type="button" className={button+" w-full border border-rose-700 text-rose-200"}><Trash2 size={15}/> Xóa vật thể</button>
     </div>}
     <p className="text-xs leading-5 text-slate-400">Chạm vật thể để sửa kích thước/vị trí. Tự lưu sau 2 giây. Nút Xuất bản lấy đúng bản đã lưu trên Supabase.</p>
    </section>}
   </div>
+ <Dialog.Root open={assetTarget!==null} onOpenChange={open=>{if(!open)setAssetTarget(null);}}>
+  <Dialog.Portal>
+   <Dialog.Overlay className="fixed inset-0 z-[80] bg-slate-950/85"/>
+   <Dialog.Content className="fixed inset-3 z-[81] flex flex-col overflow-hidden rounded-2xl bg-[#0f172a] p-4 text-white outline-none sm:inset-10">
+    <div className="mb-4 flex items-center justify-between gap-2">
+     <Dialog.Title className="text-base font-bold">Chọn ảnh cho {assetTarget==="background"?"nền":assetTarget==="player"?"nhân vật":"vật thể"}</Dialog.Title>
+     <Dialog.Close className="rounded-lg bg-slate-700 p-2" aria-label="Đóng kho ảnh"><X size={19}/></Dialog.Close>
+    </div>
+    <Dialog.Description className="sr-only">Chọn hoặc tải ảnh từ kho Supabase của bạn để dùng trong màn chơi.</Dialog.Description>
+    <div className="editor-scroll min-h-0 flex-1 overflow-auto">
+     <AssetBrowser userId={userId} onPick={applyImage}/>
+    </div>
+   </Dialog.Content>
+  </Dialog.Portal>
+ </Dialog.Root>
  </div>
  </div>;
 }
