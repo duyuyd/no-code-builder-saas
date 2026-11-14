@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {Gamepad2,ArrowLeft,ExternalLink,Map,ShieldCheck} from "lucide-react";
 import {createClient} from "@/lib/supabase/server";
-import {validateGameScene} from "@/lib/game-scene";
+import {validateGameScene,type GameScene} from "@/lib/game-scene";
 export const dynamic="force-dynamic";
 export const metadata={title:"Kho bản đồ và game chơi thử"};
 export default async function GameMaps(){
@@ -19,7 +19,7 @@ export default async function GameMaps(){
    </div>
    <div className="mb-4 flex items-center justify-between gap-2 text-xs text-slate-400"><span>{scenes.length} bản đồ có thể chơi · Kho dữ liệu thật</span><Link href="/dashboard?kind=game#start" className="font-bold text-orange-300">Tạo game từ mẫu</Link></div>
    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{scenes.map(map=>{
-    const scene=map.scene;const enemies=scene.objects.filter(o=>o.kind==="enemy").length;
+    const scene:GameScene=map.scene;const enemies=scene.objects.filter(o=>o.kind==="enemy").length;
     return <article key={map.code} className="flex flex-col overflow-hidden rounded-2xl border border-slate-700 bg-[#1b293d]">
      <div className="relative h-36 overflow-hidden border-b border-slate-700" style={{backgroundColor:scene.background,backgroundImage:scene.backgroundImageUrl?"url("+JSON.stringify(scene.backgroundImageUrl)+")":undefined,backgroundSize:"cover"}}>
       <div className="pointer-events-none absolute inset-0 opacity-25" style={{backgroundImage:"linear-gradient(#fff3 1px,transparent 1px),linear-gradient(90deg,#fff3 1px,transparent 1px)",backgroundSize:"10% 10%"}}/>
