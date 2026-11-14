@@ -3,6 +3,7 @@ import {createClient} from "@/lib/supabase/server";
 import {getDefinition,validateUiTree,type BuilderNode} from "@/lib/component-registry";
 import {findNode} from "@/lib/builder-tree";
 import {validateGameScene} from "@/lib/game-scene";
+import {diagnosePage,explainMobileLayout} from "@/lib/studio-diagnostics";
 
 export type AssistantResponse={ok:true;mode:"guidance"|"gemini";answer:string;context:string}|{ok:false;error:string};
 type Input={projectId:string;pageId:string;question:string;selectedId?:string|null;contextKind?:"builder"|"game"};
@@ -84,6 +85,14 @@ export async function askStudioAssistant(input:Input):Promise<AssistantResponse>
  const summary=chosen&&(current?.kind==="image"||current?.kind==="container"||current?.kind==="button")?
    "; trạng thái: "+(current.kind==="image"?(chosen.props.src?"đã gắn ảnh":"chưa gắn ảnh"):current.kind==="container"?chosen.children.length+" khối con":"nút "+String(chosen.props.text??"").slice(0,30)):"";
  const context="Loại "+project.kind+", trang "+page.path+", "+count+" thành phần ("+groups+"), đang chọn "+(selected?getDefinition(selected)?.label??selected:"không có")+summary;
+ const normalizedQuestion=input.question.toLocaleLowerCase("vi-VN").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d");
+ const diagnostics=diagnosePage(tree);
+ if(/(xem truoc|chay thu|mobile|android|responsive|grid|bo cuc|3 cot|ba cot|be chu|chu vo|vuot le|bi hep|tran man hinh|loi anh|anh hong|anh trang)/.test(normalizedQuestion)){
+  return {ok:true,mode:"guidance",answer:explainMobileLayout(diagnostics,page.path),context};
+ }
+ if(/(thieu anh|chua co anh|anh minh hoa|cho nao them anh)/.test(normalizedQuestion)){
+  return {ok:true,mode:"guidance",answer:"Trang "+page.path+" đang có "+diagnostics.emptyImages+" khối hình ảnh chưa có URL, "+diagnostics.configuredImages+" khối đã gắn ảnh. Hãy chạm khối ảnh trống → Thuộc tính → Kho ảnh Supabase → Chọn ảnh → Lưu. Tôi không tự gắn ảnh không rõ nguồn.",context};
+ }
  let resourceHint="";
  if(/ảnh|hình|icon|sprite|asset|texture|tài nguyên|model|3d|bản đồ|map/i.test(input.question)){
   const {data:sources}=await db.from("asset_sources").select("title,category,url").limit(100);

@@ -32,7 +32,7 @@ export default async function GameBuilderPage({searchParams}:{searchParams:Promi
  if(!validateGameScene(scene))throw new Error("Mẫu màn chơi không hợp lệ; Admin cần cập nhật game_starter_scene trong platform_settings.");
  return <div className="min-h-dvh bg-[#0f172a]">
   <div className="mx-auto max-w-7xl px-3 pt-4 sm:px-5">
-   <div className="flex flex-wrap items-center gap-3"><Link href="/builder" className="inline-flex items-center gap-1 text-xs text-orange-300"><ArrowLeft size={14}/> Dự án</Link>
+   <div className="flex flex-wrap items-center gap-3"><Link href="/dashboard" className="inline-flex items-center gap-1 text-xs text-orange-300"><ArrowLeft size={14}/> Trang chủ Studio</Link>
     <form method="GET" action="/game-builder" className="ml-auto">
      <select name="project" defaultValue={project.id} aria-label="Đổi dự án game" className="rounded-xl border border-slate-600 bg-slate-900 px-3 py-2 text-xs text-white">{(projects??[]).map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select>
      <button className="ml-2 rounded-lg border border-orange-600 px-3 py-2 text-xs text-orange-300">Mở</button>

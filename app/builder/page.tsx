@@ -9,7 +9,7 @@ import { createPage, createProject } from "./actions";
 import { signOut } from "@/app/login/actions";
 
 export default async function BuilderPage({ searchParams }: {
-  searchParams: Promise<{ project?: string; page?: string }>;
+  searchParams: Promise<{ project?: string; page?: string; mode?: string }>;
 }) {
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -26,8 +26,9 @@ export default async function BuilderPage({ searchParams }: {
   if(templatesError)throw new Error(templatesError.message);
   const {data:projects,error:projectsError}=projectResult;
   if (projectsError) throw new Error(projectsError.message);
-  const project = query.project ? projects?.find(p => p.id === query.project) : projects?.[0];
+  const project = query.project ? projects?.find(p => p.id === query.project) : (projects?.find(p=>p.kind!=="game")??projects?.[0]);
   if (query.project && !project) notFound();
+  if (project?.kind==="game" && query.mode!=="website") redirect("/game-builder?project="+project.id);
 
   if (!project) return <main className="flex min-h-dvh items-center justify-center bg-[#0f172a] px-5 py-10 text-slate-100">
     <section className="w-full max-w-lg rounded-3xl border border-slate-700/80 bg-[#1e293b] p-7 shadow-2xl sm:p-10">
@@ -81,7 +82,7 @@ export default async function BuilderPage({ searchParams }: {
           <summary className="flex cursor-pointer list-none items-center gap-1 rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-2 text-xs text-slate-300 hover:border-slate-600 hover:text-white [&::-webkit-details-marker]:hidden"><FolderPlus size={15}/><span className="hidden sm:inline">Dự án</span></summary>
           <div className="absolute right-0 z-50 mt-2 w-72 rounded-2xl border border-slate-700 bg-slate-800 p-3 shadow-2xl">
             <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-slate-400">Dự án của tôi</p>
-            <nav className="mb-3 max-h-48 space-y-1 overflow-y-auto">{(projects ?? []).map(p => <Link key={p.id} href={`/builder?project=${p.id}`} className={`block truncate rounded-lg px-3 py-2 text-sm transition ${p.id === project.id ? "bg-orange-500/15 font-semibold text-orange-300" : "text-slate-300 hover:bg-slate-700"}`}>{p.name}</Link>)}</nav>
+            <nav className="mb-3 max-h-48 space-y-1 overflow-y-auto">{(projects ?? []).map(p => <Link key={p.id} href={p.kind==="game"?"/game-builder?project="+p.id:"/builder?project="+p.id} className={`block truncate rounded-lg px-3 py-2 text-sm transition ${p.id === project.id ? "bg-orange-500/15 font-semibold text-orange-300" : "text-slate-300 hover:bg-slate-700"}`}>{p.name}</Link>)}</nav>
             <Link href="/projects" className="mb-3 block rounded-lg border border-slate-600 px-3 py-2 text-xs font-semibold text-orange-300 hover:bg-slate-700">Quản lý · Xóa · Khôi phục dự án</Link>
             <form action={createProject} className="space-y-2"><input name="name" required maxLength={120} placeholder="Tên dự án mới" aria-label="Tên dự án mới" className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-xs outline-none focus:border-orange-500"/>
             <select name="template_id" className="w-full rounded-lg border border-slate-600 bg-slate-900 p-2 text-xs text-white"><option value="">Trang trắng</option>{(templates??[]).map(t=><option key={t.id} value={t.id}>{t.kind==="game"?"🎮":t.kind==="app"?"📱":"🌐"} {t.name}</option>)}</select>

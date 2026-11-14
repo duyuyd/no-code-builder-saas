@@ -131,10 +131,11 @@ export default function GameWorkspace({projectId,projectName,userId,initialScene
  return <div className="min-h-dvh bg-[#0f172a] px-3 py-4 text-slate-100 sm:px-5">
  <div className="mx-auto max-w-7xl">
   <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
-   <div><Link href={"/builder?project="+projectId} className="mb-2 inline-flex items-center gap-2 text-xs text-orange-300"><ArrowLeft size={14}/> Trình thiết kế website</Link>
+   <div><Link href={"/builder?project="+projectId+"&mode=website"} className="mb-2 inline-flex items-center gap-2 text-xs text-orange-300"><ArrowLeft size={14}/> Trang giới thiệu game</Link>
     <h1 className="flex items-center gap-2 text-xl font-black sm:text-2xl"><Gamepad2 className="text-orange-400"/> Game Builder 2D</h1>
     <p className="mt-1 text-xs text-slate-400">{projectName} · {scene.objects.length} vật thể · {dirty?"Chưa lưu":"Đã đồng bộ"}</p></div>
    <div className="flex flex-wrap gap-2">
+    <Link href="/game-maps#five-v-five" className="inline-flex items-center justify-center rounded-xl border border-orange-500/40 bg-orange-500/10 px-3 py-2.5 text-xs font-bold text-orange-200">🎮 MOBA 5v5: 2 bản đồ chơi thật</Link>
     <StudioAssistant contextKind="game" projectId={projectId} pageId="" selectedId={selected} selectedType={chosen?.kind??null} blockCount={scene.objects.length}/>
     <button type="button" onClick={undo} disabled={!past.length} title="Hoàn tác" className={button+" border border-slate-600 bg-slate-800"}><Undo2 size={17}/></button>
     <button type="button" onClick={redo} disabled={!future.length} title="Làm lại" className={button+" border border-slate-600 bg-slate-800"}><Redo2 size={17}/></button>
