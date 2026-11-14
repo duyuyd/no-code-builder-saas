@@ -50,7 +50,7 @@ export default function GameWorkspace({projectId,projectName,userId,initialScene
  const flush=useCallback(async():Promise<boolean>=>{
   if(savingRef.current)return false;
   const snapshot=sceneRef.current;
-  if(!validateGameScene(snapshot)){setMessage("Màn chơi cần có ít nhất 1 sao, 1 đích và các vị trí hợp lệ.");return false;}
+  if(!validateGameScene(snapshot)){setMessage("Kiểm tra bản đồ: cần đích và ít nhất một sao hoặc quái (tùy chế độ), kích thước và vị trí hợp lệ.");return false;}
   savingRef.current=true;setSaving(true);
   try{
    const result=await saveGameScene(projectId,snapshot,versionRef.current);
@@ -98,7 +98,7 @@ export default function GameWorkspace({projectId,projectName,userId,initialScene
   if(tool==="select"){setSelected(null);return;}
   if(sceneRef.current.objects.length>=80){setMessage("Mỗi màn chơi tối đa 80 vật thể.");return;}
   const templates:{[K in GameObjectKind]:{w:number;h:number;label:string}}={
-   coin:{w:7,h:10,label:"⭐"},wall:{w:9,h:23,label:"🧱"},goal:{w:9,h:13,label:"🏁"}
+   coin:{w:7,h:10,label:"⭐"},wall:{w:9,h:23,label:"🧱"},goal:{w:9,h:13,label:"🏁"},enemy:{w:7,h:9,label:"👹"}
   };
   const p=templates[tool];const id=crypto.randomUUID();
   commit({...sceneRef.current,objects:[...sceneRef.current.objects,{id,kind:tool,x:Math.min(x,100-p.w),y:Math.min(y,100-p.h),...p}]});
@@ -107,7 +107,7 @@ export default function GameWorkspace({projectId,projectName,userId,initialScene
  const deleteSelected=()=>{
   if(!chosen)return;
   const remaining=scene.objects.filter(o=>o.id!==chosen.id);
-  if(!remaining.some(o=>o.kind==="coin")||!remaining.some(o=>o.kind==="goal")){setMessage("Cần giữ ít nhất 1 ngôi sao và 1 cờ đích.");return;}
+  if(!remaining.some(o=>o.kind==="goal")||!(scene.mode==="combat"?remaining.some(o=>o.kind==="enemy"):remaining.some(o=>o.kind==="coin"))){setMessage("Cần giữ ít nhất một đích và sao/quái theo chế độ.");return;}
   commit({...scene,objects:remaining});setSelected(null);
  };
  const publish=async()=>{
@@ -160,7 +160,7 @@ export default function GameWorkspace({projectId,projectName,userId,initialScene
     <h2 className="mb-4 text-sm font-bold">Kho vật thể</h2>
     <p className="mb-3 text-xs text-slate-400">Chọn công cụ rồi chạm vào màn chơi để đặt vật thể mới.</p>
     <div className="grid grid-cols-2 gap-2 xl:grid-cols-1">
-    {([{id:"select",label:"🖱️ Chọn & kéo"},{id:"coin",label:"⭐ Sao thưởng"},{id:"wall",label:"🧱 Tường cản"},{id:"goal",label:"🏁 Về đích"}] as const).map(t=>
+    {([{id:"select",label:"🖱️ Chọn & kéo"},{id:"coin",label:"⭐ Sao thưởng"},{id:"wall",label:"🧱 Tường cản"},{id:"goal",label:"🏁 Về đích"},{id:"enemy",label:"👹 Quái / đối thủ AI"}] as const).map(t=>
       <button key={t.id} type="button" onClick={()=>setTool(t.id)} className={"rounded-xl border p-3 text-left text-xs font-bold transition "+(tool===t.id?"border-orange-400 bg-orange-500/20 text-orange-200":"border-slate-700 bg-slate-900 text-slate-200 hover:border-slate-500")}>{t.label}</button>
     )}
     </div>
@@ -174,7 +174,16 @@ export default function GameWorkspace({projectId,projectName,userId,initialScene
    </div>
    {!preview&&<section className="order-3 space-y-4 rounded-2xl border border-slate-700 bg-[#1e293b] p-4">
     <h2 className="text-sm font-bold">Thuộc tính màn chơi</h2>
-    <label className="block text-xs text-slate-300">Tên game<input value={scene.title} maxLength={120} onChange={e=>commit({...scene,title:e.target.value})} className={field}/></label>
+    <label className="block text-xs text-slate-300">Cơ chế chơi
+      <select value={scene.mode??"collection"} onChange={e=>{
+       const mode=e.target.value as "collection"|"combat";
+       const objects=[...scene.objects];
+       if(mode==="combat"&&!objects.some(o=>o.kind==="enemy"))objects.push({id:crypto.randomUUID(),kind:"enemy",x:63,y:45,w:7,h:9,label:"👹",hp:3});
+       if(mode==="collection"&&!objects.some(o=>o.kind==="coin"))objects.push({id:crypto.randomUUID(),kind:"coin",x:40,y:30,w:7,h:9,label:"⭐"});
+       commit({...scene,mode,objects});
+      }} className={field}><option value="collection">Thu thập & về đích</option><option value="combat">Chiến đấu PvE: quái AI, máu, tấn công, thắng/thua</option></select>
+     </label>
+     <label className="block text-xs text-slate-300">Tên game<input value={scene.title} maxLength={120} onChange={e=>commit({...scene,title:e.target.value})} className={field}/></label>
     <label className="flex items-center justify-between gap-3 text-xs text-slate-300">Nền<input type="color" value={scene.background} onChange={e=>commit({...scene,background:e.target.value})} className="h-10 w-20 rounded-md border border-slate-600 bg-transparent"/></label>
     <div className="space-y-2 rounded-xl border border-slate-700 p-3">
      <p className="text-xs font-bold text-slate-200">Ảnh nền màn chơi</p>
@@ -189,7 +198,8 @@ export default function GameWorkspace({projectId,projectName,userId,initialScene
     <label className="block text-xs text-slate-300">Tốc độ di chuyển (0.4–5)<input type="number" step=".2" min=".4" max="5" value={scene.player.speed} onChange={e=>commit({...scene,player:{...scene.player,speed:Number(e.target.value)}})} className={field}/></label>
     {chosen&&<div className="space-y-3 border-t border-slate-700 pt-4">
      <h3 className="text-sm font-bold">Đang chọn: {chosen.kind}</h3>
-     <label className="block text-xs text-slate-300">Biểu tượng<input value={chosen.label} maxLength={16} onChange={e=>updateObject(chosen.id,{label:e.target.value})} className={field}/></label>
+     {chosen.kind==="enemy"&&<label className="block text-xs text-slate-300">Số máu kẻ địch (1–10)<input type="number" min="1" max="10" step="1" value={chosen.hp??2} onChange={e=>updateObject(chosen.id,{hp:Number(e.target.value)})} className={field}/></label>}
+      <label className="block text-xs text-slate-300">Biểu tượng<input value={chosen.label} maxLength={16} onChange={e=>updateObject(chosen.id,{label:e.target.value})} className={field}/></label>
      <div className="flex flex-wrap gap-2">
       <button type="button" onClick={()=>setAssetTarget("object")} className="inline-flex items-center gap-2 rounded-lg border border-orange-500 px-3 py-2 text-xs font-bold text-orange-200"><ImagePlus size={15}/> Chọn ảnh vật thể</button>
       {chosen.imageUrl&&<button type="button" onClick={()=>updateObject(chosen.id,{imageUrl:""})} className="rounded-lg border border-slate-600 px-3 py-2 text-xs">Dùng biểu tượng</button>}

@@ -1,4 +1,5 @@
 "use client";
+import dynamic from "next/dynamic";
 import {useCallback,useEffect,useRef,useState,type PointerEvent} from "react";
 import {RotateCcw,Trophy,Timer,Coins,Gamepad2,ArrowUp,ArrowDown,ArrowLeft,ArrowRight} from "lucide-react";
 import {boxesOverlap,gameSize,type GameObject,type GameScene} from "@/lib/game-scene";
@@ -6,7 +7,7 @@ type State={x:number;y:number;collected:string[];won:boolean;started:boolean;sec
 const initial=(scene:GameScene):State=>({x:scene.player.x,y:scene.player.y,collected:[],won:false,started:false,seconds:0,steps:0});
 const clamp=(v:number,min:number,max:number)=>Math.min(max,Math.max(min,v));
 const vector:Record<string,[number,number]>={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],w:[0,-1],s:[0,1],a:[-1,0],d:[1,0]};
-export default function GameStage({scene,mode,onMoveObject,onMoveEnd,onAddObject,onSelect,selectedId}:{
+function CollectionGameStage({scene,mode,onMoveObject,onMoveEnd,onAddObject,onSelect,selectedId}:{
  scene:GameScene;mode:"edit"|"play";
  onMoveObject?:(id:string,x:number,y:number)=>void;onMoveEnd?:()=>void;
  onAddObject?:(x:number,y:number)=>void;onSelect?:(id:string|null)=>void;selectedId?:string|null
@@ -114,4 +115,9 @@ export default function GameStage({scene,mode,onMoveObject,onMoveEnd,onAddObject
    </div>
   </div>:<p className="mt-3 text-center text-xs text-slate-400">Chọn loại đối tượng rồi chạm vào màn chơi để thêm. Kéo vật thể để đổi vị trí.</p>}
  </section>;
+}
+
+const CombatStage = dynamic(() => import("./CombatStage"),{ssr:false,loading:()=> <div className="rounded-xl bg-slate-800 p-8 text-center text-sm text-slate-200">Đang tải vòng chơi chiến đấu...</div>});
+export default function GameStage(props:Parameters<typeof CollectionGameStage>[0]){
+ return props.mode==="play"&&props.scene.mode==="combat"?<CombatStage scene={props.scene}/>:<CollectionGameStage {...props}/>;
 }

@@ -1,7 +1,7 @@
-export type GameObjectKind="coin"|"wall"|"goal";
-export type GameObject={id:string;kind:GameObjectKind;x:number;y:number;w:number;h:number;label:string;imageUrl?:string};
-export type GameScene={title:string;background:string;backgroundImageUrl?:string;player:{x:number;y:number;emoji:string;speed:number;imageUrl?:string};objects:GameObject[]};
-const allowedKinds=new Set<GameObjectKind>(["coin","wall","goal"]);
+export type GameObjectKind="coin"|"wall"|"goal"|"enemy";
+export type GameObject={id:string;kind:GameObjectKind;x:number;y:number;w:number;h:number;label:string;imageUrl?:string;hp?:number};
+export type GameScene={title:string;mode?:"collection"|"combat";background:string;backgroundImageUrl?:string;player:{x:number;y:number;emoji:string;speed:number;imageUrl?:string};objects:GameObject[]};
+const allowedKinds=new Set<GameObjectKind>(["coin","wall","goal","enemy"]);
 const validCoord=(v:unknown):v is number=>typeof v==="number"&&Number.isFinite(v)&&v>=0&&v<=100;
 function validAssetUrl(value:unknown):boolean{
  if(value===undefined||value==="")return true;
@@ -18,12 +18,14 @@ function gameObject(value:unknown):value is GameObject{
  allowedKinds.has(v.kind as GameObjectKind)&&
  validCoord(v.x)&&validCoord(v.y)&&validCoord(v.w)&&validCoord(v.h)&&v.w>=2&&v.h>=2&&
  v.x+v.w<=100.001&&v.y+v.h<=100.001&&
- typeof v.label==="string"&&v.label.length<=16&&validAssetUrl(v.imageUrl);
+ typeof v.label==="string"&&v.label.length<=16&&validAssetUrl(v.imageUrl)&&
+ (v.hp===undefined||(Number.isInteger(v.hp)&&Number(v.hp)>=1&&Number(v.hp)<=10));
 }
 export function validateGameScene(value:unknown):value is GameScene{
  if(!value||typeof value!=="object"||Array.isArray(value))return false;
  const s=value as Record<string,unknown>;
- if(typeof s.title!=="string"||s.title.trim().length<3||s.title.length>120 ||
+ if((s.mode!==undefined&&s.mode!=="collection"&&s.mode!=="combat")||
+ typeof s.title!=="string"||s.title.trim().length<3||s.title.length>120 ||
  typeof s.background!=="string"||!/^#[a-f0-9]{6}$/i.test(s.background) || !validAssetUrl(s.backgroundImageUrl) ||
  !s.player||typeof s.player!=="object"||Array.isArray(s.player) ||
  !Array.isArray(s.objects)||s.objects.length>80||s.objects.length<2)return false;
@@ -35,7 +37,7 @@ export function validateGameScene(value:unknown):value is GameScene{
  const ids=new Set((s.objects as GameObject[]).map(o=>o.id));
  if(ids.size!==s.objects.length)return false;
  const kinds=(s.objects as GameObject[]).map(o=>o.kind);
- if(!kinds.includes("coin")||!kinds.includes("goal"))return false;
+ if(!kinds.includes("goal")||(s.mode==="combat"?!kinds.includes("enemy"):!kinds.includes("coin")))return false;
  return JSON.stringify(value).length<=36000;
 }
 export const gameSize={playerW:5,playerH:7} as const;
