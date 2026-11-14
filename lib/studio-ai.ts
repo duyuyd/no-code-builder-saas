@@ -74,6 +74,10 @@ export async function askProvider(config:AiConfig,instructions:string,messages:C
    model:config.model,messages:[{role:"system",content:instructions},...messages],
    thinking:{type:"disabled"},max_tokens:config.maxOutputTokens,temperature:0.45,stream:false
   };
+ }else if(config.provider==="orcarouter"){
+  url="https://api.orcarouter.ai/v1/chat/completions";
+  headers.authorization="Bearer "+key;
+  body={model:"orcarouter/free",messages:[{role:"system",content:instructions},...messages],max_tokens:config.maxOutputTokens,stream:false};
  }else{
   url="https://api.openai.com/v1/responses";
   headers.authorization="Bearer "+key;
