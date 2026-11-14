@@ -1,133 +1,107 @@
 "use client";
-import {useEffect,useRef,useState,type PointerEvent} from "react";
-import {Camera,CheckCircle2,Download,Move3D,Pause,Play,RotateCcw,Save,Trash2} from "lucide-react";
-import {type CharacterModel} from "@/lib/character-model";
+import {useState} from "react";
+import {Camera,CheckCircle2,ChevronDown,Download,Gamepad2,Layers3,Move3D,Pause,Play,Save,Shield,Trash2,Zap} from "lucide-react";
+import type {CharacterModel} from "@/lib/character-model";
+import type {CameraView} from "@/lib/character-webgl";
+import CharacterViewport from "./CharacterViewport";
 import {saveCharacter,deleteCharacter} from "@/app/characters/actions";
 
-type Vec={x:number;y:number;z:number};
-type Face={vertices:Vec[];color:string;depth:number};
-const clamp=(n:number,min:number,max:number)=>Math.max(min,Math.min(max,n));
-const shade=(hex:string,k:number)=>{
- const n=parseInt(hex.slice(1),16),r=clamp(Math.round(((n>>16)&255)*k),0,255),g=clamp(Math.round(((n>>8)&255)*k),0,255),b=clamp(Math.round((n&255)*k),0,255);
- return "rgb("+r+","+g+","+b+")";
-};
-function transform(p:Vec,yaw:number,pitch:number):Vec{
- const c=Math.cos(yaw),s=Math.sin(yaw),pc=Math.cos(pitch),ps=Math.sin(pitch);
- const x=p.x*c+p.z*s,z=-p.x*s+p.z*c,y=p.y-1.7;
- return {x,y:y*pc-z*ps,z:y*ps+z*pc};
-}
-function facesForBox(x:number,y:number,z:number,w:number,h:number,d:number,color:string,yaw:number,pitch:number):Face[]{
- const verts=[
- {x:x-w/2,y:y-h/2,z:z-d/2},{x:x+w/2,y:y-h/2,z:z-d/2},
- {x:x+w/2,y:y+h/2,z:z-d/2},{x:x-w/2,y:y+h/2,z:z-d/2},
- {x:x-w/2,y:y-h/2,z:z+d/2},{x:x+w/2,y:y-h/2,z:z+d/2},
- {x:x+w/2,y:y+h/2,z:z+d/2},{x:x-w/2,y:y+h/2,z:z+d/2}
- ].map(p=>transform(p,yaw,pitch));
- const groups:[[number,number,number,number],number][]=[
- [[4,5,6,7],1.05],[[1,0,3,2],.62],[[0,4,7,3],.75],
- [[5,1,2,6],.91],[[3,7,6,2],1.18],[[0,1,5,4],.50]
- ];
- return groups.map(([indices,k])=>({vertices:indices.map(i=>verts[i]),color:shade(color,k),depth:indices.reduce((sum,i)=>sum+verts[i].z,0)/4}));
-}
-function render(canvas:HTMLCanvasElement,m:CharacterModel,yaw:number,pitch:number,phase:number){
- const rect=canvas.getBoundingClientRect();
- if(rect.width<1||rect.height<1)return;
- const dpr=Math.min(window.devicePixelRatio||1,2);
- const w=rect.width,h=rect.height;
- if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){
-  canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
- }
- const ctx=canvas.getContext("2d",{alpha:false});if(!ctx)return;
- ctx.setTransform(dpr,0,0,dpr,0,0);
- const gradient=ctx.createLinearGradient(0,0,0,h);
- gradient.addColorStop(0,"#1d2f48");gradient.addColorStop(1,"#08111f");
- ctx.fillStyle=gradient;ctx.fillRect(0,0,w,h);
- ctx.strokeStyle="rgba(148,163,184,.11)";ctx.lineWidth=1;
- for(let x=0;x<=w;x+=32){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
- for(let y=0;y<=h;y+=32){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
- const focal=Math.min(w*1.35,h*.95);
- const project=(v:Vec)=>{const f=focal/(5-v.z);return {x:w/2+v.x*f,y:h*.51-v.y*f};};
- ctx.fillStyle="rgba(0,0,0,.38)";ctx.beginPath();ctx.ellipse(w/2,h*.82,w*.22,h*.043,0,0,Math.PI*2);ctx.fill();
- const swing=Math.sin(phase)*.24;
- const parts:{x:number;y:number;z:number;w:number;h:number;d:number;color:string}[]=[
- {x:0,y:2.07,z:0,w:1.12*m.bodyWidth,h:1.25,d:.55,color:m.outfit},
- {x:0,y:2.76,z:0,w:.38,h:.25,d:.35,color:m.skin},
- {x:0,y:3.28,z:0,w:.90*m.headSize,h:.95*m.headSize,d:.77*m.headSize,color:m.skin},
- {x:0,y:3.77*m.headSize+(3.28-3.28*m.headSize),z:0,w:.96*m.headSize,h:.22*m.headSize,d:.80*m.headSize,color:m.hair},
- {x:-.78*m.bodyWidth,y:2.11+swing,z:0,w:.34,h:1.11*m.armLength,d:.42,color:m.outfit},
- {x:.78*m.bodyWidth,y:2.11-swing,z:0,w:.34,h:1.11*m.armLength,d:.42,color:m.outfit},
- {x:-.32*m.bodyWidth,y:.81-swing,z:0,w:.44,h:1.25*m.legLength,d:.45,color:m.pants},
- {x:.32*m.bodyWidth,y:.81+swing,z:0,w:.44,h:1.25*m.legLength,d:.45,color:m.pants},
- {x:-.32*m.bodyWidth,y:.18-swing,z:.20,w:.51,h:.27,d:.7,color:m.hair},
- {x:.32*m.bodyWidth,y:.18+swing,z:.20,w:.51,h:.27,d:.7,color:m.hair},
- {x:-.19*m.headSize,y:3.35,z:.40*m.headSize,w:.13,h:.10,d:.04,color:"#141414"},
- {x:.19*m.headSize,y:3.35,z:.40*m.headSize,w:.13,h:.10,d:.04,color:"#141414"}
- ];
- const faces=parts.flatMap(p=>facesForBox(p.x,p.y,p.z,p.w,p.h,p.d,p.color,yaw,pitch)).sort((a,b)=>a.depth-b.depth);
- for(const face of faces){
-  const projected=face.vertices.map(project);
-  ctx.beginPath();ctx.moveTo(projected[0].x,projected[0].y);
-  projected.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));ctx.closePath();
-  ctx.fillStyle=face.color;ctx.fill();
-  ctx.strokeStyle="rgba(15,23,42,.18)";ctx.lineWidth=.8;ctx.stroke();
- }
- ctx.font="12px Arial, sans-serif";ctx.fillStyle="rgba(226,232,240,.7)";
- ctx.textAlign="center";ctx.fillText("Kéo để xoay • 3D góc nhìn 360°",w/2,h-18);
-}
-const colorNames:Record<"skin"|"outfit"|"hair"|"pants",string>={skin:"Da",outfit:"Áo giáp / trang phục",hair:"Tóc",pants:"Quần / giày"};
-const scales:Record<"headSize"|"bodyWidth"|"armLength"|"legLength",string>={headSize:"Kích thước đầu",bodyWidth:"Thân rộng",armLength:"Chiều dài tay",legLength:"Chiều dài chân"};
-export default function CharacterStudio({id,initialName,initialModel,saved}:{id?:string;initialName:string;initialModel:CharacterModel;saved:boolean}){
- const canvasRef=useRef<HTMLCanvasElement>(null);
- const grab=useRef<{x:number;y:number;pointerId:number}|null>(null);
+type Tab="3d"|"4d"|"5d"|"6d";
+const colors={skin:"Màu da",hair:"Màu tóc",outfit:"Áo giáp / trang phục",pants:"Quần / giày"} as const;
+const body={headSize:"Kích cỡ đầu",bodyWidth:"Thân rộng",armLength:"Chiều dài tay",legLength:"Chiều dài chân"} as const;
+const poses=[["idle","Đứng yên"],["run","Chạy"],["combat","Chiến đấu"],["victory","Ăn mừng"]] as const;
+const equipment=[["none","Không"],["sword","Kiếm"],["staff","Trượng"],["shield","Khiên"]] as const;
+const auras=[["none","Không"],["flame","Lửa"],["electric","Điện"],["heal","Hồi máu"]] as const;
+const scenes=[["studio","Studio"],["forest","Rừng"],["arena","Đấu trường"],["castle","Thành trì"],["stadium","Sân bóng"]] as const;
+const angles:{label:string;camera:CameraView}[]=[
+ {label:"Trước",camera:{yaw:0,pitch:0,distance:8}},
+ {label:"Sau",camera:{yaw:Math.PI,pitch:0,distance:8}},
+ {label:"Trái",camera:{yaw:-Math.PI/2,pitch:0,distance:8}},
+ {label:"Phải",camera:{yaw:Math.PI/2,pitch:0,distance:8}},
+ {label:"Trên",camera:{yaw:.2,pitch:1.25,distance:9}},
+ {label:"Dưới",camera:{yaw:.2,pitch:-1.12,distance:9}},
+ {label:"Chéo 1",camera:{yaw:.62,pitch:.32,distance:8}},
+ {label:"Chéo 2",camera:{yaw:-.75,pitch:.25,distance:8}}
+];
+const input="mt-2 w-full rounded-xl border border-slate-600 bg-[#0b1424] px-3 py-3 text-sm text-white outline-none focus:border-orange-500";
+export default function CharacterStudio({id,initialName,initialModel,saved}:{
+ id?:string;initialName:string;initialModel:CharacterModel;saved:boolean;
+}){
  const [model,setModel]=useState<CharacterModel>(initialModel);
  const [name,setName]=useState(initialName);
- const [yaw,setYaw]=useState(.38),[pitch,setPitch]=useState(.10);
- const [walk,setWalk]=useState(false);
- const [message,setMessage]=useState("");
- useEffect(()=>{
-  const canvas=canvasRef.current;if(!canvas)return;
-  let raf=0;const paint=(time:number)=>{
-   render(canvas,model,yaw,pitch,walk?time*.003:0);
-   if(walk)raf=requestAnimationFrame(paint);
-  };
-  raf=requestAnimationFrame(paint);
-  const observer=new ResizeObserver(()=>{if(!walk)render(canvas,model,yaw,pitch,0);});
-  observer.observe(canvas);
-  return ()=>{cancelAnimationFrame(raf);observer.disconnect();};
- },[model,yaw,pitch,walk]);
- const pointerDown=(e:PointerEvent<HTMLCanvasElement>)=>{
-  grab.current={x:e.clientX,y:e.clientY,pointerId:e.pointerId};
-  e.currentTarget.setPointerCapture(e.pointerId);
+ const [camera,setCamera]=useState<CameraView>({yaw:.38,pitch:.12,distance:8});
+ const [playing,setPlaying]=useState(false);
+ const [tab,setTab]=useState<Tab>("3d");
+ const [notice,setNotice]=useState("");
+ function change<K extends keyof CharacterModel>(key:K,value:CharacterModel[K]){setModel(previous=>({...previous,[key]:value}));}
+ const exportConfig=()=>{
+  const data={format:"studio-character-v2",name:name.trim()||"Nhân vật",model,description:"Mô hình tham số, không phải file mesh GLB/FBX"};
+  const file=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const href=URL.createObjectURL(file),a=document.createElement("a");a.href=href;a.download="studio-character-config.json";a.click();
+  setTimeout(()=>URL.revokeObjectURL(href),1000);
+  setNotice("Đã tải cấu hình nhân vật JSON. Chụp PNG từ vùng 3D nếu cần ảnh.");
  };
- const pointerMove=(e:PointerEvent<HTMLCanvasElement>)=>{
-  const p=grab.current;if(!p||p.pointerId!==e.pointerId)return;
-  setYaw(v=>v+(e.clientX-p.x)*.012);
-  setPitch(v=>clamp(v-(e.clientY-p.y)*.008,-.55,.75));
-  grab.current={x:e.clientX,y:e.clientY,pointerId:e.pointerId};
- };
- const pointerEnd=()=>{grab.current=null;};
- const changeColor=(key:keyof Pick<CharacterModel,"skin"|"outfit"|"hair"|"pants">,value:string)=>setModel(m=>({...m,[key]:value}));
- const changeSize=(key:keyof Pick<CharacterModel,"headSize"|"bodyWidth"|"armLength"|"legLength">,value:string)=>setModel(m=>({...m,[key]:Number(value)}));
- const download=()=>{
-  const canvas=canvasRef.current;if(!canvas)return;
-  const a=document.createElement("a");a.href=canvas.toDataURL("image/png");a.download="studio-character-3d.png";a.click();
-  setMessage("Đã xuất ảnh PNG từ góc nhìn hiện tại.");
- };
- return <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-  <section className="overflow-hidden rounded-2xl border border-slate-700 bg-[#142137]">
-   <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-700 p-4"><div><h2 className="flex items-center gap-2 text-sm font-black"><Move3D size={19} className="text-orange-400"/> Cảnh 3D — có thể kéo xoay</h2><p className="mt-1 text-[11px] text-slate-400">Mô hình khối hình học 3D, chiếu phối cảnh và xoay 360°</p></div><button type="button" onClick={()=>setWalk(v=>!v)} className="flex items-center gap-2 rounded-xl bg-orange-500 px-3 py-2 text-xs font-bold">{walk?<Pause size={16}/>:<Play size={16}/>} {walk?"Dừng chuyển động":"Chạy animation"}</button></header>
-   <canvas ref={canvasRef} aria-label="Bản xem trước nhân vật 3D xoay bằng chuột hoặc cảm ứng" onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerEnd} onPointerCancel={pointerEnd} style={{touchAction:"none"}} className="block h-[420px] w-full cursor-grab select-none active:cursor-grabbing sm:h-[540px]"/>
-   <div className="flex flex-wrap gap-2 border-t border-slate-700 p-3">{[["Trước",0],["Phải",Math.PI/2],["Sau",Math.PI],["Trái",Math.PI*1.5]].map(([label,angle])=><button type="button" key={String(label)} onClick={()=>{setYaw(Number(angle));setPitch(0);}} className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-slate-200 hover:border-orange-400">{label}</button>)}<button type="button" onClick={()=>{setYaw(.3);setPitch(.65);}} className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-slate-200">Từ trên</button><button type="button" onClick={()=>{setYaw(.38);setPitch(.10);}} className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-slate-200" title="Đặt lại camera"><RotateCcw size={16}/></button><button type="button" onClick={download} className="ml-auto flex items-center gap-2 rounded-lg bg-slate-700 px-3 py-2 text-xs font-bold"><Camera size={16}/> Xuất PNG</button></div>
+ return <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_345px]">
+  <section className="min-w-0 overflow-hidden rounded-2xl border border-slate-700 bg-[#142137]">
+   <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700 p-4">
+    <div><h2 className="flex items-center gap-2 text-sm font-black"><Move3D size={20} className="text-orange-300"/> Nhân vật WebGL 3D và bản đồ</h2>
+     <p className="mt-1 text-[11px] leading-5 text-slate-400">GPU thực • ánh sáng • chiều sâu • xoay bằng ngón tay • chụm hai ngón để zoom</p>
+    </div>
+    <button type="button" onClick={()=>setPlaying(value=>!value)} className="flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2.5 text-xs font-black text-white">
+      {playing?<Pause size={16}/>:<Play size={16}/>} {playing?"Dừng timeline":"Chạy timeline"}
+    </button>
+   </header>
+   <CharacterViewport model={model} camera={camera} onCameraChange={setCamera} playing={playing}/>
+   <div className="flex flex-wrap gap-2 border-t border-slate-700 p-3">
+    {angles.map(view=><button key={view.label} type="button" onClick={()=>setCamera(view.camera)} className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-slate-200 hover:border-orange-400 hover:text-orange-300">{view.label}</button>)}
+   </div>
+   <div className="border-t border-slate-700 px-4 py-3 text-xs leading-6 text-slate-400">
+    3D = mô hình không gian. 4D = thời gian/animation. 5D = camera & bối cảnh. 6D = lớp trang bị, kỹ năng và chỉ số gameplay; không phải 4–6 chiều vật lý.
+   </div>
   </section>
-  <aside className="h-max space-y-5 rounded-2xl border border-slate-700 bg-[#1b293d] p-5">
-   <div><h2 className="text-base font-black">Thiết kế nhân vật</h2><p className="mt-2 text-xs leading-6 text-slate-400">Thay đổi thông số bên dưới. Kéo lên hình để xem từ các phía.</p></div>
-   {saved&&<p role="status" className="flex items-center gap-2 rounded-xl border border-emerald-800 bg-emerald-950/30 p-3 text-xs text-emerald-200"><CheckCircle2 size={16}/> Đã lưu vào Supabase.</p>}
-   <section className="space-y-3"><h3 className="border-b border-slate-700 pb-2 text-xs font-black uppercase tracking-wider text-orange-300">Màu sắc</h3>{(Object.keys(colorNames) as Array<keyof typeof colorNames>).map(key=><label key={key} className="flex items-center justify-between gap-3 text-xs text-slate-300">{colorNames[key]}<span className="flex items-center gap-2"><span className="font-mono text-[10px] text-slate-500">{model[key]}</span><input type="color" aria-label={colorNames[key]} value={model[key]} onChange={e=>changeColor(key,e.target.value)} className="size-10 cursor-pointer rounded-lg border-0 bg-transparent"/></span></label>)}</section>
-   <section className="space-y-4"><h3 className="border-b border-slate-700 pb-2 text-xs font-black uppercase tracking-wider text-orange-300">Tỉ lệ cơ thể</h3>{(Object.keys(scales) as Array<keyof typeof scales>).map(key=><label key={key} className="block text-xs text-slate-300"><span className="flex justify-between gap-2">{scales[key]}<span className="font-mono text-orange-200">{model[key].toFixed(2)}×</span></span><input type="range" min=".55" max="1.65" step=".05" value={model[key]} onChange={e=>changeSize(key,e.target.value)} className="mt-2 w-full accent-orange-500"/></label>)}</section>
-   <form action={saveCharacter} className="space-y-3 border-t border-slate-700 pt-4"><label className="block text-xs font-bold text-slate-200">Tên nhân vật<input name="name" value={name} onChange={e=>setName(e.target.value)} required maxLength={100} placeholder="Đặt tên nhân vật" className="mt-2 w-full rounded-xl border border-slate-600 bg-slate-900 p-3 text-sm text-white outline-none focus:border-orange-400"/></label><input type="hidden" name="id" value={id??""}/><input type="hidden" name="model" value={JSON.stringify(model)}/><button type="submit" className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 p-3.5 text-sm font-black text-white"><Save size={17}/> {id?"Lưu cập nhật":"Lưu nhân vật mới"}</button></form>
-   {id&&<form action={deleteCharacter} onSubmit={e=>{if(!window.confirm("Xóa nhân vật đã lưu này?"))e.preventDefault();}}><input type="hidden" name="id" value={id}/><button type="submit" className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-600/50 p-3 text-xs font-bold text-rose-300"><Trash2 size={16}/> Xóa nhân vật</button></form>}
-   {message&&<p role="status" className="rounded-xl bg-slate-900 p-3 text-xs text-emerald-300">{message}</p>}
-   <p className="text-[11px] leading-6 text-slate-400">Xưởng này tạo ảnh và dữ liệu mô hình khối 3D. Chưa có xuất glTF, skeletal rig, animation timeline hay runtime 4D–6D.</p>
+  <aside className="h-max min-w-0 rounded-2xl border border-slate-700 bg-[#1b293d] p-4 sm:p-5">
+   {saved&&<p role="status" className="mb-3 flex items-center gap-2 rounded-xl border border-emerald-800 bg-emerald-950/30 p-3 text-xs text-emerald-200"><CheckCircle2 size={17}/> Đã lưu vào Supabase.</p>}
+   <h2 className="text-base font-black">Bảng điều khiển nhân vật</h2>
+   <p className="mt-2 text-xs leading-6 text-slate-400">Chọn lớp bên dưới để thay đổi mô hình, thời gian, camera hoặc sức mạnh.</p>
+   <div className="mt-4 grid grid-cols-4 gap-1.5 rounded-xl border border-slate-700 bg-slate-900 p-1.5">
+    {(["3d","4d","5d","6d"] as const).map(key=><button type="button" key={key} onClick={()=>setTab(key)}
+      aria-pressed={tab===key} className={"rounded-lg py-3 text-xs font-black "+(tab===key?"bg-orange-500 text-white":"text-slate-300 hover:bg-slate-800")}>{key.toUpperCase()}</button>)}
+   </div>
+   {tab==="3d"&&<div className="mt-5 space-y-5">
+    <h3 className="flex items-center gap-2 text-sm font-bold text-orange-300"><Layers3 size={18}/> Màu sắc và hình thể 3D</h3>
+    {(Object.entries(colors) as [keyof typeof colors,string][]).map(([key,label])=><label key={key} className="flex items-center justify-between gap-2 text-xs text-slate-200">{label}<span className="flex items-center gap-2"><span className="font-mono text-[10px] text-slate-400">{model[key]}</span><input type="color" aria-label={label} value={model[key]} onChange={event=>change(key,event.target.value)} className="size-10 cursor-pointer rounded-lg bg-transparent"/></span></label>)}
+    {(Object.entries(body) as [keyof typeof body,string][]).map(([key,label])=><label key={key} className="block text-xs text-slate-300"><span className="flex justify-between">{label}<span className="font-mono text-orange-200">{model[key].toFixed(2)}×</span></span><input type="range" min=".55" max="1.65" step=".05" value={model[key]} onChange={event=>change(key,Number(event.target.value))} className="mt-2 w-full accent-orange-500"/></label>)}
+    <label className="block text-xs text-slate-300">Kiểu mắt<select value={model.eyeStyle} onChange={e=>change("eyeStyle",e.target.value as CharacterModel["eyeStyle"])} className={input}><option value="round">Tròn</option><option value="square">Vuông</option></select></label>
+   </div>}
+   {tab==="4d"&&<div className="mt-5 space-y-5">
+    <h3 className="flex items-center gap-2 text-sm font-bold text-orange-300"><Play size={17}/> Thời gian và chuyển động</h3>
+    <div className="grid grid-cols-2 gap-2">{poses.map(([value,label])=><button type="button" key={value} onClick={()=>change("pose",value)} className={"rounded-xl border p-3 text-xs font-bold "+((model.pose??"idle")===value?"border-orange-500 bg-orange-500/15 text-orange-200":"border-slate-700 bg-slate-900 text-slate-300")}>{label}</button>)}</div>
+    <label className="block text-xs text-slate-300">Tốc độ animation: {(model.timelineSpeed??1).toFixed(2)}×<input type="range" min=".25" max="3" step=".25" value={model.timelineSpeed??1} onChange={e=>change("timelineSpeed",Number(e.target.value))} className="mt-3 w-full accent-orange-500"/></label>
+    <button type="button" onClick={()=>setPlaying(value=>!value)} className="w-full rounded-xl bg-orange-500 p-3 text-xs font-black text-white">{playing?"Dừng chuyển động":"Phát chuyển động"}</button>
+    <p className="text-xs leading-6 text-slate-400">4D mô tả chiều thời gian trong animation, chưa có skeletal rig hoặc motion capture.</p>
+   </div>}
+   {tab==="5d"&&<div className="mt-5 space-y-5">
+    <h3 className="flex items-center gap-2 text-sm font-bold text-orange-300"><Camera size={18}/> Camera đa góc và môi trường</h3>
+    <label className="block text-xs text-slate-300">Bối cảnh 3D<select value={model.scene??"studio"} onChange={e=>change("scene",e.target.value as CharacterModel["scene"])} className={input}>{scenes.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
+    <div className="grid grid-cols-2 gap-2">{angles.map(view=><button type="button" key={view.label} onClick={()=>setCamera(view.camera)} className="rounded-xl border border-slate-600 bg-slate-900 p-3 text-xs text-slate-200 hover:border-orange-400">{view.label}</button>)}</div>
+    <label className="block text-xs text-slate-300">Khoảng cách camera {camera.distance.toFixed(1)}<input type="range" min="4.5" max="16" step=".5" value={camera.distance} onChange={e=>setCamera(v=>({...v,distance:Number(e.target.value)}))} className="mt-2 w-full accent-orange-500"/></label>
+    <p className="text-xs leading-6 text-slate-400">5D là góc camera và biến thể bối cảnh. Có thể xoay 360°, xem từ trên/dưới và thay nền 3D.</p>
+   </div>}
+   {tab==="6d"&&<div className="mt-5 space-y-5">
+    <h3 className="flex items-center gap-2 text-sm font-bold text-orange-300"><Zap size={18}/> Trang bị, hiệu ứng và buff</h3>
+    <label className="block text-xs text-slate-200">Trang bị<select value={model.equipment??"none"} onChange={e=>change("equipment",e.target.value as CharacterModel["equipment"])} className={input}>{equipment.map(([v,label])=><option key={v} value={v}>{label}</option>)}</select></label>
+    <label className="block text-xs text-slate-200">Hiệu ứng năng lượng<select value={model.aura??"none"} onChange={e=>change("aura",e.target.value as CharacterModel["aura"])} className={input}>{auras.map(([v,label])=><option key={v} value={v}>{label}</option>)}</select></label>
+    {(["strength","agility","defense"] as const).map((key,i)=><label key={key} className="block text-xs text-slate-300"><span className="flex justify-between">{["Sức mạnh","Nhanh nhẹn","Phòng thủ"][i]}<span className="text-orange-200">{model[key]??50}/100</span></span><input type="range" min="0" max="100" step="1" value={model[key]??50} onChange={e=>change(key,Number(e.target.value))} className="mt-2 w-full accent-orange-500"/></label>)}
+    <p className="flex items-start gap-2 text-xs leading-6 text-slate-400"><Shield size={17} className="mt-1 shrink-0"/> Các chỉ số được lưu trong dữ liệu nhân vật; chưa tự động kết nối với hệ thống chiến đấu trực tuyến.</p>
+   </div>}
+   <form action={saveCharacter} className="mt-6 space-y-3 border-t border-slate-700 pt-5">
+    <label className="block text-xs font-bold text-slate-200">Tên nhân vật<input name="name" value={name} onChange={e=>setName(e.target.value)} required maxLength={100} placeholder="Đặt tên nhân vật" className={input}/></label>
+    <input type="hidden" name="id" value={id??""}/><input type="hidden" name="model" value={JSON.stringify(model)}/>
+    <button type="submit" className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-black text-white"><Save size={18}/>{id?"Lưu cập nhật":"Lưu nhân vật mới"}</button>
+   </form>
+   <button type="button" onClick={exportConfig} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-600 px-4 py-3 text-xs font-bold text-slate-200"><Download size={17}/> Xuất cấu hình nhân vật JSON</button>
+   {id&&<form action={deleteCharacter} onSubmit={e=>{if(!window.confirm("Xóa nhân vật đã lưu này?"))e.preventDefault();}} className="mt-3"><input type="hidden" name="id" value={id}/><button type="submit" className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-700 p-3 text-xs text-rose-300"><Trash2 size={17}/> Xóa nhân vật</button></form>}
+   {notice&&<p role="status" className="mt-3 rounded-xl bg-slate-900 p-3 text-xs text-emerald-300">{notice}</p>}
   </aside>
  </div>;
 }
