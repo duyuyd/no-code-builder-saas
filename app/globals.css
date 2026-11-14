@@ -13,3 +13,16 @@ input, textarea, select, button { font: inherit; }
 .drag-handle { touch-action: none; }
 .editor-scroll { scrollbar-width: thin; }
 .builder-node { overflow-wrap: anywhere; }
+
+/* SaaS editor: isolate its dark chrome from the rendered white page. */
+.canvas-grid {
+  background-image: linear-gradient(to right, rgba(148,163,184,.12) 1px, transparent 1px), linear-gradient(to bottom, rgba(148,163,184,.12) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: center top;
+}
+.editor-scroll { scrollbar-color: #475569 transparent; scrollbar-width: thin; }
+.editor-scroll::-webkit-scrollbar { width: 7px; height: 7px; }
+.editor-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 99px; }
+@media (prefers-reduced-motion: reduce) {
+  .builder-node { transition: none !important; }
+}
