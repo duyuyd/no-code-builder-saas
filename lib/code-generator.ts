@@ -1,4 +1,5 @@
 import type { BuilderNode } from "./component-registry";
+import { interactiveExportRuntime } from "./export-runtime";
 import { getDefinition, nodeCss, safeUrl, sanitizeNumeric, validateUiTree } from "./component-registry";
 
 const escapeHtml = (value: string) => value.replace(/&/g, "&amp;").replace(/</g, "&lt;")
@@ -53,10 +54,14 @@ function nodeToHtml(node: BuilderNode): string {
     }
     case "list": return `<${def.tag}${style}>${(p.items ?? "").split(/\r?\n/).filter(Boolean).map(v => `<li>${escapeHtml(v)}</li>`).join("")}</${def.tag}>`;
     case "iframe": return `<iframe${style} src="${escapeHtml(safeUrl(p.src ?? ""))}" title="${escapeHtml(p.title ?? "")}" sandbox="allow-scripts allow-forms" loading="lazy"></iframe>`;
-    case "container": return `<${def.tag}${style}>${node.children.map(nodeToHtml).join("\n")}</${def.tag}>`;
+    case "container": {
+      const recipient = node.type === "form" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.recipientEmail ?? "") ? ' data-recipient="' + escapeHtml(p.recipientEmail) + '"' : "";
+      return `<${def.tag}${style}${recipient}>${node.children.map(nodeToHtml).join("\n")}</${def.tag}>`;
+    }
     case "button": return p.href && safeUrl(p.href) ? `<a${style} href="${escapeHtml(safeUrl(p.href))}">${escapeHtml(p.text ?? "")}</a>` : `<button type="${node.type === "submit-button" ? "submit" : "button"}"${style}>${escapeHtml(p.text ?? "")}</button>`;
     case "memory": return `<section${style}><h2>${escapeHtml(p.title ?? "Lật thẻ trí nhớ")}</h2><p>Game tương tác chạy trong bản xuất bản trên nền tảng. Bản HTML tĩnh chưa bao gồm logic chơi.</p></section>`;
-    case "quiz": return `<section${style}><h2>${escapeHtml(p.title ?? "Trắc nghiệm")}</h2><p>Trò chơi tương tác chỉ chạy khi xuất bản website.</p></section>`;
+    case "quiz": return `<section class="export-game" data-quiz="${escapeHtml(JSON.stringify({title:p.title??"Trắc nghiệm",questions:p.questions??""}))}"></section>`;
+    case "memory": return `<section class="export-game" data-memory="${escapeHtml(JSON.stringify({title:p.title??"Lật thẻ trí nhớ",symbols:p.symbols??"",pairCount:p.pairCount??"6"}))}"></section>`;
     case "text": return `<${def.tag}${style}>${escapeHtml(p.text ?? "")}</${def.tag}>`;
   }
 }
@@ -87,7 +92,8 @@ function nodeToJsx(node: BuilderNode): string {
     case "container": return `<${def.tag}${style}>${node.children.map(nodeToJsx).join("\n")}</${def.tag}>`;
     case "button": return p.href && safeUrl(p.href) ? `<a${style} href=${jsxAttr(safeUrl(p.href))}>${escapeJsx(p.text ?? "")}</a>` : `<button type="${node.type === "submit-button" ? "submit" : "button"}"${style}>${escapeJsx(p.text ?? "")}</button>`;
     case "memory": return `<section${style}><h2>${escapeJsx(p.title ?? "Lật thẻ trí nhớ")}</h2><p>Game tương tác chạy trong bản xuất bản trên nền tảng. Bản React tĩnh chưa bao gồm logic chơi.</p></section>`;
-    case "quiz": return `<section${style}><h2>${escapeJsx(p.title ?? "Trắc nghiệm")}</h2><p>Trò chơi tương tác chỉ chạy khi xuất bản website.</p></section>`;
+    case "quiz": return `<section${style}><h2>${escapeJsx(p.title ?? "Trắc nghiệm")}</h2><p>Bản xuất React cơ bản chưa bao gồm logic game. Hãy xuất gói HTML để chơi offline.</p></section>`;
+    case "memory": return `<section${style}><h2>${escapeJsx(p.title ?? "Lật thẻ trí nhớ")}</h2><p>Bản xuất React cơ bản chưa bao gồm logic game. Hãy xuất gói HTML để chơi offline.</p></section>`;
     case "text": return `<${def.tag}${style}>${escapeJsx(p.text ?? "")}</${def.tag}>`;
   }
 }
@@ -97,5 +103,5 @@ export function generateReactCode(uiTree: BuilderNode[]): string {
 }
 export function generateHtmlCode(uiTree: BuilderNode[], title = "Exported Page"): string {
   if (!validateUiTree(uiTree)) throw new Error("Invalid UI Tree");
-  return `<!doctype html>\n<html lang="vi">\n<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>${escapeHtml(title)}</title></head>\n<body>\n${uiTree.map(nodeToHtml).join("\n")}\n</body>\n</html>\n`;
+  return `<!doctype html>\n<html lang="vi">\n<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>${escapeHtml(title)}</title></head>\n<body><main>\n${uiTree.map(nodeToHtml).join("\n")}\n</main>\n<script>${interactiveExportRuntime}</script>\n</body>\n</html>\n`;
 }
