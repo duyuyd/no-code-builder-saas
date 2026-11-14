@@ -56,7 +56,8 @@ function nodeToHtml(node: BuilderNode): string {
     case "iframe": return `<iframe${style} src="${escapeHtml(safeUrl(p.src ?? ""))}" title="${escapeHtml(p.title ?? "")}" sandbox="allow-scripts allow-forms" loading="lazy"></iframe>`;
     case "container": {
       const recipient = node.type === "form" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.recipientEmail ?? "") ? ' data-recipient="' + escapeHtml(p.recipientEmail) + '"' : "";
-      return `<${def.tag}${style}${recipient}>${node.children.map(nodeToHtml).join("\n")}</${def.tag}>`;
+      const mobileClass=(node.type==="grid"||node.type.endsWith("-grid"))?' class="studio-export-grid"':"";
+      return `<${def.tag}${mobileClass}${style}${recipient}>${node.children.map(nodeToHtml).join("\n")}</${def.tag}>`;
     }
     case "button": return p.href && safeUrl(p.href) ? `<a${style} href="${escapeHtml(safeUrl(p.href))}">${escapeHtml(p.text ?? "")}</a>` : `<button type="${node.type === "submit-button" ? "submit" : "button"}"${style}>${escapeHtml(p.text ?? "")}</button>`;
     case "memory": return `<section${style}><h2>${escapeHtml(p.title ?? "Lật thẻ trí nhớ")}</h2><p>Game tương tác chạy trong bản xuất bản trên nền tảng. Bản HTML tĩnh chưa bao gồm logic chơi.</p></section>`;
@@ -89,7 +90,7 @@ function nodeToJsx(node: BuilderNode): string {
     }
     case "list": return `<${def.tag}${style}>${(p.items ?? "").split(/\r?\n/).filter(Boolean).map((v,i) => `<li key={${i}}>${escapeJsx(v)}</li>`).join("")}</${def.tag}>`;
     case "iframe": return `<iframe${style} src=${jsxAttr(safeUrl(p.src ?? ""))} title=${jsxAttr(p.title ?? "")} sandbox="allow-scripts allow-forms" loading="lazy" />`;
-    case "container": return `<${def.tag}${style}>${node.children.map(nodeToJsx).join("\n")}</${def.tag}>`;
+    case "container": return `<${def.tag}${node.type==="grid"||node.type.endsWith("-grid")?' className="studio-export-grid"':""}${style}>${node.children.map(nodeToJsx).join("\n")}</${def.tag}>`;
     case "button": return p.href && safeUrl(p.href) ? `<a${style} href=${jsxAttr(safeUrl(p.href))}>${escapeJsx(p.text ?? "")}</a>` : `<button type="${node.type === "submit-button" ? "submit" : "button"}"${style}>${escapeJsx(p.text ?? "")}</button>`;
     case "memory": return `<section${style}><h2>${escapeJsx(p.title ?? "Lật thẻ trí nhớ")}</h2><p>Game tương tác chạy trong bản xuất bản trên nền tảng. Bản React tĩnh chưa bao gồm logic chơi.</p></section>`;
     case "quiz": return `<section${style}><h2>${escapeJsx(p.title ?? "Trắc nghiệm")}</h2><p>Bản xuất React cơ bản chưa bao gồm logic game. Hãy xuất gói HTML để chơi offline.</p></section>`;
@@ -99,9 +100,9 @@ function nodeToJsx(node: BuilderNode): string {
 }
 export function generateReactCode(uiTree: BuilderNode[]): string {
   if (!validateUiTree(uiTree)) throw new Error("Invalid UI Tree");
-  return `import type { CSSProperties } from "react";\n\nexport default function GeneratedPage() {\n  return (\n    <main>\n${uiTree.map(nodeToJsx).join("\n")}\n    </main>\n  );\n}\n`;
+  return `import type { CSSProperties } from "react";\n\nexport default function GeneratedPage() {\n  return (\n    <main style={{ containerType: "inline-size" }}>\n      <style>{\`@container (max-width: 620px) { .studio-export-grid { grid-template-columns: minmax(0, 1fr) !important; } .studio-export-grid > * { min-width: 0 !important; max-width: 100% !important; overflow-wrap: anywhere; } }\`}</style>\n${uiTree.map(nodeToJsx).join("\n")}\n    </main>\n  );\n}\n`;
 }
 export function generateHtmlCode(uiTree: BuilderNode[], title = "Exported Page"): string {
   if (!validateUiTree(uiTree)) throw new Error("Invalid UI Tree");
-  return `<!doctype html>\n<html lang="vi">\n<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>${escapeHtml(title)}</title></head>\n<body><main>\n${uiTree.map(nodeToHtml).join("\n")}\n</main>\n<script>${interactiveExportRuntime}</script>\n</body>\n</html>\n`;
+  return `<!doctype html>\n<html lang="vi">\n<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>${escapeHtml(title)}</title></head>\n<body><main style="container-type:inline-size">\n${uiTree.map(nodeToHtml).join("\n")}\n</main>\n<script>${interactiveExportRuntime}</script>\n</body>\n</html>\n`;
 }
