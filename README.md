@@ -107,7 +107,7 @@ The CI workflow checks TypeScript and attempts a production build on `main` and 
 
 - Drag a palette item into Canvas (or press **+**), select the node to edit properties, drop onto the dashed slot within containers for nesting.
 - Undo `Ctrl/Cmd+Z`, redo `Ctrl/Cmd+Shift+Z` or `Ctrl+Y` outside input fields.
-- Autosave starts 2 seconds after tree modifications. Manual Save uses the same Server Action; concurrent edits are rejected on version mismatch to avoid overwriting other sessions.
+- Autosave starts 2 seconds after tree modifications. Manual Save uses the same Server Action; non-overlapping concurrent edits can be merged; conflicting changes keep a per-tab draft without overwriting the other session.
 - Export buttons download static generated HTML or React JSX/TSX to the browser; these files do not contain Supabase credentials.
 
 ## Limitations
@@ -117,3 +117,34 @@ The CI workflow checks TypeScript and attempts a production build on `main` and 
 - Exported components are static presentation code. Browser form actions and operational backend services must be added separately to deployed exports.
 - SQL is intended for first-time installation; review policies/migrations before rerunning on a populated database.
 - A platform-scale SaaS still needs billing, observability, rate limiting, audit trails, end-to-end tests and production build workers.
+
+
+## Modules: Custom Domain, White-label, PDF E-sign
+
+Database migration: `supabase/migrations/20261115_tenants_domains_esign.sql` (RLS enabled, original projects/pages unchanged).
+
+- `/domains`: User-managed tenant branding (name, HTTPS logo, primary color), mapped published project, Vercel domain registration and DNS verification. The domain status is server-only.
+- `/sign`: PDF page preview and visual handwritten signature placement; pdf-lib stamps the PDF; private Supabase Storage bucket `signed-pdfs` and immutable SHA-256 audit metadata in `public.esign_documents`. **This is an image-based electronic signature, NOT a cryptographic PKI/PAdES signature.**
+- `/pricing`: Free/Pro/Agency plan descriptions from `platform_settings.saas_pricing`. Free is active; paid plans and payment collection are **not enabled**.
+- Verified custom hosts show the tenant's published project via `/host-site/[[...slug]]`; unverified domains show nothing. Draft pages remain private.
+
+### Vercel Project → Settings → Environment Variables
+
+| Variable | Type | Purpose |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | public | Existing Supabase URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | public (publishable key only) | User sessions |
+| `NEXT_PUBLIC_SITE_URL` | public | Email auth redirects |
+| `VERCEL_PROJECT_ID` | server-only non-secret | Domain project |
+| `VERCEL_TEAM_ID` | server-only non-secret | Domain team |
+| `VERCEL_TOKEN` | **server-only encrypted secret** | Add/verify Vercel domains |
+| `SUPABASE_SERVICE_ROLE_KEY` | **server-only encrypted secret** | Verify/write tenant domain status |
+| `HANZO_ESIGN_URL` | optional HTTPS | Link to a separately hosted Hanzo instance |
+
+The project/team IDs are already set. Set the two missing secrets in Vercel's secure UI, **never in GitHub, chat, frontend variables or public code**. Redeploy after adding server environment variables.
+
+To add a domain: sign in → `/domains` → save branding and choose a *published* project → submit a domain you control → add the TXT/other DNS records supplied by Vercel at your domain registrar → verify again. DNS and TLS may require additional time. Domain registration/purchase is **not** automated.
+
+Upstream Hanzo eSign: https://github.com/hanzoai/esign (AGPL-3.0). This is a separate self-hosted app requiring its own runtime and services (React Router, Prisma/DB, SMTP). This repo does **not** fork or embed Hanzo. The local PDF-stamping MVP is independent; `HANZO_ESIGN_URL` links to Hanzo if you have separately deployed it. Advanced workflows (multi-party, invitations, PKI) remain unimplemented.
+
+**Commercial hosting:** the current Vercel Hobby account is for noncommercial use. A commercial service will require an approved hosting/plan change; no paid plan or billing has been enabled.
