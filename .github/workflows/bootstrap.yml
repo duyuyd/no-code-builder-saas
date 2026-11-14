@@ -17,20 +17,19 @@ jobs:
         run: |
           set -euo pipefail
           printf '%s  %s\n' '168f7f17aca50dfac899a1061db3e597140d4113bfa925a7019a26c61333763a' '.bootstrap/source.tar.xz' | sha256sum -c -
-          tar -xJf .bootstrap/source.tar.xz -C .
+          tar -xJf .bootstrap/source.tar.xz -C . --exclude='./.github/workflows/ci.yml'
           test -f supabase/schema.sql
           test -f app/builder/page.tsx
           test -f lib/component-registry.ts
           test -f lib/code-generator.ts
           test -f app/'(admin)'/settings/page.tsx
-      - name: Commit all source to main
+      - name: Commit source files to main
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           rm -rf .bootstrap
-          rm .github/workflows/bootstrap.yml
           git add -A
           git commit -m 'feat: implement Supabase-backed no-code SaaS builder'
           git push origin HEAD:main
