@@ -24,7 +24,8 @@ export default async function AdminAiPage(){
  const variables:[AiProvider,string,string,string][]=[
   ["gemini","GEMINI_API_KEY","https://aistudio.google.com/apikey","Google AI Studio"],
   ["deepseek","DEEPSEEK_API_KEY","https://platform.deepseek.com/api_keys","DeepSeek Platform"],
-  ["openai","OPENAI_API_KEY","https://platform.openai.com/api-keys","OpenAI Platform"],\n  ["orcarouter","ORCAROUTER_API_KEY","https://www.orcarouter.ai/console","OrcaRouter (Free)"]
+  ["openai","OPENAI_API_KEY","https://platform.openai.com/api-keys","OpenAI Platform"],
+  ["orcarouter","ORCAROUTER_API_KEY","https://www.orcarouter.ai/console","OrcaRouter (Free)"]
  ];
  return <main className="min-h-dvh bg-[#0f172a] px-4 py-7 text-slate-100 sm:px-6">
   <div className="mx-auto max-w-5xl">
