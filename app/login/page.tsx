@@ -38,7 +38,7 @@ export default async function LoginPage({searchParams}:{searchParams:Promise<{er
      {register&&<p className="flex items-start gap-2 text-xs leading-6 text-slate-400"><CheckCircle2 size={16} className="mt-1 shrink-0 text-emerald-400"/> Tài khoản sẽ được tạo bằng Supabase. Có thể cần xác nhận qua email.</p>}
      <button type="submit" className="brand-bg flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-4 text-sm font-black text-white shadow-lg shadow-orange-600/20 transition hover:brightness-110">{register?"Tạo tài khoản và bắt đầu":"Đăng nhập vào Studio"} <ArrowRight size={18}/></button>
     </form>
-    <div className="mt-7 flex flex-col items-center gap-3 text-center text-xs text-slate-400"><p className="flex items-center gap-2"><ShieldCheck size={15} className="text-emerald-400"/> Chúng tôi không yêu cầu OTP ngân hàng hoặc thông tin thẻ.</p><p>Quên mật khẩu? Liên hệ quản trị để được hỗ trợ khôi phục tài khoản.</p></div>
+    <div className="mt-7 flex flex-col items-center gap-3 text-center text-xs text-slate-400"><p className="flex items-center gap-2"><ShieldCheck size={15} className="text-emerald-400"/> Chúng tôi không yêu cầu OTP ngân hàng hoặc thông tin thẻ.</p><p>Quên mật khẩu? <Link href="/reset-password" className="font-semibold text-orange-300 underline underline-offset-4">Đặt lại mật khẩu qua email</Link></p></div>
    </div>
   </section>
  </main>;
