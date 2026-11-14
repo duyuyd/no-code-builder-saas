@@ -3,13 +3,13 @@ import {useCallback,useEffect,useRef,useState} from "react";
 import Link from "next/link";
 import {ArrowLeft,CloudUpload,ExternalLink,Eye,EyeOff,Gamepad2,Plus,Redo2,Save,Trash2,Undo2} from "lucide-react";
 import GameStage from "@/components/GameStage";
-import {validateGameScene,type GameObjectKind,type GameScene} from "@/lib/game-scene";
+import {validateGameScene,type GameObjectKind,type GameScene,type GameSceneTemplate} from "@/lib/game-scene";
 import {saveGameScene,publishGameScene,unpublishGameScene} from "@/app/game-builder/actions";
 
 const field="mt-2 w-full rounded-xl border border-slate-600 bg-slate-900 p-3 text-sm text-white outline-none focus:border-orange-500";
 const round=(v:number)=>Math.round(v*10)/10;
-export default function GameWorkspace({projectId,projectName,initialScene,initialVersion,initialPublished}:{
- projectId:string;projectName:string;initialScene:GameScene;initialVersion:number;initialPublished:boolean
+export default function GameWorkspace({projectId,projectName,initialScene,initialVersion,initialPublished,templates}:{
+ projectId:string;projectName:string;initialScene:GameScene;initialVersion:number;initialPublished:boolean;templates:GameSceneTemplate[]
 }){
  const [scene,setScene]=useState<GameScene>(initialScene);
  const sceneRef=useRef(scene);
@@ -26,6 +26,8 @@ export default function GameWorkspace({projectId,projectName,initialScene,initia
  const [selected,setSelected]=useState<string|null>(null);
  const [past,setPast]=useState<GameScene[]>([]);
  const [future,setFuture]=useState<GameScene[]>([]);
+ const [templateChoice,setTemplateChoice]=useState(templates[0]?.code??"");
+ const pendingDrag=useRef<GameScene|null>(null);
  useEffect(()=>{sceneRef.current=scene;},[scene]);
  const commit=useCallback((next:GameScene)=>{
   setPast(previous=>[...previous.slice(-39),sceneRef.current]);setFuture([]);
@@ -63,6 +65,23 @@ export default function GameWorkspace({projectId,projectName,initialScene,initia
  },[scene,dirty,preview,saveNonce,flush]);
  const updateObject=(id:string,patch:Partial<GameScene["objects"][number]>)=>{
   commit({...sceneRef.current,objects:sceneRef.current.objects.map(o=>o.id===id?{...o,...patch}:o)});
+ };
+ const dragMove=(id:string,x:number,y:number)=>{
+  if(pendingDrag.current===null)pendingDrag.current=sceneRef.current;
+  const next={...sceneRef.current,objects:sceneRef.current.objects.map(o=>o.id===id?{...o,x,y}:o)};
+  sceneRef.current=next;setScene(next);setDirty(true);
+ };
+ const completeDrag=()=>{
+  const initial=pendingDrag.current;
+  if(initial){setPast(previous=>[...previous.slice(-39),initial]);setFuture([]);pendingDrag.current=null;}
+ };
+ const applyTemplate=()=>{
+  const template=templates.find(item=>item.code===templateChoice);
+  if(!template||!validateGameScene(template.scene))return;
+  if(dirty&&!window.confirm("Thay bản nháp hiện tại bằng mẫu này? Bạn có thể Hoàn tác trong phiên thiết kế."))return;
+  commit({...template.scene,player:{...template.scene.player},objects:template.scene.objects.map(o=>({...o,id:crypto.randomUUID()}))});
+  setSelected(null);setTool("select");setPreview(false);
+  setMessage("Đã tải mẫu "+template.name+". Màn chơi sẽ tự lưu sau 2 giây.");
  };
  const chosen=scene.objects.find(o=>o.id===selected);
  const addObject=(x:number,y:number)=>{
@@ -112,6 +131,15 @@ export default function GameWorkspace({projectId,projectName,initialScene,initia
     <button type="button" disabled={publishing||saving} onClick={()=>void publish()} className={button+" bg-orange-500 text-white"}><CloudUpload size={16}/>{publishing?"Đang xuất bản":"Xuất bản"}</button>
    </div>
   </header>
+  {!preview&&templates.length>0&&<section className="mb-4 flex flex-wrap items-end gap-3 rounded-2xl border border-slate-700 bg-[#1e293b] p-4">
+    <label className="min-w-48 flex-1 text-xs font-semibold text-slate-200">Khởi tạo bản đồ theo thể loại
+     <select value={templateChoice} onChange={e=>setTemplateChoice(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-600 bg-slate-900 px-3 py-3 text-xs text-white">
+      {templates.map(t=><option key={t.code} value={t.code}>{t.genre} · {t.name}</option>)}
+     </select>
+    </label>
+    <button type="button" onClick={applyTemplate} className="rounded-xl bg-orange-500 px-5 py-3 text-xs font-bold text-white">Dùng bản đồ này</button>
+    <p className="w-full text-xs leading-5 text-amber-200">Đây là mẫu bản đồ tương tác 2D để chỉnh sửa; chưa có trận MOBA online, RPG nhiều người chơi hoặc bóng đá vật lý.</p>
+   </section>}
   {message&&<p role="status" className="mb-4 rounded-xl border border-slate-700 bg-[#1e293b] p-3 text-sm text-orange-200">{message}</p>}
   {published&&<div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-700 bg-emerald-950/30 p-3 text-xs text-emerald-200">
    <a href={"/play/"+projectId} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 font-bold"><ExternalLink size={16}/> Game đang công khai · Mở để chơi</a>
@@ -132,7 +160,7 @@ export default function GameWorkspace({projectId,projectName,initialScene,initia
    </section>}
    <div className="order-1 min-w-0 rounded-2xl border border-slate-700 bg-[#1e293b] p-3 sm:p-5 xl:order-2">
     <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-bold">{scene.title}</p><span className="text-xs text-slate-400">{preview?"ĐANG CHƠI THỬ":"KHUNG THIẾT KẾ 2D"}</span></div>
-    <GameStage key={preview?"playing":"editing"} scene={scene} mode={preview?"play":"edit"} selectedId={selected} onSelect={setSelected} onAddObject={addObject} onMoveObject={(id,x,y)=>updateObject(id,{x:round(x),y:round(y)})}/>
+    <GameStage key={preview?"playing":"editing"} scene={scene} mode={preview?"play":"edit"} selectedId={selected} onSelect={setSelected} onAddObject={addObject} onMoveObject={(id,x,y)=>dragMove(id,round(x),round(y))} onMoveEnd={completeDrag}/>
    </div>
    {!preview&&<section className="order-3 space-y-4 rounded-2xl border border-slate-700 bg-[#1e293b] p-4">
     <h2 className="text-sm font-bold">Thuộc tính màn chơi</h2>

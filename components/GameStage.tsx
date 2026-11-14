@@ -6,9 +6,9 @@ type State={x:number;y:number;collected:string[];won:boolean;started:boolean;sec
 const initial=(scene:GameScene):State=>({x:scene.player.x,y:scene.player.y,collected:[],won:false,started:false,seconds:0,steps:0});
 const clamp=(v:number,min:number,max:number)=>Math.min(max,Math.max(min,v));
 const vector:Record<string,[number,number]>={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],w:[0,-1],s:[0,1],a:[-1,0],d:[1,0]};
-export default function GameStage({scene,mode,onMoveObject,onAddObject,onSelect,selectedId}:{
+export default function GameStage({scene,mode,onMoveObject,onMoveEnd,onAddObject,onSelect,selectedId}:{
  scene:GameScene;mode:"edit"|"play";
- onMoveObject?:(id:string,x:number,y:number)=>void;
+ onMoveObject?:(id:string,x:number,y:number)=>void;onMoveEnd?:()=>void;
  onAddObject?:(x:number,y:number)=>void;onSelect?:(id:string|null)=>void;selectedId?:string|null
 }){
  const [state,setState]=useState<State>(()=>initial(scene));
@@ -90,8 +90,8 @@ export default function GameStage({scene,mode,onMoveObject,onAddObject,onSelect,
       if(mode!=="edit"||dragging.current!==o.id)return;
       const next=position(e,o);if(next)onMoveObject?.(o.id,next.x,next.y);
      }}
-     onPointerUp={()=>{dragging.current=null;}}
-     onPointerCancel={()=>{dragging.current=null;}}
+     onPointerUp={()=>{dragging.current=null;onMoveEnd?.();}}
+     onPointerCancel={()=>{dragging.current=null;onMoveEnd?.();}}
      className={"absolute z-10 flex items-center justify-center rounded-md border text-center leading-none "+(mode==="edit"?"cursor-grab active:cursor-grabbing ":"pointer-events-none ")+(selectedId===o.id&&mode==="edit"?"border-orange-400 bg-orange-500/30 ring-2 ring-orange-400":"border-white/20 bg-white/10")}
      style={{left:o.x+"%",top:o.y+"%",width:o.w+"%",height:o.h+"%",fontSize:"clamp(15px,2.6vw,38px)"}}>{o.label|| (o.kind==="coin"?"⭐":o.kind==="goal"?"🏁":"🧱")}
     </div>

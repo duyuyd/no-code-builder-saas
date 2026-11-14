@@ -11,7 +11,7 @@ const presetCache=new Map<string,Promise<ComponentPreset[]>>();
 function getPresets(type:string):Promise<ComponentPreset[]>{
  let req=presetCache.get(type);
  if(!req){
-  req=Promise.resolve(createClient().from("component_presets").select("component_type,variant_key,label_vi,context_vi,props_override,style_override,sort_order")
+  req=Promise.resolve(createClient().from("component_presets").select("component_type,variant_key,label_vi,context_vi,props_override,style_override,children_template,sort_order")
    .eq("component_type",type).order("sort_order")).then(({data,error})=>{
     if(error)throw new Error(error.message);
     return (data??[]) as ComponentPreset[];
@@ -77,6 +77,7 @@ export default function PropertiesPanel({node,userId,onChange,onDelete,onApplyPr
        </div>
        <p className="truncate px-1 text-[11px] font-bold text-slate-100">{preset.label_vi.split(" · ")[0]}</p>
        <p className="truncate px-1 text-[10px] text-slate-400">{preset.context_vi}</p>
+       {preset.children_template?.length>0&&<p className="px-1 text-[10px] text-emerald-300">Có khối nội dung dựng sẵn</p>}
       </button>)}</div>}
     </section>
     {definition.kind==="image"&&<div className="rounded-xl border border-slate-700 bg-slate-900 p-3">

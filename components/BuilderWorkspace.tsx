@@ -31,6 +31,16 @@ function commit(state: History, nodes: BuilderNode[], selectedId: string | null 
   if (nodes === state.nodes) return state;
   return { nodes, selectedId, past: [...state.past.slice(-49), state.nodes], future: [] };
 }
+function fillEmptyContainer(nodes:BuilderNode[],id:string,children:BuilderNode[]):BuilderNode[]{
+  return nodes.map(n=>{
+    if(n.id===id)return {...n,children};
+    if(!n.children.length)return n;
+    return {...n,children:fillEmptyContainer(n.children,id,children)};
+  });
+}
+function cloneNodes(nodes:BuilderNode[]):BuilderNode[]{
+  return nodes.map(n=>({...n,id:crypto.randomUUID(),props:{...n.props},style:{...n.style},children:cloneNodes(n.children)}));
+}
 function reducer(state: History, action: Action): History {
   switch (action.type) {
     case "restore": return { ...state, nodes: action.nodes, selectedId: state.selectedId && findNode(action.nodes, state.selectedId) ? state.selectedId : null };
@@ -49,6 +59,12 @@ function reducer(state: History, action: Action): History {
       for (const [key,value] of Object.entries(action.preset.style_override)) {
         if (typeof value === "string" && key in definition.styleSchema)
           next = updateNode(next, action.id, "style", key, value);
+      }
+      // Build a useful nested section on the first preset application, but never erase user content.
+      if(definition.allowsChildren && current.children.length===0 &&
+         Array.isArray(action.preset.children_template) &&
+         action.preset.children_template.length && validateUiTree(action.preset.children_template)){
+        next=fillEmptyContainer(next,action.id,cloneNodes(action.preset.children_template));
       }
       return validateUiTree(next) ? commit(state,next,action.id) : state;
     }

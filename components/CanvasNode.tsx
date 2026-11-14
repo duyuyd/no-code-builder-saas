@@ -1,6 +1,5 @@
 "use client";
 import { createElement, type CSSProperties, type ReactNode } from "react";
-import { motion } from "framer-motion";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -81,8 +80,8 @@ export default function CanvasNode({ node, selectedId, onSelect }: CanvasNodePro
       <button type="button" ref={setActivatorNodeRef} {...attributes} {...listeners} aria-label="Kéo để sắp xếp thành phần"
         className="drag-handle flex size-7 shrink-0 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-200 hover:text-orange-500"><GripVertical size={17}/></button>
     </div>
-    <motion.div layout transition={{ layout: { duration: 0.17 } }} className="min-w-0 overflow-hidden rounded-lg">
+    <div className="min-w-0 overflow-hidden rounded-lg">
       <RenderElement node={node} selectedId={selectedId} onSelect={onSelect}/>
-    </motion.div>
+    </div>
   </div>;
 }
