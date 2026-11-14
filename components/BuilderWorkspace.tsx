@@ -8,13 +8,15 @@ import { CheckCircle2, ChevronDown, CloudUpload, Code2, Download, FileCode2, Lay
 import ComponentPalette from "./ComponentPalette";
 import BuilderCanvas from "./BuilderCanvas";
 import PropertiesPanel from "./PropertiesPanel";
-import { createBuilderNode, getDefinition, type BuilderNode } from "@/lib/component-registry";
+import { createBuilderNode, getDefinition, validateUiTree, type BuilderNode } from "@/lib/component-registry";
+import { mergeUiTrees } from "@/lib/merge-ui-tree";
 import { findLocation, findNode, insertNode, moveNode, removeNode, updateNode, type DropTarget } from "@/lib/builder-tree";
 import { generateHtmlCode, generateReactCode } from "@/lib/code-generator";
 import { savePageTree } from "@/app/builder/actions";
 
 type History = { past: BuilderNode[][]; nodes: BuilderNode[]; future: BuilderNode[][]; selectedId: string | null };
 type Action =
+  | { type: "restore"; nodes: BuilderNode[] }
   | { type: "select"; id: string | null }
   | { type: "add"; node: BuilderNode; target: DropTarget }
   | { type: "edit"; id: string; field: "props" | "style"; key: string; value: string }
@@ -28,6 +30,7 @@ function commit(state: History, nodes: BuilderNode[], selectedId: string | null 
 }
 function reducer(state: History, action: Action): History {
   switch (action.type) {
+    case "restore": return { ...state, nodes: action.nodes, selectedId: state.selectedId && findNode(action.nodes, state.selectedId) ? state.selectedId : null };
     case "select": return { ...state, selectedId: action.id };
     case "add": return commit(state, insertNode(state.nodes, action.target, action.node), action.node.id);
     case "edit": return commit(state, updateNode(state.nodes, action.id, action.field, action.key, action.value));
@@ -121,10 +124,36 @@ export default function BuilderWorkspace({ pageId, pagePath, projectName, initia
   const [mobilePaletteOpen, setMobilePaletteOpen] = useState(false);
   const [mobilePropertiesOpen, setMobilePropertiesOpen] = useState(false);
   const latestNodes = useRef(state.nodes);
+  const baseTree = useRef(initialNodes);
   const savedTree = useRef(JSON.stringify(initialNodes));
+  const draftKey = `no-code-builder:draft:${pageId}`;
   const version = useRef(initialVersion);
   const isSaving = useRef(false);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
+
+  // Restore unsaved edits if this tab was refreshed. Supabase is the canonical store.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(draftKey);
+      if (!raw) return;
+      const draft: unknown = JSON.parse(raw);
+      if (!draft || typeof draft !== "object") return;
+      const value = draft as { nodes?: unknown; base?: unknown; version?: unknown };
+      if (!validateUiTree(value.nodes) || !validateUiTree(value.base) ||
+        !Number.isSafeInteger(value.version) || Number(value.version) < 1) return;
+      if (JSON.stringify(value.nodes) === JSON.stringify(initialNodes)) {
+        sessionStorage.removeItem(draftKey);
+        return;
+      }
+      baseTree.current = value.base;
+      savedTree.current = JSON.stringify(value.base);
+      version.current = Number(value.version);
+      latestNodes.current = value.nodes;
+      dispatch({ type: "restore", nodes: value.nodes });
+    } catch { /* Optional browser storage may be unavailable. */ }
+    // Run only when navigating to a new page; not on Server Component refresh.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageId]);
 
   const flushSave = useCallback(async () => {
     if (isSaving.current) return;
@@ -132,32 +161,50 @@ export default function BuilderWorkspace({ pageId, pagePath, projectName, initia
     isSaving.current = true;
     setStatus("saving");
     try {
-      for (let index = 0; index < 20; index++) {
+      for (let index = 0; index < 4; index++) {
         const snapshot = latestNodes.current;
         const serialized = JSON.stringify(snapshot);
         if (savedTree.current === serialized) break;
-        const result = await savePageTree(pageId, snapshot, version.current);
+        const result = await savePageTree(pageId, snapshot, version.current, baseTree.current);
         if (!result.ok) throw new Error(result.error);
+
+        const currentDraft = latestNodes.current;
+        const reconciled = mergeUiTrees(snapshot, currentDraft, result.tree);
         version.current = result.version;
-        savedTree.current = serialized;
+        baseTree.current = result.tree;
+        savedTree.current = JSON.stringify(result.tree);
+        if (!reconciled) throw new Error("Có chỉnh sửa trùng nhau khi đang lưu. Bản nháp vẫn được giữ trên thiết bị.");
+        if (JSON.stringify(reconciled) !== JSON.stringify(currentDraft)) {
+          latestNodes.current = reconciled;
+          dispatch({ type: "restore", nodes: reconciled });
+        }
       }
-      setStatus(savedTree.current === JSON.stringify(latestNodes.current) ? "saved" : "unsaved");
+      const allSaved = savedTree.current === JSON.stringify(latestNodes.current);
+      setStatus(allSaved ? "saved" : "unsaved");
       setErrorMessage("");
+      if (allSaved) {
+        try { sessionStorage.removeItem(draftKey); } catch { /* storage disabled */ }
+      }
     } catch (error) {
       setStatus("error");
-      setErrorMessage(error instanceof Error ? error.message : "Không thể lưu trang.");
+      setErrorMessage(error instanceof Error ? error.message : "Không thể lưu trang. Bản nháp chưa bị xóa.");
     } finally {
       isSaving.current = false;
     }
-  }, [pageId]);
+  }, [pageId, draftKey]);
 
   useEffect(() => {
     latestNodes.current = state.nodes;
     if (savedTree.current === JSON.stringify(state.nodes)) return;
+    try {
+      sessionStorage.setItem(draftKey, JSON.stringify({
+        nodes: state.nodes, base: baseTree.current, version: version.current,
+      }));
+    } catch { /* Supabase saving remains available without tab storage. */ }
     setStatus("unsaved");
     const timer = window.setTimeout(() => { void flushSave(); }, 2000);
     return () => window.clearTimeout(timer);
-  }, [state.nodes, flushSave]);
+  }, [state.nodes, flushSave, draftKey]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -225,7 +272,10 @@ export default function BuilderWorkspace({ pageId, pagePath, projectName, initia
         </div>
       </details>
     </div>
-    {status === "error" && <p role="alert" className="border-b border-rose-500/30 bg-rose-500/10 px-4 py-2 text-xs text-rose-200">{errorMessage}</p>}
+    {status === "error" && <div role="alert" className="flex flex-wrap items-center justify-between gap-2 border-b border-rose-500/30 bg-rose-500/10 px-4 py-2 text-xs text-rose-200">
+      <span>{errorMessage}</span>
+      <button type="button" onClick={() => void flushSave()} className="shrink-0 rounded-lg border border-rose-400/50 px-3 py-1.5 font-semibold text-white hover:bg-rose-500/20">Thử lưu lại</button>
+    </div>}
     <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={() => setDragging("")}>
       <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[270px_minmax(0,1fr)_320px]">
         <div className="hidden min-h-0 lg:block"><ComponentPalette onAdd={onAdd}/></div>

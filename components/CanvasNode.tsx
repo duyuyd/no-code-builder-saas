@@ -42,9 +42,18 @@ function RenderElement({ node, selectedId, onSelect }: CanvasNodeProps) {
       return <table style={style} className="w-full overflow-hidden rounded-xl border border-slate-200 bg-white text-xs shadow-sm"><tbody>{rows.map((row,i) => <tr key={i}>{row.map((cell,j) => i === 0 ? <th className="border-b border-r border-slate-200 bg-slate-100 p-2 text-left" key={j}>{cell}</th> : <td className="border-b border-r border-slate-100 p-2" key={j}>{cell}</td>)}</tr>)}</tbody></table>;
     }
     case "chart": {
-      const values = (p.values ?? "").split(",").map(Number).filter(n => Number.isFinite(n) && n >= 0).slice(0, 50);
+      const values = (p.values ?? "").split(",").map(value => value.trim()).filter(Boolean)
+        .map(Number).filter(n => Number.isFinite(n) && n >= 0).slice(0, 50);
       const max = Math.max(1, ...values);
-      return <div style={style} className="flex min-h-44 items-end gap-2 rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">{values.length ? values.map((value,i) => <div key={i} title={String(value)} className="brand-bg min-w-3 flex-1 rounded-t-md opacity-90 transition-opacity hover:opacity-100" style={{height: `${Math.max(1, value/max*100)}%`, minHeight: `${Math.max(2, value/max*130)}px`}} />) : <span className="p-2 text-xs text-slate-400">Nhập dữ liệu cho biểu đồ</span>}</div>;
+      return <div style={style} className="flex min-h-32 flex-col justify-center rounded-xl border border-slate-200 bg-slate-50/80 p-4 shadow-sm">
+        {values.length === 0 ? <p className="py-8 text-center text-xs text-slate-500">Chưa có dữ liệu biểu đồ. Chọn thành phần rồi nhập số liệu trong Thuộc tính.</p> :
+          <div className="flex h-40 w-full items-end gap-2 border-b border-slate-300 pb-1">
+            {values.map((value, i) => <div key={i} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1" title={String(value)}>
+              <span className="truncate text-[10px] text-slate-500">{value}</span>
+              <div className="w-full min-w-2 rounded-t-md bg-orange-500 shadow-sm" style={{ height: `${Math.max(2, value / max * 100)}%` }} />
+            </div>)}
+          </div>}
+      </div>;
     }
     case "iframe": return src ? <iframe src={src} title={p.title ?? "Embed"} style={style} sandbox="allow-scripts allow-forms" className="min-h-40 w-full border" /> : <div style={style}>Thiết lập URL nhúng</div>;
     case "container": {
