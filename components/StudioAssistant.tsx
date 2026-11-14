@@ -4,7 +4,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import {BookOpen,LoaderCircle,MessageCircle,RotateCcw,Send,Sparkles,X} from "lucide-react";
 import {askStudioAssistant,getStudioAssistantStatus,type AssistantResponse,type AssistantStatus} from "@/app/builder/assistant-actions";
 
-type Message={from:"user"|"studio";text:string;mode?:"offline"|"gemini"|"deepseek"|"openai"};
+type Message={from:"user"|"studio";text:string;mode?:"offline"|"gemini"|"deepseek"|"openai"|"orcarouter"};
 export default function StudioAssistant({projectId,pageId,selectedId,selectedType,blockCount,contextKind="builder"}:{
  projectId:string;pageId:string;selectedId:string|null;selectedType:string|null;blockCount:number;contextKind?:"builder"|"game"
 }){
