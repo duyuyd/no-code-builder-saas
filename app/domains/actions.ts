@@ -54,7 +54,7 @@ export async function registerTenantDomain(_prev:TenantActionState,form:FormData
    // Vercel may already have assigned this hostname to the same project.
    result=await inspectVercelProjectDomain(domain).catch(()=>{throw err});
  }
- const verified=result.verified===true && result.misconfigured!==true;
+ const verified=result.verified===true && result.misconfigured===false;
  const {error}=await privileged.from("tenants").update({
     custom_domain:domain,domain_status:verified?"verified":"pending",
     domain_verification:checks(result)
@@ -76,7 +76,7 @@ export async function verifyTenantDomain(_prev:TenantActionState,_form:FormData)
  catch{
    result=await inspectVercelProjectDomain(domain);
  }
- const verified=result.verified===true && result.misconfigured!==true;
+ const verified=result.verified===true && result.misconfigured===false;
  const {error}=await privilegedSupabase().from("tenants").update({
    domain_status:verified?"verified":"pending",domain_verification:checks(result)
  }).eq("id",tenant.id).eq("owner_id",user.id);
