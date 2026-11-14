@@ -17,8 +17,10 @@ export default async function BuilderPage({ searchParams }: {
 
   const query = await searchParams;
   const { siteTitle } = await getSiteSettings();
+  const {data:templates,error:templatesError}=await supabase.from("starter_templates").select("id,name,kind,description").eq("is_active",true).order("name");
+  if(templatesError)throw new Error(templatesError.message);
   const { data: projects, error: projectsError } = await supabase.from("projects")
-    .select("id,name").order("created_at", { ascending: false });
+    .select("id,name,kind").order("created_at", { ascending: false });
   if (projectsError) throw new Error(projectsError.message);
   const project = query.project ? projects?.find(p => p.id === query.project) : projects?.[0];
   if (query.project && !project) notFound();
@@ -36,6 +38,9 @@ export default async function BuilderPage({ searchParams }: {
         <label className="block text-sm font-medium text-slate-200" htmlFor="project-name">Tên dự án
           <input id="project-name" name="name" required maxLength={120} autoFocus placeholder="Nhập tên dự án của bạn" className="mt-2 w-full rounded-xl border border-slate-600 bg-slate-900/75 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15"/>
         </label>
+        <label className="block text-xs font-bold text-slate-300">Mẫu sản phẩm
+          <select name="template_id" className="mt-2 w-full rounded-xl border border-slate-600 bg-slate-900 p-3 text-sm text-white"><option value="">Trang trắng</option>{(templates??[]).map(t=><option key={t.id} value={t.id}>{t.kind==="game"?"🎮":t.kind==="app"?"📱":"🌐"} {t.name}</option>)}</select>
+        </label>
         <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 font-semibold text-white shadow-lg shadow-orange-500/20 transition hover:bg-orange-400"><FolderPlus size={18}/>Tạo dự án<ChevronRight size={17}/></button>
       </form>
     </section>
@@ -49,6 +54,7 @@ export default async function BuilderPage({ searchParams }: {
   if (!page) throw new Error("Dự án chưa có trang. Hãy kiểm tra dữ liệu hoặc tạo trang đầu tiên.");
   if (!validateUiTree(page.ui_tree)) throw new Error("Cấu trúc giao diện đã lưu không hợp lệ.");
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  const {data:published}=await supabase.from("published_pages").select("path").eq("project_id",project.id).eq("is_live",true).limit(1);
 
   return <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-[#0f172a] text-slate-100">
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-slate-700/75 bg-[#0f172a] px-3 sm:px-5">
@@ -68,7 +74,9 @@ export default async function BuilderPage({ searchParams }: {
           <div className="absolute right-0 z-50 mt-2 w-72 rounded-2xl border border-slate-700 bg-slate-800 p-3 shadow-2xl">
             <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-slate-400">Dự án của tôi</p>
             <nav className="mb-3 max-h-48 space-y-1 overflow-y-auto">{(projects ?? []).map(p => <Link key={p.id} href={`/builder?project=${p.id}`} className={`block truncate rounded-lg px-3 py-2 text-sm transition ${p.id === project.id ? "bg-orange-500/15 font-semibold text-orange-300" : "text-slate-300 hover:bg-slate-700"}`}>{p.name}</Link>)}</nav>
-            <form action={createProject} className="flex gap-2"><input name="name" required maxLength={120} placeholder="Tên dự án mới" aria-label="Tên dự án mới" className="min-w-0 flex-1 rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-xs outline-none focus:border-orange-500"/><button className="rounded-lg bg-orange-500 px-3 text-white" title="Tạo dự án mới" aria-label="Tạo dự án mới"><Plus size={16}/></button></form>
+            <form action={createProject} className="space-y-2"><input name="name" required maxLength={120} placeholder="Tên dự án mới" aria-label="Tên dự án mới" className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-xs outline-none focus:border-orange-500"/>
+            <select name="template_id" className="w-full rounded-lg border border-slate-600 bg-slate-900 p-2 text-xs text-white"><option value="">Trang trắng</option>{(templates??[]).map(t=><option key={t.id} value={t.id}>{t.kind==="game"?"🎮":t.kind==="app"?"📱":"🌐"} {t.name}</option>)}</select>
+            <button className="w-full rounded-lg bg-orange-500 p-2 text-xs font-bold text-white">Tạo sản phẩm</button></form>
           </div>
         </details>
         {profile?.role === "admin" && <Link href="/settings" title="Cài đặt quản trị" aria-label="Cài đặt quản trị" className="rounded-lg border border-slate-700 bg-slate-800 p-2.5 text-slate-300 transition hover:text-orange-300"><Settings2 size={16}/></Link>}
@@ -82,6 +90,6 @@ export default async function BuilderPage({ searchParams }: {
         <form action={createPage} className="absolute right-0 z-50 mt-2 flex w-64 gap-2 rounded-xl border border-slate-700 bg-slate-800 p-3 shadow-2xl"><input type="hidden" name="project_id" value={project.id}/><input name="path" required placeholder="/trang-moi" aria-label="Đường dẫn trang mới" className="min-w-0 flex-1 rounded-lg border border-slate-600 bg-slate-900 px-2 py-2 text-xs outline-none focus:border-orange-500"/><button className="rounded-lg bg-orange-500 px-2 text-white" title="Thêm trang" aria-label="Thêm trang"><Plus size={16}/></button></form>
       </details>
     </div>
-    <BuilderWorkspace key={page.id} pageId={page.id} pagePath={page.path} projectName={project.name} initialNodes={page.ui_tree} initialVersion={page.version}/>
+    <BuilderWorkspace key={page.id} pageId={page.id} projectId={project.id} projectKind={project.kind} pagePath={page.path} previewPages={(pages??[]).map(p=>({path:p.path,ui_tree:p.ui_tree}))} initiallyPublished={Boolean(published?.length)} projectName={project.name} initialNodes={page.ui_tree} initialVersion={page.version}/>
   </div>;
 }

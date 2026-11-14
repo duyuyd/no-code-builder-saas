@@ -6,16 +6,28 @@ import { validateUiTree, type BuilderNode } from "@/lib/component-registry";
 import { mergeUiTrees } from "@/lib/merge-ui-tree";
 export type SaveResult = { ok: true; version: number; tree: BuilderNode[] } | { ok: false; error: string; reason?: "conflict" | "forbidden" | "invalid" };
 export async function createProject(formData: FormData) {
+  const templateId = String(formData.get("template_id") ?? "").trim();
+  if (templateId && !/^[a-f0-9-]{36}$/i.test(templateId)) throw new Error("Mẫu không hợp lệ.");
   const name = String(formData.get("name") ?? "").trim();
   if (!name || name.length > 120) throw new Error("Tên dự án không hợp lệ.");
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  let kind = "website";
+  let templatePages: {path:string;ui_tree:BuilderNode[]}[] = [{path:"/",ui_tree:[]}];
+  if (templateId) {
+    const {data:template,error:templateError}=await supabase.from("starter_templates").select("kind,pages").eq("id",templateId).eq("is_active",true).single();
+    if (templateError || !template || !Array.isArray(template.pages)) throw new Error("Không thể tải mẫu.");
+    kind=template.kind;
+    templatePages=template.pages;
+    if(!templatePages.length || templatePages.length>20 || !templatePages.every(p => /^\\/[a-z0-9/_-]*$/i.test(p.path) && validateUiTree(p.ui_tree))) throw new Error("Nội dung mẫu không hợp lệ.");
+  }
   const { data: project, error } = await supabase.from("projects")
-    .insert({ owner_id: user.id, name }).select("id").single();
+    .insert({ owner_id: user.id, name, kind }).select("id").single();
   if (error || !project) throw new Error(error?.message ?? "Không thể tạo dự án.");
+  const clone = (nodes: BuilderNode[]):BuilderNode[] => nodes.map(n=>({...n,id:crypto.randomUUID(),props:{...n.props},style:{...n.style},children:clone(n.children)}));
   const { error: pageError } = await supabase.from("pages")
-    .insert({ project_id: project.id, path: "/", ui_tree: [] });
+    .insert(templatePages.map(p=>({project_id:project.id,path:p.path,ui_tree:clone(p.ui_tree)})));
   if (pageError) {
     await supabase.from("projects").delete().eq("id", project.id);
     throw new Error(pageError.message);
@@ -73,4 +85,31 @@ export async function savePageTree(pageId: string, tree: BuilderNode[], expected
     version = current.version;
   }
   return { ok: false, reason: "conflict", error: "Trang đang được cập nhật ở phiên khác. Bản nháp của bạn vẫn được giữ." };
+}
+
+export type PublishResult = {ok:true;url:string;count:number} | {ok:false;error:string};
+export async function publishProject(projectId:string):Promise<PublishResult> {
+  if(!/^[a-f0-9-]{36}$/i.test(projectId)) return {ok:false,error:"Mã dự án không hợp lệ."};
+  const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();
+  if(!user)return {ok:false,error:"Cần đăng nhập."};
+  const {data:project}=await supabase.from("projects").select("id,name,owner_id").eq("id",projectId).maybeSingle();
+  if(!project||project.owner_id!==user.id)return {ok:false,error:"Bạn không sở hữu dự án."};
+  const {data:pages,error}=await supabase.from("pages").select("path,ui_tree").eq("project_id",projectId);
+  if(error||!pages?.length)return {ok:false,error:error?.message??"Dự án chưa có trang."};
+  if(pages.some(p=>!validateUiTree(p.ui_tree)))return {ok:false,error:"Dữ liệu trang không hợp lệ."};
+  const {error:writeError}=await supabase.from("published_pages").upsert(pages.map(p=>({
+    project_id:projectId,path:p.path,ui_tree:p.ui_tree,site_title:project.name,is_live:true,published_at:new Date().toISOString()
+  })),{onConflict:"project_id,path"});
+  if(writeError)return {ok:false,error:writeError.message};
+  return {ok:true,url:`/s/${projectId}`,count:pages.length};
+}
+export async function unpublishProject(projectId:string):Promise<PublishResult> {
+  if(!/^[a-f0-9-]{36}$/i.test(projectId))return {ok:false,error:"Mã dự án không hợp lệ."};
+  const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();
+  if(!user)return {ok:false,error:"Cần đăng nhập."};
+  const {data:project}=await supabase.from("projects").select("owner_id").eq("id",projectId).maybeSingle();
+  if(!project||project.owner_id!==user.id)return {ok:false,error:"Bạn không sở hữu dự án."};
+  const {error}=await supabase.from("published_pages").update({is_live:false}).eq("project_id",projectId);
+  if(error)return {ok:false,error:error.message};
+  return {ok:true,url:`/s/${projectId}`,count:0};
 }

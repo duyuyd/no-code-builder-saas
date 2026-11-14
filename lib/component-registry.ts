@@ -1,6 +1,6 @@
 export type FieldType = "text" | "textarea" | "url" | "color" | "number" | "boolean";
 export type ComponentCategory = "basic" | "layout" | "form" | "media" | "data";
-export type RenderKind = "text" | "button" | "link" | "image" | "video" | "audio" | "divider" | "input" | "textarea" | "select" | "checkbox" | "range" | "table" | "chart" | "progress" | "list" | "iframe" | "container";
+export type RenderKind = "text" | "button" | "link" | "image" | "video" | "audio" | "divider" | "input" | "textarea" | "select" | "checkbox" | "range" | "table" | "chart" | "progress" | "list" | "iframe" | "container" | "quiz";
 export type FieldSchema = { label: string; type: FieldType; defaultValue: string };
 export type ComponentDefinition = {
   type: string;
@@ -23,7 +23,7 @@ export type BuilderNode = {
 const field = (label: string, type: FieldType, defaultValue = ""): FieldSchema => ({ label, type, defaultValue });
 const propsByKind: Record<RenderKind, Record<string, FieldSchema>> = {
   text: { text: field("Nội dung", "textarea", "Nội dung") },
-  button: { text: field("Nhãn nút", "text", "Nút bấm") },
+  button: { text: field("Nhãn nút", "text", "Nút bấm"), href: field("Liên kết khi nhấn (/trang hoặc URL)", "text", "") },
   link: { text: field("Nhãn liên kết", "text", "Liên kết"), href: field("URL", "url") },
   image: { src: field("URL ảnh", "url"), alt: field("Mô tả ảnh", "text") },
   video: { src: field("URL video", "url") },
@@ -39,7 +39,8 @@ const propsByKind: Record<RenderKind, Record<string, FieldSchema>> = {
   progress: { value: field("Giá trị", "number", "0"), max: field("Tổng", "number", "100") },
   list: { items: field("Một dòng cho mỗi mục", "textarea") },
   iframe: { src: field("URL nhúng", "url"), title: field("Tiêu đề", "text", "Embedded Content") },
-  container: { label: field("Nhãn vùng chứa", "text") },
+  container: { label: field("Nhãn vùng chứa", "text"), recipientEmail: field("Email nhận biểu mẫu", "text", "") },
+  quiz: { title: field("Tên trò chơi", "text", "Trắc nghiệm"), questions: field("Mỗi dòng: câu hỏi|A|B|C|D|đáp án (1-4)", "textarea", "") },
 };
 const baseStyles = {
   color: field("Màu chữ", "color", "#1e293b"),
@@ -119,6 +120,7 @@ export const COMPONENT_REGISTRY: readonly ComponentDefinition[] = [
   define("slider", "Thanh trượt", "form", "range", "input"),
   define("range", "Thanh khoảng giá trị", "form", "range", "input"),
   define("progress", "Tiến trình", "data", "progress", "progress"),
+  define("quiz", "Trắc nghiệm tương tác", "data", "quiz", "div"),
   define("meter", "Thước đo", "data", "progress", "meter"),
   define("table", "Bảng dữ liệu", "data", "table", "table"),
   define("chart", "Biểu đồ", "data", "chart", "div"),
@@ -193,7 +195,7 @@ export function validateUiTree(value: unknown): value is BuilderNode[] {
 export function safeUrl(value: string): string {
   const url = value.trim();
   if (url.startsWith("/") && !url.startsWith("//")) return url;
-  try { const parsed = new URL(url); if (parsed.protocol === "https:" || parsed.protocol === "http:") return url; } catch { /* invalid */ }
+  try { const parsed = new URL(url); if (["https:", "http:", "mailto:"].includes(parsed.protocol)) return url; } catch { /* invalid */ }
   return "";
 }
 export function sanitizeNumeric(value: string, fallback: number, min = 0, max = 2000): number {
@@ -215,6 +217,7 @@ export function nodeCss(node: BuilderNode): Record<string, string | number> {
     css.flexDirection = node.type === "row" || node.type === "flex" || node.type === "navigation" || node.type === "toolbar" ? "row" : "column";
     if (node.type === "grid") css.gridTemplateColumns = "repeat(2, minmax(0,1fr))";
     css.gap = sanitizeNumeric(s.gap ?? "", 8, 0, 200);
+    if (css.flexDirection === "row") css.flexWrap = "wrap";
   }
   return css;
 }

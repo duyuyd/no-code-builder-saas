@@ -41,6 +41,7 @@ function RenderElement({ node, selectedId, onSelect }: CanvasNodeProps) {
       const rows = (p.csv ?? "").split(/\r?\n/).filter(Boolean).slice(0, 100).map(r => r.split(",").slice(0, 40));
       return <table style={style} className="w-full overflow-hidden rounded-xl border border-slate-200 bg-white text-xs shadow-sm"><tbody>{rows.map((row,i) => <tr key={i}>{row.map((cell,j) => i === 0 ? <th className="border-b border-r border-slate-200 bg-slate-100 p-2 text-left" key={j}>{cell}</th> : <td className="border-b border-r border-slate-100 p-2" key={j}>{cell}</td>)}</tr>)}</tbody></table>;
     }
+    case "quiz": return <div style={style} className="rounded-2xl border border-indigo-200 bg-indigo-50 p-5 text-indigo-900"><p className="font-bold">{p.title || "Trắc nghiệm"}</p><p className="mt-2 text-sm">Chạy thử để chơi và tính điểm. Chọn Thuộc tính để sửa câu hỏi.</p></div>;
     case "chart": {
       const values = (p.values ?? "").split(",").map(value => value.trim()).filter(Boolean)
         .map(Number).filter(n => Number.isFinite(n) && n >= 0).slice(0, 50);

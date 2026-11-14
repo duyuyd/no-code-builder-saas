@@ -54,7 +54,7 @@ function nodeToHtml(node: BuilderNode): string {
     case "list": return `<${def.tag}${style}>${(p.items ?? "").split(/\r?\n/).filter(Boolean).map(v => `<li>${escapeHtml(v)}</li>`).join("")}</${def.tag}>`;
     case "iframe": return `<iframe${style} src="${escapeHtml(safeUrl(p.src ?? ""))}" title="${escapeHtml(p.title ?? "")}" sandbox="allow-scripts allow-forms" loading="lazy"></iframe>`;
     case "container": return `<${def.tag}${style}>${node.children.map(nodeToHtml).join("\n")}</${def.tag}>`;
-    case "button": return `<button type="${node.type === "submit-button" ? "submit" : "button"}"${style}>${escapeHtml(p.text ?? "")}</button>`;
+    case "button": return p.href && safeUrl(p.href) ? `<a${style} href="${escapeHtml(safeUrl(p.href))}">${escapeHtml(p.text ?? "")}</a>` : `<button type="${node.type === "submit-button" ? "submit" : "button"}"${style}>${escapeHtml(p.text ?? "")}</button>`;
     case "text": return `<${def.tag}${style}>${escapeHtml(p.text ?? "")}</${def.tag}>`;
   }
 }
@@ -83,7 +83,7 @@ function nodeToJsx(node: BuilderNode): string {
     case "list": return `<${def.tag}${style}>${(p.items ?? "").split(/\r?\n/).filter(Boolean).map((v,i) => `<li key={${i}}>${escapeJsx(v)}</li>`).join("")}</${def.tag}>`;
     case "iframe": return `<iframe${style} src=${jsxAttr(safeUrl(p.src ?? ""))} title=${jsxAttr(p.title ?? "")} sandbox="allow-scripts allow-forms" loading="lazy" />`;
     case "container": return `<${def.tag}${style}>${node.children.map(nodeToJsx).join("\n")}</${def.tag}>`;
-    case "button": return `<button type="${node.type === "submit-button" ? "submit" : "button"}"${style}>${escapeJsx(p.text ?? "")}</button>`;
+    case "button": return p.href && safeUrl(p.href) ? `<a${style} href=${jsxAttr(safeUrl(p.href))}>${escapeJsx(p.text ?? "")}</a>` : `<button type="${node.type === "submit-button" ? "submit" : "button"}"${style}>${escapeJsx(p.text ?? "")}</button>`;
     case "text": return `<${def.tag}${style}>${escapeJsx(p.text ?? "")}</${def.tag}>`;
   }
 }

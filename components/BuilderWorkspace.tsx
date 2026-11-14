@@ -4,7 +4,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { motion } from "framer-motion";
 import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, pointerWithin, rectIntersection, useSensor, useSensors, type CollisionDetection, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { CheckCircle2, ChevronDown, CloudUpload, Code2, Download, FileCode2, Layers3, LoaderCircle, Plus, Redo2, Save, Settings2, Undo2, X } from "lucide-react";
+import { CheckCircle2, ChevronDown, CloudUpload, Code2, Download, Eye, ExternalLink, Globe2, Monitor, Smartphone, Tablet, Rocket, FileCode2, LoaderCircle, Plus, Redo2, Save, Settings2, Undo2, X } from "lucide-react";
 import ComponentPalette from "./ComponentPalette";
 import BuilderCanvas from "./BuilderCanvas";
 import PropertiesPanel from "./PropertiesPanel";
@@ -12,7 +12,8 @@ import { createBuilderNode, getDefinition, validateUiTree, type BuilderNode } fr
 import { mergeUiTrees } from "@/lib/merge-ui-tree";
 import { findLocation, findNode, insertNode, moveNode, removeNode, updateNode, type DropTarget } from "@/lib/builder-tree";
 import { generateHtmlCode, generateReactCode } from "@/lib/code-generator";
-import { savePageTree } from "@/app/builder/actions";
+import { savePageTree, publishProject, unpublishProject } from "@/app/builder/actions";
+import LivePage from "./LivePage";
 
 type History = { past: BuilderNode[][]; nodes: BuilderNode[]; future: BuilderNode[][]; selectedId: string | null };
 type Action =
@@ -110,7 +111,11 @@ function MobileSheet({ open, onOpenChange, title, children }: {
   </Dialog.Root>;
 }
 
-export default function BuilderWorkspace({ pageId, pagePath, projectName, initialNodes, initialVersion }: {
+export default function BuilderWorkspace({ pageId, projectId, projectKind, previewPages, initiallyPublished, pagePath, projectName, initialNodes, initialVersion }: {
+  projectId: string;
+  projectKind: string;
+  previewPages: {path:string;ui_tree:BuilderNode[]}[];
+  initiallyPublished: boolean;
   pageId: string;
   pagePath: string;
   projectName: string;
@@ -123,12 +128,20 @@ export default function BuilderWorkspace({ pageId, pagePath, projectName, initia
   const [errorMessage, setErrorMessage] = useState("");
   const [mobilePaletteOpen, setMobilePaletteOpen] = useState(false);
   const [mobilePropertiesOpen, setMobilePropertiesOpen] = useState(false);
+  const [device,setDevice]=useState<"mobile"|"tablet"|"desktop">("desktop");
+  const [previewOpen,setPreviewOpen]=useState(false);
+  const [previewPath,setPreviewPath]=useState(pagePath);
+  const [previewError,setPreviewError]=useState("");
+  const [published,setPublished]=useState(initiallyPublished);
+  const [publishing,setPublishing]=useState(false);
+  const [publishStatus,setPublishStatus]=useState("");
   const latestNodes = useRef(state.nodes);
   const baseTree = useRef(initialNodes);
   const savedTree = useRef(JSON.stringify(initialNodes));
   const draftKey = `no-code-builder:draft:${pageId}`;
   const version = useRef(initialVersion);
   const isSaving = useRef(false);
+  useEffect(()=>{if(window.innerWidth < 640)setDevice("mobile");},[]);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
 
   // Restore unsaved edits if this tab was refreshed. Supabase is the canonical store.
@@ -252,6 +265,27 @@ export default function BuilderWorkspace({ pageId, pagePath, projectName, initia
       dispatch({ type: "move", id: data.id, target });
     }
   };
+  const onNavigate=(path:string)=>{
+    if(path===pagePath || previewPages.some(p=>p.path===path)){setPreviewPath(path);setPreviewError("");}
+    else setPreviewError("Chưa tạo trang "+path+". Hãy thêm trang trước.");
+  };
+  const liveTree=previewPath===pagePath?state.nodes:previewPages.find(p=>p.path===previewPath)?.ui_tree??[];
+  const publish=async()=>{
+    if(publishing)return;setPublishing(true);setPublishStatus("");
+    try{
+      await flushSave();
+      if(savedTree.current!==JSON.stringify(latestNodes.current)){setPublishStatus("Cần lưu thành công trước khi xuất bản.");return;}
+      const r=await publishProject(projectId);
+      if(!r.ok){setPublishStatus(r.error);return;}
+      setPublished(true);setPublishStatus("Đã xuất bản "+r.count+" trang. Bản nháp vẫn được giữ riêng.");
+    }catch(e){setPublishStatus(e instanceof Error?e.message:"Xuất bản thất bại.");}
+    finally{setPublishing(false);}
+  };
+  const hide=async()=>{
+    if(publishing)return;setPublishing(true);
+    try{const r=await unpublishProject(projectId);if(!r.ok)setPublishStatus(r.error);else {setPublished(false);setPublishStatus("Website đã ngừng công khai.");}}
+    finally{setPublishing(false);}
+  };
   const iconButtonClass = "flex size-9 items-center justify-center rounded-xl border border-slate-700 bg-slate-800 text-slate-300 transition hover:border-slate-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-35 sm:size-10";
 
   return <section className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#0f172a] text-slate-100">
@@ -261,25 +295,33 @@ export default function BuilderWorkspace({ pageId, pagePath, projectName, initia
           {status === "saving" ? <LoaderCircle size={12} className="animate-spin"/> : status === "saved" ? <CheckCircle2 size={12}/> : <CloudUpload size={12}/>} {status === "saved" ? "Đã lưu vào Supabase" : status === "saving" ? "Đang lưu..." : status === "error" ? "Lưu thất bại" : "Có thay đổi chưa lưu"}
         </p>
       </div>
+      <div className="hidden items-center gap-1 rounded-lg border border-slate-700 bg-slate-900 p-1 sm:flex">
+       {([{id:"mobile",Icon:Smartphone},{id:"tablet",Icon:Tablet},{id:"desktop",Icon:Monitor}] as const).map(({id,Icon})=><button key={id} type="button" title={id} aria-label={"Xem "+id} aria-pressed={device===id} onClick={()=>setDevice(id)} className={"rounded-lg p-2 "+(device===id?"bg-orange-500 text-white":"text-slate-400 hover:bg-slate-700")}><Icon size={16}/></button>)}
+      </div>
+      <button type="button" title="Chạy thử tương tác" onClick={()=>{setPreviewPath(pagePath);setPreviewError("");setPreviewOpen(true);}} className="flex size-9 items-center justify-center rounded-xl border border-slate-600 bg-slate-700 text-white sm:size-10"><Eye size={18}/></button>
+      <button type="button" title="Xuất bản website thật" onClick={()=>void publish()} disabled={publishing} className="flex size-9 items-center justify-center rounded-xl bg-orange-500 text-white disabled:opacity-50 sm:size-10">{publishing?<LoaderCircle size={17} className="animate-spin"/>:<Rocket size={17}/>}</button>
       <button type="button" onClick={() => dispatch({ type: "undo" })} disabled={!state.past.length} className={iconButtonClass} aria-label="Hoàn tác" title="Hoàn tác (Ctrl+Z)"><Undo2 size={17}/></button>
       <button type="button" onClick={() => dispatch({ type: "redo" })} disabled={!state.future.length} className={iconButtonClass} aria-label="Làm lại" title="Làm lại (Ctrl+Y)"><Redo2 size={17}/></button>
       <button type="button" onClick={() => void flushSave()} disabled={status === "saving"} className="flex h-9 items-center gap-1.5 rounded-xl bg-orange-500 px-3 text-xs font-semibold text-white shadow-md shadow-orange-500/15 transition hover:bg-orange-400 disabled:opacity-60 sm:h-10 sm:px-4"><Save size={16}/><span className="hidden sm:inline">Lưu</span></button>
-      <details className="relative">
+      {projectKind !== "game" && <details className="relative">
         <summary className="flex h-9 cursor-pointer list-none items-center gap-1.5 rounded-xl border border-slate-600 bg-slate-700 px-3 text-xs font-semibold text-slate-100 transition hover:bg-slate-600 sm:h-10 [&::-webkit-details-marker]:hidden"><Download size={16}/><span className="hidden sm:inline">Xuất mã</span><ChevronDown size={14} className="hidden sm:block"/></summary>
         <div className="absolute right-0 z-30 mt-2 w-44 space-y-1 rounded-xl border border-slate-600 bg-[#1e293b] p-2 shadow-2xl">
           <button type="button" onClick={() => downloadFile("page.tsx", generateReactCode(state.nodes), "text/typescript")} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-200 transition hover:bg-slate-700"><Code2 size={16} className="text-orange-400"/> Xuất React</button>
           <button type="button" onClick={() => downloadFile("page.html", generateHtmlCode(state.nodes, projectName), "text/html")} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-200 transition hover:bg-slate-700"><FileCode2 size={16} className="text-orange-400"/> Xuất HTML</button>
         </div>
-      </details>
+      </details>}
     </div>
     {status === "error" && <div role="alert" className="flex flex-wrap items-center justify-between gap-2 border-b border-rose-500/30 bg-rose-500/10 px-4 py-2 text-xs text-rose-200">
       <span>{errorMessage}</span>
       <button type="button" onClick={() => void flushSave()} className="shrink-0 rounded-lg border border-rose-400/50 px-3 py-1.5 font-semibold text-white hover:bg-rose-500/20">Thử lưu lại</button>
     </div>}
+    {publishStatus && <div role="status" className="flex items-center justify-between gap-2 border-b border-slate-700 bg-slate-800 px-4 py-2 text-xs text-slate-200"><span>{publishStatus}</span>{published&&<a href={"/s/"+projectId} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-orange-300"><ExternalLink size={14}/>Xem</a>}</div>}
+    {published && <div className="flex items-center justify-between gap-2 border-b border-emerald-800 bg-emerald-950/30 px-4 py-1.5 text-xs text-emerald-300"><a href={"/s/"+projectId} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1"><Globe2 size={14}/> Website đang công khai · Mở</a><button type="button" onClick={()=>void hide()} className="rounded-md border border-slate-600 px-2 py-1 text-slate-300">Ẩn website</button></div>}
+    <div className="flex shrink-0 items-center gap-2 border-b border-slate-700 bg-slate-900 px-2 py-2 sm:hidden">{([{id:"mobile",Icon:Smartphone,label:"Điện thoại"},{id:"tablet",Icon:Tablet,label:"Máy tính bảng"},{id:"desktop",Icon:Monitor,label:"Web"}] as const).map(({id,Icon,label})=><button key={id} type="button" onClick={()=>setDevice(id)} aria-pressed={device===id} className={"flex min-w-0 flex-1 items-center justify-center gap-1 rounded-lg p-2 text-xs "+(device===id?"bg-orange-500 text-white":"bg-slate-800 text-slate-400")}><Icon size={15}/>{label}</button>)}</div>
     <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={() => setDragging("")}>
       <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[270px_minmax(0,1fr)_320px]">
         <div className="hidden min-h-0 lg:block"><ComponentPalette onAdd={onAdd}/></div>
-        <BuilderCanvas nodes={state.nodes} selectedId={state.selectedId} onSelect={onSelect} onRequestAdd={() => setMobilePaletteOpen(true)}/>
+        <BuilderCanvas device={device} onPreview={()=>{setPreviewPath(pagePath);setPreviewOpen(true);}} nodes={state.nodes} selectedId={state.selectedId} onSelect={onSelect} onRequestAdd={() => setMobilePaletteOpen(true)}/>
         <div className="hidden min-h-0 lg:block"><PropertiesPanel node={selectedNode} onChange={(id, field, key, value) => dispatch({ type: "edit", id, field, key, value })} onDelete={onDelete}/></div>
       </div>
       <DragOverlay dropAnimation={null} zIndex={70}>
@@ -289,6 +331,25 @@ export default function BuilderWorkspace({ pageId, pagePath, projectName, initia
         <button type="button" onClick={() => setMobilePaletteOpen(true)} className="flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-orange-500 px-3 text-sm font-semibold text-white shadow-md shadow-orange-500/20 transition hover:bg-orange-400"><Plus size={19}/> Thêm thành phần</button>
         <button type="button" onClick={() => setMobilePropertiesOpen(true)} className="flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-600 bg-slate-700 px-4 text-sm font-semibold text-slate-100 transition hover:bg-slate-600"><Settings2 size={17}/> Thuộc tính</button>
       </div>
+      <Dialog.Root open={previewOpen} onOpenChange={setPreviewOpen}>
+        <Dialog.Portal><Dialog.Overlay className="fixed inset-0 z-[100] bg-slate-950/85"/>
+          <Dialog.Content className="fixed inset-0 z-[101] flex flex-col bg-[#0f172a] text-white outline-none" aria-describedby="live-preview-desc">
+            <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-slate-700 bg-slate-800 p-3">
+              <Dialog.Title className="mr-auto flex items-center gap-2 font-bold"><Eye size={17}/> Chạy thử: {projectName}</Dialog.Title>
+              <Dialog.Description id="live-preview-desc" className="sr-only">Kiểm tra tương tác, liên kết và giao diện trên thiết bị.</Dialog.Description>
+              <select title="Đổi trang" value={previewPath} onChange={e=>{setPreviewPath(e.target.value);setPreviewError("");}} className="max-w-24 rounded-lg border border-slate-600 bg-slate-900 p-2 text-xs">{previewPages.map(p=><option value={p.path} key={p.path}>{p.path}</option>)}</select>
+              <Dialog.Close asChild><button type="button" aria-label="Đóng chạy thử" className="rounded-lg border border-slate-600 p-2"><X size={18}/></button></Dialog.Close>
+            </div>
+            {previewError&&<p role="alert" className="bg-rose-900 p-2 text-xs">{previewError}</p>}
+            <div className="editor-scroll min-h-0 flex-1 overflow-auto p-3 sm:p-8">
+              <div className="mx-auto min-h-[65dvh] overflow-hidden rounded-2xl border border-slate-700 bg-white shadow-2xl transition-[width]" style={{width:device==="mobile"?"390px":device==="tablet"?"768px":"1120px",maxWidth:"100%"}}>
+                <LivePage key={previewPath} nodes={liveTree} onNavigate={onNavigate}/>
+              </div>
+            </div>
+            <p className="border-t border-slate-700 p-2 text-center text-xs text-slate-400">Đây là bản chạy thử. Nhấn Xuất bản để khách có thể truy cập website.</p>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
       <MobileSheet open={mobilePaletteOpen} onOpenChange={setMobilePaletteOpen} title="Thêm thành phần">
         <ComponentPalette onAdd={onAdd}/>
       </MobileSheet>
