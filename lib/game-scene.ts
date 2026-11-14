@@ -1,6 +1,6 @@
 export type GameObjectKind="coin"|"wall"|"goal"|"enemy";
 export type GameObject={id:string;kind:GameObjectKind;x:number;y:number;w:number;h:number;label:string;imageUrl?:string;hp?:number};
-export type GameScene={title:string;mode?:"collection"|"combat";background:string;backgroundImageUrl?:string;player:{x:number;y:number;emoji:string;speed:number;imageUrl?:string};objects:GameObject[]};
+export type GameScene={title:string;mode?:"collection"|"combat"|"moba";mobaCode?:string;background:string;backgroundImageUrl?:string;player:{x:number;y:number;emoji:string;speed:number;imageUrl?:string};objects:GameObject[]};
 const allowedKinds=new Set<GameObjectKind>(["coin","wall","goal","enemy"]);
 const validCoord=(v:unknown):v is number=>typeof v==="number"&&Number.isFinite(v)&&v>=0&&v<=100;
 function validAssetUrl(value:unknown):boolean{
@@ -24,7 +24,8 @@ function gameObject(value:unknown):value is GameObject{
 export function validateGameScene(value:unknown):value is GameScene{
  if(!value||typeof value!=="object"||Array.isArray(value))return false;
  const s=value as Record<string,unknown>;
- if((s.mode!==undefined&&s.mode!=="collection"&&s.mode!=="combat")||
+ if((s.mode!==undefined&&s.mode!=="collection"&&s.mode!=="combat"&&s.mode!=="moba")||
+ (s.mobaCode!==undefined&&(typeof s.mobaCode!=="string"||!/^[-a-z0-9]{3,80}$/.test(s.mobaCode)))||
  typeof s.title!=="string"||s.title.trim().length<3||s.title.length>120 ||
  typeof s.background!=="string"||!/^#[a-f0-9]{6}$/i.test(s.background) || !validAssetUrl(s.backgroundImageUrl) ||
  !s.player||typeof s.player!=="object"||Array.isArray(s.player) ||
@@ -37,6 +38,7 @@ export function validateGameScene(value:unknown):value is GameScene{
  const ids=new Set((s.objects as GameObject[]).map(o=>o.id));
  if(ids.size!==s.objects.length)return false;
  const kinds=(s.objects as GameObject[]).map(o=>o.kind);
+ if(s.mode==="moba")return typeof s.mobaCode==="string"&&/^[a-z0-9-]{3,80}$/.test(s.mobaCode)&&JSON.stringify(value).length<=36000;
  if(!kinds.includes("goal")||(s.mode==="combat"?!kinds.includes("enemy"):!kinds.includes("coin")))return false;
  return JSON.stringify(value).length<=36000;
 }

@@ -3,6 +3,7 @@ import {redirect,notFound} from "next/navigation";
 import {ArrowLeft,Gamepad2} from "lucide-react";
 import {createClient} from "@/lib/supabase/server";
 import {validateGameScene,type GameScene,type GameSceneTemplate} from "@/lib/game-scene";
+import {validateArenaMap,type ArenaMap} from "@/lib/moba-arena";
 import GameWorkspace from "@/components/GameWorkspace";
 export const dynamic="force-dynamic";
 export const metadata={title:"Game Builder 2D",robots:{index:false,follow:false}};
@@ -19,15 +20,16 @@ export default async function GameBuilderPage({searchParams}:{searchParams:Promi
   <Gamepad2 className="mb-5 text-orange-400" size={42}/><h1 className="text-3xl font-bold">Game Builder 2D</h1><p className="my-4 text-sm text-slate-300">Tạo một dự án loại Game trong Builder, sau đó trở lại đây để xây dựng màn chơi 2D.</p>
   <Link href="/builder" className="inline-flex rounded-xl bg-orange-500 px-5 py-3 font-bold">Đến Builder để tạo game</Link>
  </div></main>;
- const [{data:game,error:gameError},{data:starter,error:starterError},{data:publication},templateResult]=await Promise.all([
+ const [{data:game,error:gameError},{data:starter,error:starterError},{data:publication},templateResult,mobaResult]=await Promise.all([
   db.from("game_projects").select("scene,version").eq("project_id",project.id).maybeSingle(),
   db.from("platform_settings").select("value").eq("key","game_starter_scene").maybeSingle(),
   db.from("game_publications").select("is_live").eq("project_id",project.id).maybeSingle(),
-  db.from("game_scene_templates").select("code,name,genre,description,scene").eq("is_active",true).order("name")
+  db.from("game_scene_templates").select("code,name,genre,description,scene").eq("is_active",true).order("name"),
+  db.from("moba_maps").select("code,name,config").eq("is_active",true).order("name")
  ]);
  if(gameError)throw new Error(gameError.message);
  if(starterError)throw new Error(starterError.message);
- if(templateResult.error)throw new Error(templateResult.error.message);
+ if(templateResult.error||mobaResult.error)throw new Error(templateResult.error?.message??mobaResult.error?.message);
  const scene=game?.scene??starter?.value;
  if(!validateGameScene(scene))throw new Error("Mẫu màn chơi không hợp lệ; Admin cần cập nhật game_starter_scene trong platform_settings.");
  return <div className="min-h-dvh bg-[#0f172a]">
@@ -39,6 +41,6 @@ export default async function GameBuilderPage({searchParams}:{searchParams:Promi
     </form>
    </div>
   </div>
-  <GameWorkspace key={project.id} userId={user.id} templates={(templateResult.data??[]).filter(t=>validateGameScene(t.scene)) as GameSceneTemplate[]} projectId={project.id} projectName={project.name} initialScene={scene as GameScene} initialVersion={game?.version??0} initialPublished={publication?.is_live===true}/>
+  <GameWorkspace key={project.id} userId={user.id} templates={(templateResult.data??[]).filter(t=>validateGameScene(t.scene)) as GameSceneTemplate[]} projectId={project.id} projectName={project.name} mobaMaps={(mobaResult.data??[]).filter(m=>validateArenaMap(m.config)) as Array<{code:string;name:string;config:ArenaMap}>} initialScene={scene as GameScene} initialVersion={game?.version??0} initialPublished={publication?.is_live===true}/>
  </div>;
 }

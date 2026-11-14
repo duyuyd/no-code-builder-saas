@@ -7,13 +7,15 @@ import {ArrowLeft,CloudUpload,ExternalLink,Eye,EyeOff,Gamepad2,ImagePlus,Plus,Re
 import GameStage from "@/components/GameStage";
 import StudioAssistant from "@/components/StudioAssistant";
 import {validateGameScene,type GameObjectKind,type GameScene,type GameSceneTemplate} from "@/lib/game-scene";
+import type {ArenaMap} from "@/lib/moba-arena";
 import {saveGameScene,publishGameScene,unpublishGameScene} from "@/app/game-builder/actions";
 
 const AssetBrowser = dynamic(() => import("./AssetBrowser"), {ssr:false,loading:()=> <p className="p-6 text-sm text-slate-300">Đang tải kho ảnh...</p>});
+const MobaStage = dynamic(() => import("./MobaStage"),{ssr:false,loading:()=> <p className="rounded-xl bg-slate-900 p-8 text-center text-sm text-slate-200">Đang tải MOBA 5v5...</p>});
 const field="mt-2 w-full rounded-xl border border-slate-600 bg-slate-900 p-3 text-sm text-white outline-none focus:border-orange-500";
 const round=(v:number)=>Math.round(v*10)/10;
-export default function GameWorkspace({projectId,projectName,userId,initialScene,initialVersion,initialPublished,templates}:{
- projectId:string;projectName:string;userId:string;initialScene:GameScene;initialVersion:number;initialPublished:boolean;templates:GameSceneTemplate[]
+export default function GameWorkspace({projectId,projectName,userId,initialScene,initialVersion,initialPublished,templates,mobaMaps}:{
+ projectId:string;projectName:string;userId:string;initialScene:GameScene;initialVersion:number;initialPublished:boolean;templates:GameSceneTemplate[];mobaMaps:Array<{code:string;name:string;config:ArenaMap}>
 }){
  const [scene,setScene]=useState<GameScene>(initialScene);
  const sceneRef=useRef(scene);
@@ -51,7 +53,7 @@ export default function GameWorkspace({projectId,projectName,userId,initialScene
  const flush=useCallback(async():Promise<boolean>=>{
   if(savingRef.current)return false;
   const snapshot=sceneRef.current;
-  if(!validateGameScene(snapshot)){setMessage("Kiểm tra bản đồ: cần đích và ít nhất một sao hoặc quái (tùy chế độ), kích thước và vị trí hợp lệ.");return false;}
+  if(!validateGameScene(snapshot)||(snapshot.mode==="moba"&&!mobaMaps.some(item=>item.code===snapshot.mobaCode))){setMessage("Dữ liệu game hoặc bản đồ MOBA không hợp lệ.");return false;}
   savingRef.current=true;setSaving(true);
   try{
    const result=await saveGameScene(projectId,snapshot,versionRef.current);
@@ -62,7 +64,7 @@ export default function GameWorkspace({projectId,projectName,userId,initialScene
    return true;
   }catch(error){setMessage(error instanceof Error?error.message:"Lỗi lưu màn chơi.");return false;}
   finally{savingRef.current=false;setSaving(false);setSaveNonce(x=>x+1);}
- },[projectId]);
+ },[projectId,mobaMaps]);
  useEffect(()=>{
   if(!dirty||preview)return;
   const timer=window.setTimeout(()=>{void flush();},2000);
@@ -127,6 +129,19 @@ export default function GameWorkspace({projectId,projectName,userId,initialScene
   try{const result=await unpublishGameScene(projectId);if(!result.ok)setMessage(result.message);else{setPublished(false);setMessage("Đã ngừng xuất bản game.");}}
   finally{setPublishing(false);}
  };
+ const arena=mobaMaps.find(item=>item.code===scene.mobaCode);
+ const changeGameMode=(mode:"collection"|"combat"|"moba")=>{
+  if(mode==="moba"){
+   if(!mobaMaps.length){setMessage("Kho MOBA hiện chưa có bản đồ được phép dùng.");return;}
+   commit({...sceneRef.current,mode:"moba",mobaCode:sceneRef.current.mobaCode??mobaMaps[0].code});
+  }else{
+   const objects=[...sceneRef.current.objects];
+   if(mode==="combat"&&!objects.some(item=>item.kind==="enemy"))objects.push({id:crypto.randomUUID(),kind:"enemy",x:63,y:45,w:7,h:9,label:"👹",hp:3});
+   if(mode==="collection"&&!objects.some(item=>item.kind==="coin"))objects.push({id:crypto.randomUUID(),kind:"coin",x:40,y:30,w:7,h:9,label:"⭐"});
+   commit({...sceneRef.current,mode,objects});
+  }
+  setSelected(null);setPreview(false);
+ };
  const button="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-xs font-bold transition disabled:opacity-40";
  return <div className="min-h-dvh bg-[#0f172a] px-3 py-4 text-slate-100 sm:px-5">
  <div className="mx-auto max-w-7xl">
@@ -144,7 +159,20 @@ export default function GameWorkspace({projectId,projectName,userId,initialScene
     <button type="button" disabled={publishing||saving} onClick={()=>void publish()} className={button+" bg-orange-500 text-white"}><CloudUpload size={16}/>{publishing?"Đang xuất bản":"Xuất bản"}</button>
    </div>
   </header>
-  {!preview&&templates.length>0&&<section className="mb-4 flex flex-wrap items-end gap-3 rounded-2xl border border-slate-700 bg-[#1e293b] p-4">
+  <section className="mb-4 flex flex-wrap items-end gap-3 rounded-2xl border border-orange-500/20 bg-[#17263a] p-4">
+   <label className="min-w-48 flex-1 text-xs font-black text-orange-200">Core game
+    <select value={scene.mode??"collection"} onChange={e=>changeGameMode(e.target.value as "collection"|"combat"|"moba")} className="mt-2 w-full rounded-xl border border-slate-600 bg-slate-900 p-3 text-sm text-white">
+     <option value="collection">Thu thập 2D</option><option value="combat">Chiến đấu PvE</option><option value="moba">MOBA 5v5 PvE ba đường</option>
+    </select>
+   </label>
+   {scene.mode==="moba"&&<label className="min-w-48 flex-1 text-xs font-black text-orange-200">Chọn chiến trường
+    <select value={scene.mobaCode??""} onChange={e=>commit({...sceneRef.current,mobaCode:e.target.value})} className="mt-2 w-full rounded-xl border border-slate-600 bg-slate-900 p-3 text-sm text-white">
+     {mobaMaps.map(map=><option key={map.code} value={map.code}>{map.name}</option>)}
+    </select>
+   </label>}
+   <p className="w-full text-xs leading-6 text-slate-300">{scene.mode==="moba"?"Hai sân đấu có 10 hero, 3 đường, lính và trụ. Chơi trên Android bằng joystick. Chọn bản đồ, để tự lưu, rồi xuất bản game theo dự án.":"Chế độ 2D cho phép kéo chỉnh từng vật thể; chọn MOBA để tạo một trận 5v5 PvE."}</p>
+  </section>
+  {!preview&&scene.mode!=="moba"&&templates.length>0&&<section className="mb-4 flex flex-wrap items-end gap-3 rounded-2xl border border-slate-700 bg-[#1e293b] p-4">
     <label className="min-w-48 flex-1 text-xs font-semibold text-slate-200">Khởi tạo bản đồ theo thể loại
      <select value={templateChoice} onChange={e=>setTemplateChoice(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-600 bg-slate-900 px-3 py-3 text-xs text-white">
       {templates.map(t=><option key={t.code} value={t.code}>{t.genre} · {t.name}</option>)}
@@ -158,8 +186,8 @@ export default function GameWorkspace({projectId,projectName,userId,initialScene
    <a href={"/play/"+projectId} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 font-bold"><ExternalLink size={16}/> Game đang công khai · Mở để chơi</a>
    <button onClick={()=>void unpublish()} disabled={publishing} className="rounded-lg border border-emerald-700 px-3 py-2">Ngừng công khai</button>
   </div>}
-  <div className="grid min-w-0 gap-4 xl:grid-cols-[220px_minmax(0,1fr)_275px]">
-   {!preview&&<section className="order-2 rounded-2xl border border-slate-700 bg-[#1e293b] p-4 xl:order-1">
+  <div className={scene.mode==="moba"?"grid min-w-0 grid-cols-1 gap-4":"grid min-w-0 gap-4 xl:grid-cols-[220px_minmax(0,1fr)_275px]"}>
+   {!preview&&scene.mode!=="moba"&&<section className="order-2 rounded-2xl border border-slate-700 bg-[#1e293b] p-4 xl:order-1">
     <h2 className="mb-4 text-sm font-bold">Kho vật thể</h2>
     <p className="mb-3 text-xs text-slate-400">Chọn công cụ rồi chạm vào màn chơi để đặt vật thể mới.</p>
     <div className="grid grid-cols-2 gap-2 xl:grid-cols-1">
@@ -173,9 +201,12 @@ export default function GameWorkspace({projectId,projectName,userId,initialScene
    </section>}
    <div className="order-1 min-w-0 rounded-2xl border border-slate-700 bg-[#1e293b] p-3 sm:p-5 xl:order-2">
     <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-bold">{scene.title}</p><span className="text-xs text-slate-400">{preview?"ĐANG CHƠI THỬ":"KHUNG THIẾT KẾ 2D"}</span></div>
-    <GameStage key={preview?"playing":"editing"} scene={scene} mode={preview?"play":"edit"} selectedId={selected} onSelect={setSelected} onAddObject={addObject} onMoveObject={(id,x,y)=>dragMove(id,round(x),round(y))} onMoveEnd={completeDrag}/>
+    {scene.mode==="moba"?
+   arena?<MobaStage key={arena.code} map={arena.config} name={arena.name}/>:<p role="alert" className="rounded-xl border border-rose-700 p-6 text-xs text-rose-300">Bản đồ MOBA chưa sẵn sàng.</p>:
+   <GameStage key={preview?"playing":"editing"} scene={scene} mode={preview?"play":"edit"} selectedId={selected} onSelect={setSelected} onAddObject={addObject} onMoveObject={(id,x,y)=>dragMove(id,round(x),round(y))} onMoveEnd={completeDrag}/>}
+
    </div>
-   {!preview&&<section className="order-3 space-y-4 rounded-2xl border border-slate-700 bg-[#1e293b] p-4">
+   {!preview&&scene.mode!=="moba"&&<section className="order-3 space-y-4 rounded-2xl border border-slate-700 bg-[#1e293b] p-4">
     <h2 className="text-sm font-bold">Thuộc tính màn chơi</h2>
     <label className="block text-xs text-slate-300">Cơ chế chơi
       <select value={scene.mode??"collection"} onChange={e=>{

@@ -21,6 +21,10 @@ export async function saveGameScene(projectId:string,scene:GameScene,expectedVer
   if(!validateGameScene(scene))throw new Error("Màn chơi không hợp lệ: cần ít nhất 1 ngôi sao và 1 đích đến.");
   if(!Number.isSafeInteger(expectedVersion)||expectedVersion<0)throw new Error("Phiên bản không hợp lệ.");
   const {db}=await owner(projectId);
+  if(scene.mode==="moba"){
+   const {data:arena,error:arenaError}=await db.from("moba_maps").select("code").eq("code",scene.mobaCode??"").eq("is_active",true).maybeSingle();
+   if(arenaError||!arena)throw new Error("Bản đồ MOBA không còn khả dụng.");
+  }
   if(expectedVersion===0){
    const {data,error}=await db.from("game_projects").insert({project_id:projectId,scene}).select("version").maybeSingle();
    if(error||!data)throw new Error(error?.code==="23505"?"Màn chơi đã được lưu ở phiên khác. Tải lại trang để tránh ghi đè.":error?.message??"Không thể lưu.");
@@ -39,6 +43,10 @@ export async function publishGameScene(projectId:string):Promise<GamePublishResu
   const {db,project}=await owner(projectId);
   const {data:game,error:loadError}=await db.from("game_projects").select("scene").eq("project_id",projectId).maybeSingle();
   if(loadError||!game||!validateGameScene(game.scene))throw new Error("Hãy lưu màn chơi hợp lệ trước khi xuất bản.");
+  if(game.scene.mode==="moba"){
+   const {data:arena,error:arenaError}=await db.from("moba_maps").select("code").eq("code",game.scene.mobaCode??"").eq("is_active",true).maybeSingle();
+   if(arenaError||!arena)throw new Error("Bản đồ MOBA không còn khả dụng.");
+  }
   const {error}=await db.from("game_publications").upsert({
    project_id:projectId,scene:game.scene,title:project.name,is_live:true,published_at:new Date().toISOString()
   },{onConflict:"project_id"});

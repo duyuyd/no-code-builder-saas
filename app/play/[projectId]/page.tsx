@@ -5,6 +5,8 @@ import {Gamepad2} from "lucide-react";
 import {createClient} from "@/lib/supabase/server";
 import {validateGameScene,type GameScene} from "@/lib/game-scene";
 import GameStage from "@/components/GameStage";
+import {validateArenaMap,type ArenaMap} from "@/lib/moba-arena";
+import MobaStage from "@/components/MobaStage";
 export const dynamic="force-dynamic";
 type Params={projectId:string};
 async function getGame(projectId:string){
@@ -22,13 +24,20 @@ export default async function PlayGame({params}:{params:Promise<Params>}){
  const id=(await params).projectId;
  const game=await getGame(id);
  if(!game)notFound();
+ let arena:{name:string;config:ArenaMap}|null=null;
+ if(game.scene.mode==="moba"){
+  const db=await createClient();
+  const {data,error}=await db.from("moba_maps").select("name,config").eq("code",game.scene.mobaCode??"").eq("is_active",true).maybeSingle();
+  if(error||!data||!validateArenaMap(data.config))notFound();
+  arena={name:data.name,config:data.config};
+ }
  return <main className="min-h-dvh bg-[#0f172a] px-3 py-8 text-slate-100 sm:px-5">
-  <div className="mx-auto max-w-4xl">
+  <div className={arena?"mx-auto max-w-[1500px]":"mx-auto max-w-4xl"}>
    <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
     <h1 className="flex items-center gap-2 text-xl font-black sm:text-2xl"><Gamepad2 className="text-orange-400"/>{game.title}</h1>
     <Link href="/" className="text-xs text-orange-300 hover:underline">Được tạo bởi No-Code Builder</Link>
    </div>
-   <GameStage scene={game.scene} mode="play"/>
+   {arena?<MobaStage map={arena.config} name={arena.name}/>:<GameStage scene={game.scene} mode="play"/>}
    <p className="mt-8 text-center text-xs text-slate-400">Không cần đăng nhập để chơi. Bản này sử dụng màn chơi đã được chủ dự án xuất bản.</p>
   </div>
  </main>;
