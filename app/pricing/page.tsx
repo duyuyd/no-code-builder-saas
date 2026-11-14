@@ -2,7 +2,7 @@ import Link from "next/link";
 import {Check,ArrowLeft,ShieldCheck} from "lucide-react";
 import {createClient} from "@/lib/supabase/server";
 export const dynamic="force-dynamic";
-type Plan={code:string;name:string;priceLabel:string;description:string;features:string[];available:boolean};
+type Plan={code:string;name:string;priceLabel:string;description:string;features:string[];available:boolean;visible?:boolean};
 function valid(value:unknown):value is Plan[] {
  return Array.isArray(value)&&value.length>0&&value.every(p=>p&&typeof p==="object"&&typeof p.code==="string"&&typeof p.name==="string"&&typeof p.priceLabel==="string"&&typeof p.description==="string"&&Array.isArray(p.features)&&p.features.every((f:unknown)=>typeof f==="string")&&typeof p.available==="boolean");
 }
@@ -10,7 +10,7 @@ export default async function Pricing(){
  const db=await createClient();
  const {data,error}=await db.from("platform_settings").select("value").eq("key","saas_pricing").maybeSingle();
  if(error)throw new Error(error.message);
- const plans=valid(data?.value)?data.value:[];
+ const plans=valid(data?.value)?data.value.filter(plan=>plan.visible!==false):[];
  return <main className="min-h-dvh bg-[#0f172a] px-4 py-10 text-slate-100">
   <div className="mx-auto max-w-6xl">
    <Link href="/builder" className="inline-flex items-center gap-2 text-sm text-orange-300"><ArrowLeft size={16}/>Builder</Link>
@@ -19,7 +19,7 @@ export default async function Pricing(){
     <p className="text-sm font-bold text-orange-300">{plan.name}</p><h2 className="mt-3 text-3xl font-extrabold">{plan.priceLabel}</h2><p className="mt-4 min-h-16 text-sm leading-6 text-slate-400">{plan.description}</p>
     <div className="my-5 h-px bg-slate-700"/>
     <div className="flex-1 space-y-3">{plan.features.map(feature=><p key={feature} className="flex items-start gap-2 text-sm"><Check size={17} className="mt-0.5 shrink-0 text-emerald-400"/>{feature}</p>)}</div>
-    {plan.available?<Link href="/builder" className="mt-8 rounded-xl bg-orange-500 p-3 text-center text-sm font-bold">Bắt đầu sử dụng</Link>:<div aria-disabled="true" className="mt-8 rounded-xl border border-slate-600 bg-slate-800 p-3 text-center text-sm text-slate-400">Chưa mở thanh toán</div>}
+    {plan.code==="free" && plan.available?<Link href="/builder" className="mt-8 rounded-xl bg-orange-500 p-3 text-center text-sm font-bold">Bắt đầu sử dụng</Link>:<div aria-disabled="true" className="mt-8 rounded-xl border border-slate-600 bg-slate-800 p-3 text-center text-sm text-slate-400">Liên hệ quản trị để được cấp gói · Chưa tích hợp thanh toán tự động</div>}
    </article>)}</div>
    <p className="mt-10 flex items-center justify-center gap-2 text-center text-xs text-slate-500"><ShieldCheck size={16}/>Dữ liệu dự án và tài liệu ký được phân quyền theo tài khoản.</p>
   </div>

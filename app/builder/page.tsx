@@ -20,7 +20,7 @@ export default async function BuilderPage({ searchParams }: {
   const {data:templates,error:templatesError}=await supabase.from("starter_templates").select("id,name,kind,description").eq("is_active",true).order("name");
   if(templatesError)throw new Error(templatesError.message);
   const { data: projects, error: projectsError } = await supabase.from("projects")
-    .select("id,name,kind").order("created_at", { ascending: false });
+    .select("id,name,kind").eq("owner_id",user.id).is("archived_at",null).order("created_at", { ascending: false });
   if (projectsError) throw new Error(projectsError.message);
   const project = query.project ? projects?.find(p => p.id === query.project) : projects?.[0];
   if (query.project && !project) notFound();
@@ -33,7 +33,7 @@ export default async function BuilderPage({ searchParams }: {
       </div>
       <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-orange-400/20 bg-orange-500/10 px-3 py-1 text-xs font-semibold text-orange-300"><Sparkles size={13}/> Không gian sáng tạo</div>
       <h1 className="mb-3 text-3xl font-bold tracking-tight">Tạo dự án đầu tiên</h1>
-      <p className="mb-8 text-sm leading-6 text-slate-400">Thiết kế trang web với thao tác kéo thả, tùy chỉnh mọi thành phần và lưu trực tiếp vào không gian của bạn.</p>
+      <p className="mb-8 text-sm leading-6 text-slate-400">Thiết kế trang web với thao tác kéo thả, tùy chỉnh mọi thành phần và lưu trực tiếp vào không gian của bạn.</p><Link href="/projects" className="mb-4 inline-flex rounded-xl border border-slate-600 px-4 py-2 text-sm text-orange-300">Quản lý / Khôi phục dự án trong Thùng rác</Link>
       <form action={createProject} className="space-y-4">
         <label className="block text-sm font-medium text-slate-200" htmlFor="project-name">Tên dự án
           <input id="project-name" name="name" required maxLength={120} autoFocus placeholder="Nhập tên dự án của bạn" className="mt-2 w-full rounded-xl border border-slate-600 bg-slate-900/75 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15"/>
@@ -74,6 +74,7 @@ export default async function BuilderPage({ searchParams }: {
           <div className="absolute right-0 z-50 mt-2 w-72 rounded-2xl border border-slate-700 bg-slate-800 p-3 shadow-2xl">
             <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-slate-400">Dự án của tôi</p>
             <nav className="mb-3 max-h-48 space-y-1 overflow-y-auto">{(projects ?? []).map(p => <Link key={p.id} href={`/builder?project=${p.id}`} className={`block truncate rounded-lg px-3 py-2 text-sm transition ${p.id === project.id ? "bg-orange-500/15 font-semibold text-orange-300" : "text-slate-300 hover:bg-slate-700"}`}>{p.name}</Link>)}</nav>
+            <Link href="/projects" className="mb-3 block rounded-lg border border-slate-600 px-3 py-2 text-xs font-semibold text-orange-300 hover:bg-slate-700">Quản lý · Xóa · Khôi phục dự án</Link>
             <form action={createProject} className="space-y-2"><input name="name" required maxLength={120} placeholder="Tên dự án mới" aria-label="Tên dự án mới" className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-xs outline-none focus:border-orange-500"/>
             <select name="template_id" className="w-full rounded-lg border border-slate-600 bg-slate-900 p-2 text-xs text-white"><option value="">Trang trắng</option>{(templates??[]).map(t=><option key={t.id} value={t.id}>{t.kind==="game"?"🎮":t.kind==="app"?"📱":"🌐"} {t.name}</option>)}</select>
             <button className="w-full rounded-lg bg-orange-500 p-2 text-xs font-bold text-white">Tạo sản phẩm</button></form>
@@ -87,7 +88,7 @@ export default async function BuilderPage({ searchParams }: {
             <Link href="/pricing" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">💳 Bảng giá</Link>
           </nav>
         </details>
-        {profile?.role === "admin" && <Link href="/settings" title="Cài đặt quản trị" aria-label="Cài đặt quản trị" className="rounded-lg border border-slate-700 bg-slate-800 p-2.5 text-slate-300 transition hover:text-orange-300"><Settings2 size={16}/></Link>}
+        {profile?.role === "admin" && <Link href="/admin" title="Trung tâm quản trị: thành viên, dự án, gói" aria-label="Trung tâm quản trị" className="flex items-center gap-1 rounded-lg border border-orange-500/50 bg-orange-500/10 p-2.5 text-orange-300 transition hover:text-white"><Settings2 size={16}/><span className="hidden text-xs font-bold lg:inline">Quản trị</span></Link>}
         <form action={signOut}><button title="Đăng xuất" aria-label="Đăng xuất" className="rounded-lg border border-slate-700 bg-slate-800 p-2.5 text-slate-300 transition hover:text-white"><LogOut size={16}/></button></form>
       </div>
     </header>

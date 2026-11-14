@@ -42,6 +42,8 @@ export async function createPage(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  const {data:parent}=await supabase.from("projects").select("id").eq("id",projectId).eq("owner_id",user.id).is("archived_at",null).maybeSingle();
+  if(!parent)throw new Error("Dự án không tồn tại hoặc đang trong Thùng rác.");
   const { data, error } = await supabase.from("pages")
     .insert({ project_id: projectId, path, ui_tree: [] }).select("id").single();
   if (error || !data) throw new Error(error?.message ?? "Không thể tạo trang.");
@@ -59,6 +61,10 @@ export async function savePageTree(pageId: string, tree: BuilderNode[], expected
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (!user || authError) return { ok: false, reason: "forbidden", error: "Phiên đăng nhập đã hết hạn." };
 
+  const {data:parentPage}=await supabase.from("pages").select("project_id").eq("id",pageId).maybeSingle();
+  if(!parentPage)return {ok:false,reason:"forbidden",error:"Không tìm thấy trang."};
+  const {data:activeProject}=await supabase.from("projects").select("id").eq("id",parentPage.project_id).is("archived_at",null).maybeSingle();
+  if(!activeProject)return {ok:false,reason:"forbidden",error:"Dự án đang trong Thùng rác. Khôi phục trước khi lưu."};
   let mergedTree = tree;
   let version = expectedVersion;
   for (let attempt = 0; attempt < 4; attempt++) {
@@ -92,7 +98,7 @@ export async function publishProject(projectId:string):Promise<PublishResult> {
   if(!/^[a-f0-9-]{36}$/i.test(projectId)) return {ok:false,error:"Mã dự án không hợp lệ."};
   const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();
   if(!user)return {ok:false,error:"Cần đăng nhập."};
-  const {data:project}=await supabase.from("projects").select("id,name,owner_id").eq("id",projectId).maybeSingle();
+  const {data:project}=await supabase.from("projects").select("id,name,owner_id").eq("id",projectId).is("archived_at",null).maybeSingle();
   if(!project||project.owner_id!==user.id)return {ok:false,error:"Bạn không sở hữu dự án."};
   const {data:pages,error}=await supabase.from("pages").select("path,ui_tree").eq("project_id",projectId);
   if(error||!pages?.length)return {ok:false,error:error?.message??"Dự án chưa có trang."};
