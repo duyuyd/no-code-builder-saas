@@ -33,6 +33,7 @@ export default async function AdminPage(){
    <nav aria-label="Điều hướng quản trị" className="mb-8 flex flex-wrap gap-2">{[
     ["#members","Thành viên"],["#projects","Dự án / Xóa"],["#plans","Quản lý gói"],["#billing","Thanh toán"]
    ].map(([href,label])=><a key={href} href={href} className="rounded-xl border border-slate-600 bg-[#1e293b] px-4 py-2.5 text-xs font-semibold hover:border-orange-500">{label}</a>)}</nav>
+   <Link href="/admin/requests" className="mb-6 inline-flex rounded-xl border border-orange-500 bg-orange-500/10 px-5 py-3 text-sm font-bold text-orange-200 transition hover:bg-orange-500/20">📬 Xem và duyệt yêu cầu nâng cấp Pro / Agency</Link>
    <AdminDashboard members={(members.data??[]) as Member[]} projects={(projects.data??[]) as ManagedProject[]} plans={plans} audit={(audit.data??[]) as AuditItem[]}/>
    <p className="mt-10 flex items-center gap-2 text-xs text-slate-500"><Users size={14}/> Thông tin đăng ký chỉ hiển thị cho Admin. Không chứa mật khẩu hay khóa xác thực.</p>
   </div>

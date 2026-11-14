@@ -19,7 +19,7 @@ export default async function Pricing(){
     <p className="text-sm font-bold text-orange-300">{plan.name}</p><h2 className="mt-3 text-3xl font-extrabold">{plan.priceLabel}</h2><p className="mt-4 min-h-16 text-sm leading-6 text-slate-400">{plan.description}</p>
     <div className="my-5 h-px bg-slate-700"/>
     <div className="flex-1 space-y-3">{plan.features.map(feature=><p key={feature} className="flex items-start gap-2 text-sm"><Check size={17} className="mt-0.5 shrink-0 text-emerald-400"/>{feature}</p>)}</div>
-    {plan.code==="free" && plan.available?<Link href="/builder" className="mt-8 rounded-xl bg-orange-500 p-3 text-center text-sm font-bold">Bắt đầu sử dụng</Link>:<div aria-disabled="true" className="mt-8 rounded-xl border border-slate-600 bg-slate-800 p-3 text-center text-sm text-slate-400">Liên hệ quản trị để được cấp gói · Chưa tích hợp thanh toán tự động</div>}
+    {plan.code==="free" && plan.available?<Link href="/builder" className="mt-8 rounded-xl bg-orange-500 p-3 text-center text-sm font-bold">Bắt đầu sử dụng</Link>:<Link href={plan.code==="agency"?"/upgrade?plan=agency":"/upgrade?plan=pro"} className="mt-8 rounded-xl border border-orange-500/50 bg-orange-500/10 p-3 text-center text-sm font-bold text-orange-300 transition hover:bg-orange-500/20">Gửi yêu cầu nâng cấp gói</Link>}
    </article>)}</div>
    <p className="mt-10 flex items-center justify-center gap-2 text-center text-xs text-slate-500"><ShieldCheck size={16}/>Dữ liệu dự án và tài liệu ký được phân quyền theo tài khoản.</p>
   </div>
