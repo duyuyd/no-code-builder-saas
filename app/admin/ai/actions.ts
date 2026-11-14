@@ -12,7 +12,8 @@ export async function saveStudioAiConfig(_prev:AiAdminState,form:FormData):Promi
   const dailyUserLimit=Number(form.get("dailyUserLimit"));
   const dailyGlobalLimit=Number(form.get("dailyGlobalLimit"));
   const maxOutputTokens=Number(form.get("maxOutputTokens"));
-  if(!["gemini","deepseek","openai"].includes(provider))throw new Error("Nhà cung cấp không hợp lệ.");
+  if(!["gemini","deepseek","openai","orcarouter"].includes(provider))throw new Error("Nhà cung cấp không hợp lệ.");
+  if(provider==="orcarouter"&&model!=="orcarouter/free")throw new Error("Chỉ hỗ trợ model OrcaRouter miễn phí.");
   if(!validAiModel(model))throw new Error("Tên model không hợp lệ (3–80 ký tự).");
   if(!Number.isInteger(dailyUserLimit)||dailyUserLimit<1||dailyUserLimit>20)throw new Error("Hạn mức mỗi người: 1–20 lượt/ngày.");
   if(!Number.isInteger(dailyGlobalLimit)||dailyGlobalLimit<1||dailyGlobalLimit>300)throw new Error("Hạn mức toàn nền tảng: 1–300 lượt/ngày.");
