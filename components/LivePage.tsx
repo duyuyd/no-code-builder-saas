@@ -8,7 +8,7 @@ function Quiz({node}:{node:BuilderNode}) {
    .filter(row=>row.length===6 && row.slice(0,5).every(Boolean) && /^[1-4]$/.test(row[5])).slice(0,40),[node.props.questions]);
  const [i,setI]=useState(0),[answer,setAnswer]=useState<number|null>(null),[score,setScore]=useState(0);
  const current=questions[i];
- return <section style={nodeCss(node) as CSSProperties} className="rounded-3xl border border-indigo-100 p-5 shadow-md">
+ return <section id="quiz" style={nodeCss(node) as CSSProperties} className="rounded-3xl border border-indigo-100 p-5 shadow-md">
    <h2 className="mb-3 text-xl font-bold">{node.props.title||"Trắc nghiệm"} <span className="float-right text-xs">{Math.min(i+1,questions.length)}/{questions.length}</span></h2>
    {!questions.length?<p>Nhập mỗi câu theo dạng: Câu hỏi|A|B|C|D|1</p>:i>=questions.length?
     <div className="space-y-4 rounded-2xl bg-white p-6 text-center text-slate-900"><Trophy className="mx-auto text-amber-500" size={36}/><p className="text-2xl font-bold">{score}/{questions.length} điểm</p><button onClick={()=>{setI(0);setScore(0);setAnswer(null)}} className="rounded-xl bg-indigo-600 px-5 py-3 text-white"><RotateCcw className="mr-1 inline" size={16}/> Chơi lại</button></div>:
