@@ -1,6 +1,6 @@
 "use client";
 import { createElement, useMemo, useState, type CSSProperties, type ReactNode, type FormEvent, type MouseEvent } from "react";
-import { ArrowRight, RotateCcw, Trophy } from "lucide-react";
+import { ArrowRight, RotateCcw, Trophy, Image as ImageIcon } from "lucide-react";
 import { getDefinition, nodeCss, safeUrl, sanitizeNumeric, type BuilderNode } from "@/lib/component-registry";
 import dynamic from "next/dynamic";
 const MemoryMatchGame = dynamic(() => import("./MemoryMatchGame"), { ssr: false, loading: () => <div className="rounded-2xl bg-slate-900 p-6 text-sm text-slate-300">Đang tải trò chơi...</div> });
@@ -31,7 +31,7 @@ function Item({node,projectId,onNavigate}:{node:BuilderNode;projectId?:string;on
   case "text":return createElement(def.tag,{style:s,className:"max-w-full whitespace-pre-wrap break-words"},text);
   case "button":return node.type==="submit-button"?<button type="submit" style={s} className="w-fit rounded-xl shadow-sm">{text}</button>:href?<a href={url} onClick={navigate} style={s} className="inline-flex w-fit max-w-full items-center gap-2 rounded-xl shadow-sm hover:brightness-95">{text}<ArrowRight size={15}/></a>:<button type="button" style={s} onClick={()=>setFeedback("Chưa cấu hình liên kết.")} className="w-fit rounded-xl shadow-sm">{text}{feedback&&<span className="ml-2 text-xs">{feedback}</span>}</button>;
   case "link":return <a href={url||"#"} onClick={navigate} style={s} className="break-all underline underline-offset-4">{text}</a>;
-  case "image":return src?<img src={src} alt={p.alt??""} loading="lazy" style={s} className="max-w-full rounded-xl object-cover shadow-md"/>:<div style={s} className="rounded-xl border border-dashed text-sm">Chưa có ảnh</div>;
+  case "image":return src?<img src={src} alt={p.alt??""} loading="lazy" style={s} className="max-w-full rounded-xl object-cover shadow-md"/>:<div style={{...s,backgroundColor:"#f1f5f9",color:"#475569",minHeight:150,padding:16}} className="flex min-w-0 flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-300 text-center text-sm"><ImageIcon size={28} className="text-slate-400"/><span className="break-words">Chưa có ảnh — chọn từ Kho ảnh trong Builder</span></div>;
   case "video":return src?<video controls src={src} style={s} className="max-w-full rounded-xl"/>:<div>Chưa có URL video</div>;
   case "audio":return src?<audio controls src={src} style={s} className="max-w-full"/>:<div>Chưa có URL âm thanh</div>;
   case "divider":return def.tag==="hr"?<hr style={s}/>:<div style={{...s,height:20}}/>;
@@ -51,10 +51,10 @@ function Item({node,projectId,onNavigate}:{node:BuilderNode;projectId?:string;on
     const submit=(e:FormEvent<HTMLFormElement>)=>{e.preventDefault();const email=p.recipientEmail?.trim()||"";if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){setFeedback("Thiếu email nhận biểu mẫu.");return;}const body=Array.from(new FormData(e.currentTarget).entries()).filter((x)=>typeof x[1]==="string").map(([k,v])=>k+": "+v).join("\n");window.location.href="mailto:"+email+"?subject="+encodeURIComponent("Liên hệ từ website")+"&body="+encodeURIComponent(body.slice(0,6000));};
     return <form onSubmit={submit} style={s} className="flex min-w-0 flex-col gap-3 rounded-xl">{children}{feedback&&<p role="alert" className="text-xs text-rose-600">{feedback}</p>}</form>;
    }
-   return createElement(def.tag,{style:s,className:"min-w-0 max-w-full rounded-xl"},children);
+   return createElement(def.tag,{style:s,className:"min-w-0 max-w-full rounded-xl "+((node.type==="grid"||node.type.endsWith("-grid"))?"studio-responsive-grid":"")},children);
   }
  }
 }
 export default function LivePage({nodes,projectId,onNavigate}:{nodes:BuilderNode[];projectId?:string;onNavigate?:(path:string)=>void}) {
- return <main className="min-w-0 bg-white text-slate-900"><div className="mx-auto flex min-h-[60dvh] max-w-6xl flex-col gap-4 p-3 sm:p-6">{nodes.map(n=><Item key={n.id} node={n} projectId={projectId} onNavigate={onNavigate}/>)}</div></main>;
+ return <main className="studio-responsive-root min-w-0 bg-white text-slate-900"><div className="mx-auto flex min-h-[60dvh] max-w-6xl flex-col gap-4 p-3 sm:p-6">{nodes.map(n=><Item key={n.id} node={n} projectId={projectId} onNavigate={onNavigate}/>)}</div></main>;
 }

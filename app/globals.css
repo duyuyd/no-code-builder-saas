@@ -26,3 +26,19 @@ input, textarea, select, button { font: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .builder-node { transition: none !important; }
 }
+
+/* Container-query responsive UI works in narrow Studio preview as well as in published pages.
+   Inline columns are the user-defined desktop layout and are only overridden on narrow containers. */
+.studio-responsive-root { container-type: inline-size; }
+@container (max-width: 620px) {
+  .studio-responsive-grid {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .studio-responsive-grid > * {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-wrap: anywhere;
+  }
+}
+.studio-responsive-grid { min-width: 0; max-width: 100%; }
+.studio-responsive-grid img { max-width: 100%; height: auto; }

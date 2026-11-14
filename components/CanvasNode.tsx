@@ -64,7 +64,7 @@ function RenderElement({ node, selectedId, onSelect, onReorder, onDuplicate }: C
         </SortableContext>
         <DropInside id={node.id} />
       </>;
-      return createElement(def.tag, { style, className: "min-h-24 w-full min-w-0 rounded-xl border border-slate-200 shadow-sm" }, children);
+      return createElement(def.tag, { style, className: "min-h-24 w-full min-w-0 rounded-xl border border-slate-200 shadow-sm "+((node.type==="grid"||node.type.endsWith("-grid"))?"studio-responsive-grid":"") }, children);
     }
   }
 }

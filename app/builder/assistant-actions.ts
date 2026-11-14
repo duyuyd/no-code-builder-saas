@@ -7,7 +7,16 @@ import {validateGameScene} from "@/lib/game-scene";
 export type AssistantResponse={ok:true;mode:"guidance"|"gemini";answer:string;context:string}|{ok:false;error:string};
 type Input={projectId:string;pageId:string;question:string;selectedId?:string|null;contextKind?:"builder"|"game"};
 function answerOffline(question:string,context:string):string{
- const q=question.toLocaleLowerCase("vi-VN");
+ const q=question.trim().toLocaleLowerCase("vi-VN");
+ const normalized=q.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d");
+ if(/^(alo+|hello+|hi+|chao|xin chao|hey+)[!?. ]*$/.test(normalized))
+  return "Chào bạn. Tôi là trợ lý bên trong No-Code Studio. Tôi đang xem: "+context+". Bạn có thể hỏi tôi sửa bố cục đang xem, chèn ảnh, sắp xếp khối trên Android hoặc mở màn thiết kế game. Tôi chưa tự nhấn nút hay thay đổi dữ liệu của bạn.";
+ if(/(ban la ai|may la ai|tro ly la ai|ai day|ten gi|la chatgpt hay gemini)/.test(normalized))
+  return "Tôi là Trợ lý Studio, không phải Google Gemini đang hoạt động. Tôi đọc loại dự án, trang, thành phần đã lưu và hướng dẫn thao tác bằng bộ quy tắc nội bộ. Tôi không tự sửa dự án hoặc trả lời như một chatbot AI tổng quát. Gemini chỉ được gọi nếu quản trị viên tự cấp khóa và bật chế độ ngoài.";
+ if(/(preview|xem truoc|chay thu|3 cot|ba cot|vo bo cuc|chu bi be|chu bi xuong dong|bi hep|responsive|mobile).*(loi|hep|vo|cot|chu|anh|giao dien)|(?:loi|vo|hep).*(?:cot|preview|chay thu)/.test(normalized))
+  return "Bản xem trước trên màn hình Android nên chuyển bố cục grid 2–6 cột thành 1 cột khi khung rộng dưới 620px. Tôi đã cập nhật cơ chế responsive ở Canvas và Chạy thử; điều chỉnh mẫu bằng cách chọn khối Grid → Thuộc tính. Nếu ảnh trắng có chữ khó nhìn, hãy chọn khối Hình ảnh và chọn ảnh trong Kho ảnh.";
+ if(/(lien quan|lien minh|moba|5v5|ban do|tuong|tru|duong |jungle|lane)/.test(normalized))
+  return "Bản đồ game dạng vật thể 2D cũ chưa phải MOBA. Một map MOBA thực cần ba làn đường, rừng, trụ, lính, hero AI, kỹ năng, HUD và điều kiện phá nhà chính. Đừng nhầm demo thu thập sao với 5v5. Mở /game-maps để xem mẫu hiện có; muốn chơi trận MOBA phải dùng core chuyên biệt, không chỉ đổi màu nền.";
  let reply="";
  if(/kéo|thả|chọn|bấm|thao tác|dính|mobile|điện thoại/.test(q))
  reply="1. Trên điện thoại, bấm Thêm và dấu + cạnh thành phần để chèn, không phải kéo bằng tay.\n2. Chạm khối trong Canvas: bảng Thuộc tính hiện ra. Chọn một trong 12 kiểu có sẵn.\n3. Trên Android có nút ↑ Lên, ↓ Xuống và Nhân đôi ngay trên khối. Muốn kéo, giữ tay cầm khoảng 0,26 giây rồi di chuyển.\n4. Đợi trạng thái Đã lưu vào Supabase rồi bấm Chạy thử.";
@@ -24,7 +33,7 @@ function answerOffline(question:string,context:string):string{
  else if(/admin|quản trị|thành viên|dự án rác|xóa/.test(q))
  reply="Vào /admin để xem tài khoản thật, dự án, quyền, gói cước và nhật ký (chỉ tài khoản admin). Vào /projects để lưu trữ hoặc khôi phục dự án trong Thùng rác. Phần thanh toán do chủ nền tảng tự cấu hình.";
  else
- reply="Bạn có thể hỏi cách kéo thả, chọn mẫu, chỉnh màu, chèn ảnh, xây game, tạo website, lưu hoặc xuất bản. Trợ lý hiện đọc đúng trang và loại thành phần nhưng chưa tự thao tác hay tự tạo tính năng mới.";
+ reply="Tôi chưa hiểu ý định cụ thể của câu này khi chạy offline. Trang đang mở có "+context+". Hãy chọn khối đang bị lỗi và mô tả thao tác (ví dụ: Grid ba cột bị vỡ trên Android, nút không có liên kết hoặc ảnh chưa hiển thị). Tôi sẽ hướng dẫn dựa trên dữ liệu đã lưu, không tự nhận là AI hội thoại tổng quát.";
  return "Ngữ cảnh: "+context+"\n\n"+reply;
 }
 function countAndFind(tree:BuilderNode[],id:string|null|undefined){
