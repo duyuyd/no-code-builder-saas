@@ -11,8 +11,8 @@ const presetCache=new Map<string,Promise<ComponentPreset[]>>();
 function getPresets(type:string):Promise<ComponentPreset[]>{
  let req=presetCache.get(type);
  if(!req){
-  req=createClient().from("component_presets").select("component_type,variant_key,label_vi,context_vi,props_override,style_override,sort_order")
-   .eq("component_type",type).order("sort_order").then(({data,error})=>{
+  req=Promise.resolve(createClient().from("component_presets").select("component_type,variant_key,label_vi,context_vi,props_override,style_override,sort_order")
+   .eq("component_type",type).order("sort_order")).then(({data,error})=>{
     if(error)throw new Error(error.message);
     return (data??[]) as ComponentPreset[];
    });
