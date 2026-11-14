@@ -27,6 +27,8 @@ type Action =
   | { type: "preset"; id: string; preset: ComponentPreset }
   | { type: "delete"; id: string }
   | { type: "move"; id: string; target: DropTarget }
+  | { type: "nudge"; id:string; direction:-1|1 }
+  | { type: "duplicate"; id:string }
   | { type: "undo" } | { type: "redo" };
 
 function countNodes(node:BuilderNode):number{
@@ -78,6 +80,22 @@ function reducer(state: History, action: Action): History {
       return commit(state, nodes, state.selectedId && findNode(nodes, state.selectedId) ? state.selectedId : null);
     }
     case "move": return commit(state, moveNode(state.nodes, action.id, action.target), action.id);
+    case "nudge": {
+      const position=findLocation(state.nodes,action.id);
+      if(!position)return state;
+      const siblings=position.parentId?findNode(state.nodes,position.parentId)?.children:state.nodes;
+      if(!siblings||position.index+action.direction<0||position.index+action.direction>=siblings.length)return state;
+      const targetIndex=action.direction===1?position.index+2:position.index-1;
+      return commit(state,moveNode(state.nodes,action.id,{parentId:position.parentId,index:targetIndex}),action.id);
+    }
+    case "duplicate": {
+      const original=findNode(state.nodes,action.id);
+      const position=findLocation(state.nodes,action.id);
+      if(!original||!position)return state;
+      const copy=cloneNodes([original])[0];
+      const next=insertNode(state.nodes,{parentId:position.parentId,index:position.index+1},copy);
+      return validateUiTree(next)?commit(state,next,copy.id):state;
+    }
     case "undo": {
       if (!state.past.length) return state;
       const nodes = state.past[state.past.length - 1];
@@ -365,7 +383,7 @@ export default function BuilderWorkspace({ pageId, projectId, userId, projectKin
     <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={() => setDragging("")}>
       <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[270px_minmax(0,1fr)_320px]">
         <div className="hidden min-h-0 lg:block"><ComponentPalette onAdd={onAdd}/></div>
-        <BuilderCanvas device={device} onPreview={()=>{setPreviewPath(pagePath);setPreviewOpen(true);}} nodes={state.nodes} selectedId={state.selectedId} onSelect={onSelect} onRequestAdd={() => setMobilePaletteOpen(true)}/>
+        <BuilderCanvas onReorder={(id,direction)=>dispatch({type:"nudge",id,direction})} onDuplicate={id=>dispatch({type:"duplicate",id})} device={device} onPreview={()=>{setPreviewPath(pagePath);setPreviewOpen(true);}} nodes={state.nodes} selectedId={state.selectedId} onSelect={onSelect} onRequestAdd={() => setMobilePaletteOpen(true)}/>
         <div className="hidden min-h-0 lg:block"><PropertiesPanel userId={userId} onApplyPreset={(id,preset)=>dispatch({type:"preset",id,preset})} node={selectedNode} onChange={(id, field, key, value) => dispatch({ type: "edit", id, field, key, value })} onDelete={onDelete}/></div>
       </div>
       <DragOverlay dropAnimation={null} zIndex={70}>

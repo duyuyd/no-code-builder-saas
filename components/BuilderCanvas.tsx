@@ -1,16 +1,17 @@
 "use client";
-import { motion } from "framer-motion";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { LayoutTemplate, MousePointer2, Plus, Smartphone } from "lucide-react";
 import CanvasNode from "./CanvasNode";
 import type { BuilderNode } from "@/lib/component-registry";
 
-export default function BuilderCanvas({ nodes, selectedId, onSelect, onRequestAdd, device="desktop", onPreview }: {
+export default function BuilderCanvas({ nodes, selectedId, onSelect, onRequestAdd, device="desktop", onPreview, onReorder, onDuplicate }: {
   device?: "mobile" | "tablet" | "desktop"; onPreview?:()=>void;
   nodes: BuilderNode[];
   selectedId: string | null;
   onSelect: (id: string | null) => void;
+  onReorder?:(id:string,direction:-1|1)=>void;
+  onDuplicate?:(id:string)=>void;
   onRequestAdd?: () => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: "canvas-root", data: { kind: "root" } });
@@ -21,7 +22,7 @@ export default function BuilderCanvas({ nodes, selectedId, onSelect, onRequestAd
       <button type="button" onClick={onPreview} className="flex items-center gap-1.5 rounded-lg border border-slate-700/80 bg-slate-800/80 px-2.5 py-1.5 text-[11px] text-white hover:border-orange-400"><Smartphone size={13}/> Chạy thử</button>
     </div>
     <div className="relative z-10 flex min-h-0 flex-1 justify-start overflow-x-auto px-3 pb-28 pt-2 sm:justify-center sm:px-6 sm:pb-8">
-      <motion.div layout initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.24 }} className="shrink-0 self-start transition-[width]" style={{width:device==="mobile"?"390px":device==="tablet"?"768px":"1120px",maxWidth:device==="mobile"?"100%":undefined}}>
+      <div className="shrink-0 self-start transition-[width]" style={{width:device==="mobile"?"390px":device==="tablet"?"768px":"1120px",maxWidth:device==="mobile"?"100%":undefined}}>
         <div className="mx-auto mb-0 h-7 w-32 rounded-t-xl border border-b-0 border-slate-600 bg-slate-800/90 px-4 py-2 text-center text-[10px] font-semibold tracking-wide text-slate-400">{device==="mobile"?"ĐIỆN THOẠI":device==="tablet"?"MÁY TÍNH BẢNG":"WEB MÁY TÍNH"}</div>
         <div ref={setNodeRef} onClick={() => onSelect(null)} className={`min-h-[520px] rounded-2xl rounded-tl-xl border-2 bg-white p-4 text-slate-900 shadow-[0_28px_75px_rgba(0,0,0,0.35)] transition-colors duration-200 sm:min-h-[680px] sm:p-7 ${isOver ? "border-orange-400 ring-4 ring-orange-500/15" : "border-slate-500/60"}`}>
           {nodes.length === 0 && <div className="flex min-h-[450px] flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/80 px-5 text-center">
@@ -30,12 +31,12 @@ export default function BuilderCanvas({ nodes, selectedId, onSelect, onRequestAd
             <button type="button" onClick={e => { e.stopPropagation(); onRequestAdd?.(); }} className="flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-500/15 transition hover:bg-orange-400 lg:hidden"><Plus size={16}/> Thêm thành phần</button>
           </div>}
           <SortableContext items={nodes.map(node => `node:${node.id}`)} strategy={verticalListSortingStrategy}>
-            <div className="flex flex-col gap-3">{nodes.map(node => <CanvasNode key={node.id} node={node} selectedId={selectedId} onSelect={onSelect}/>)}</div>
+            <div className="flex flex-col gap-3">{nodes.map(node => <CanvasNode key={node.id} node={node} selectedId={selectedId} onSelect={onSelect} onReorder={onReorder} onDuplicate={onDuplicate}/>)}</div>
           </SortableContext>
           {nodes.length > 0 && <div className={`pointer-events-none mt-5 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed px-3 py-5 text-center text-xs transition-colors ${isOver ? "border-orange-400 bg-orange-50 text-orange-500" : "border-slate-200 bg-slate-50 text-slate-400"}`}><Plus size={15}/> Thả vào đây để thêm khối cuối trang</div>}
         </div>
         <div className="mt-4 text-center text-[11px] text-slate-500">Chọn thành phần để chỉnh sửa • Kéo tay cầm để sắp xếp</div>
-      </motion.div>
+      </div>
     </div>
   </main>;
 }

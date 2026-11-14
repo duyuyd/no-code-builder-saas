@@ -3,9 +3,9 @@ import { createElement, type CSSProperties, type ReactNode } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Image as ImageIcon } from "lucide-react";
+import { GripVertical, ArrowUp, ArrowDown, Copy, Image as ImageIcon } from "lucide-react";
 import { getDefinition, nodeCss, safeUrl, sanitizeNumeric, type BuilderNode } from "@/lib/component-registry";
-export type CanvasNodeProps = { node: BuilderNode; selectedId: string | null; onSelect: (id: string) => void };
+export type CanvasNodeProps = { node: BuilderNode; selectedId: string | null; onSelect: (id: string) => void; onReorder?:(id:string,direction:-1|1)=>void; onDuplicate?:(id:string)=>void };
 
 function DropInside({ id }: { id: string }) {
   const { setNodeRef, isOver } = useDroppable({ id: `inside:${id}`, data: { kind: "inside", id } });
@@ -13,7 +13,7 @@ function DropInside({ id }: { id: string }) {
     Thả thành phần vào vùng chứa
   </div>;
 }
-function RenderElement({ node, selectedId, onSelect }: CanvasNodeProps) {
+function RenderElement({ node, selectedId, onSelect, onReorder, onDuplicate }: CanvasNodeProps) {
   const def = getDefinition(node.type);
   if (!def) return null;
   const p = node.props;
@@ -60,7 +60,7 @@ function RenderElement({ node, selectedId, onSelect }: CanvasNodeProps) {
     case "container": {
       const children: ReactNode = <>
         <SortableContext items={node.children.map(c => `node:${c.id}`)} strategy={verticalListSortingStrategy}>
-          {node.children.map(child => <CanvasNode key={child.id} node={child} selectedId={selectedId} onSelect={onSelect} />)}
+          {node.children.map(child => <CanvasNode key={child.id} node={child} selectedId={selectedId} onSelect={onSelect} onReorder={onReorder} onDuplicate={onDuplicate} />)}
         </SortableContext>
         <DropInside id={node.id} />
       </>;
@@ -68,7 +68,7 @@ function RenderElement({ node, selectedId, onSelect }: CanvasNodeProps) {
     }
   }
 }
-export default function CanvasNode({ node, selectedId, onSelect }: CanvasNodeProps) {
+export default function CanvasNode({ node, selectedId, onSelect, onReorder, onDuplicate }: CanvasNodeProps) {
   const { setNodeRef, setActivatorNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: `node:${node.id}`, data: { kind: "node", id: node.id },
   });
@@ -77,11 +77,16 @@ export default function CanvasNode({ node, selectedId, onSelect }: CanvasNodePro
     onClick={e => { e.stopPropagation(); onSelect(node.id); }}>
     <div className="mb-2 flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-2 py-1 text-[11px] text-slate-500">
       <span className="min-w-0 truncate font-semibold text-slate-600">{getDefinition(node.type)?.label}</span>
-      <button type="button" ref={setActivatorNodeRef} {...attributes} {...listeners} aria-label="Kéo để sắp xếp thành phần"
-        className="drag-handle flex size-7 shrink-0 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-200 hover:text-orange-500"><GripVertical size={17}/></button>
+      <span className="flex shrink-0 items-center gap-1">
+       <button type="button" onClick={e=>{e.stopPropagation();onReorder?.(node.id,-1);}} aria-label="Đưa khối lên một vị trí" title="Lên trên" className="flex size-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 active:bg-orange-100"><ArrowUp size={17}/></button>
+       <button type="button" onClick={e=>{e.stopPropagation();onReorder?.(node.id,1);}} aria-label="Đưa khối xuống một vị trí" title="Xuống dưới" className="flex size-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 active:bg-orange-100"><ArrowDown size={17}/></button>
+       <button type="button" onClick={e=>{e.stopPropagation();onDuplicate?.(node.id);}} aria-label="Nhân đôi khối" title="Nhân đôi" className="flex size-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 active:bg-orange-100"><Copy size={16}/></button>
+       <button type="button" ref={setActivatorNodeRef} {...attributes} {...listeners} onClick={e=>e.stopPropagation()} aria-label="Giữ rồi kéo để sắp xếp khối" title="Giữ 0,26 giây và kéo" style={{touchAction:"none"}}
+        className="drag-handle flex size-10 shrink-0 items-center justify-center rounded-lg bg-orange-100 text-orange-700 active:bg-orange-200"><GripVertical size={20}/></button>
+      </span>
     </div>
     <div className="min-w-0 overflow-hidden rounded-lg">
-      <RenderElement node={node} selectedId={selectedId} onSelect={onSelect}/>
+      <RenderElement node={node} selectedId={selectedId} onSelect={onSelect} onReorder={onReorder} onDuplicate={onDuplicate}/>
     </div>
   </div>;
 }
