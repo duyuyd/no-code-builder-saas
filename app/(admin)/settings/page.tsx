@@ -14,7 +14,8 @@ export default async function AdminSettingsPage() {
     <div className="flex flex-wrap items-center gap-4"><Link href="/builder" className="brand-text text-sm underline">← Quay lại Builder</Link><Link href="/admin" className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white">Trung tâm quản trị</Link></div>
     <h1 className="my-6 text-3xl font-bold">Cài đặt nền tảng</h1>
     <AdminSettingsForm title={siteTitle} color={primaryColor} />
-    <nav aria-label="Tính năng SaaS" className="mt-6 grid gap-3 sm:grid-cols-3">
+    <nav aria-label="Tính năng SaaS" className="mt-6 grid gap-3 sm:grid-cols-2">
+      <Link href="/admin/ai" className="rounded-xl border border-orange-500/30 bg-white p-4 text-sm font-semibold text-slate-800 shadow-sm hover:border-orange-500">🤖 Cấu hình AI Gemini / DeepSeek / OpenAI</Link>
       <Link href="/domains" className="rounded-xl border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-800 shadow-sm hover:border-orange-500">🌐 Tên miền riêng</Link>
       <Link href="/sign" className="rounded-xl border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-800 shadow-sm hover:border-orange-500">✍️ Ký PDF</Link>
       <Link href="/pricing" className="rounded-xl border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-800 shadow-sm hover:border-orange-500">💳 Bảng giá SaaS</Link>

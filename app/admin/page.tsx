@@ -25,7 +25,7 @@ export default async function AdminPage(){
  return <main className="min-h-dvh bg-[#0f172a] px-4 py-7 text-slate-100 sm:px-6">
   <div className="mx-auto max-w-7xl">
    <div className="mb-7 flex flex-wrap items-center justify-between gap-3"><Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-orange-300 hover:underline"><ArrowLeft size={16}/> Trang chủ Studio</Link>
-     <Link href="/settings" className="rounded-xl border border-slate-700 px-4 py-2 text-xs text-slate-200 hover:bg-slate-800">Cấu hình hệ thống</Link></div>
+     <div className="flex flex-wrap gap-2"><Link href="/admin/ai" className="rounded-xl border border-orange-500/60 bg-orange-500/10 px-4 py-2 text-xs font-bold text-orange-200 hover:bg-orange-500/20">🤖 Quản lý trợ lý AI</Link><Link href="/settings" className="rounded-xl border border-slate-700 px-4 py-2 text-xs text-slate-200 hover:bg-slate-800">Cấu hình hệ thống</Link></div></div>
    <div className="mb-6 flex items-center gap-4">
     <div className="rounded-2xl bg-orange-500 p-3"><ShieldCheck size={28}/></div>
     <div><h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Trung tâm Quản trị</h1><p className="mt-1 text-sm text-slate-400">Tài khoản thật · Dự án · Gói nâng cấp · Nhật ký</p></div>
