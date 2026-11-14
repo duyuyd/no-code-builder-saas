@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { validateUiTree, type BuilderNode } from "@/lib/component-registry";
 import { mergeUiTrees } from "@/lib/merge-ui-tree";
+import { validateGameScene } from "@/lib/game-scene";
 export type SaveResult = { ok: true; version: number; tree: BuilderNode[] } | { ok: false; error: string; reason?: "conflict" | "forbidden" | "invalid" };
 export async function createProject(formData: FormData) {
   const templateId = String(formData.get("template_id") ?? "").trim();
@@ -14,11 +15,13 @@ export async function createProject(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
   let kind = "website";
+  let sceneCode: string | null = null;
   let templatePages: {path:string;ui_tree:BuilderNode[]}[] = [{path:"/",ui_tree:[]}];
   if (templateId) {
-    const {data:template,error:templateError}=await supabase.from("starter_templates").select("kind,pages").eq("id",templateId).eq("is_active",true).single();
+    const {data:template,error:templateError}=await supabase.from("starter_templates").select("kind,pages,game_scene_code").eq("id",templateId).eq("is_active",true).single();
     if (templateError || !template || !Array.isArray(template.pages)) throw new Error("Không thể tải mẫu.");
     kind=template.kind;
+    sceneCode=typeof template.game_scene_code==="string"?template.game_scene_code:null;
     templatePages=template.pages;
     if(!templatePages.length || templatePages.length>20 || !templatePages.every(p => new RegExp("^/[a-z0-9/_-]*$","i").test(p.path) && validateUiTree(p.ui_tree))) throw new Error("Nội dung mẫu không hợp lệ.");
   }
@@ -32,8 +35,24 @@ export async function createProject(formData: FormData) {
     await supabase.from("projects").delete().eq("id", project.id);
     throw new Error(pageError.message);
   }
+  if(kind==="game" && sceneCode){
+    const {data:starter,error:starterError}=await supabase.from("game_scene_templates")
+      .select("scene").eq("code",sceneCode).eq("is_active",true).maybeSingle();
+    if(starterError||!starter||!validateGameScene(starter.scene)){
+      await supabase.from("projects").delete().eq("id",project.id);
+      throw new Error("Bản đồ game khởi tạo không hợp lệ. Đã hủy dự án mới.");
+    }
+    const scene=structuredClone(starter.scene);
+    const {error:gameError}=await supabase.from("game_projects")
+      .insert({project_id:project.id,scene,version:1});
+    if(gameError){
+      await supabase.from("projects").delete().eq("id",project.id);
+      throw new Error("Không thể khởi tạo game: "+gameError.message);
+    }
+  }
+  revalidatePath("/dashboard");
   revalidatePath("/builder");
-  redirect(`/builder?project=${project.id}`);
+  redirect(kind==="game"?`/game-builder?project=${project.id}`:`/builder?project=${project.id}`);
 }
 export async function createPage(formData: FormData) {
   const projectId = String(formData.get("project_id") ?? "");

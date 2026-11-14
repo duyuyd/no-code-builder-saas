@@ -1,2 +1,44 @@
-import { redirect } from "next/navigation";
-export default function Home() { redirect("/builder"); }
+import Link from "next/link";
+import {ArrowUpRight,Blocks,BookOpen,Check,ChevronRight,Gamepad2,Globe2,Layers3,MonitorPlay,Palette,ShieldCheck,Sparkles,Store,Workflow} from "lucide-react";
+import {getSiteSettings} from "@/lib/platform-settings";
+import {createClient} from "@/lib/supabase/server";
+
+export const dynamic="force-dynamic";
+export default async function Home(){
+ const [{siteTitle},db]=await Promise.all([getSiteSettings(),createClient()]);
+ const {data:templates,error}=await db.from("starter_templates").select("id,name,kind,description").eq("is_active",true).order("name").limit(8);
+ if(error)throw new Error(error.message);
+ return <main className="min-h-dvh overflow-hidden bg-[#080f1e] text-white">
+  <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-5 sm:px-8">
+   <Link href="/" className="flex min-w-0 items-center gap-2.5 font-black tracking-tight"><span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-orange-500 shadow-lg shadow-orange-600/20"><Blocks size={22}/></span><span className="max-w-[180px] truncate text-sm sm:max-w-none sm:text-lg">{siteTitle}</span></Link>
+   <nav className="flex items-center gap-2 sm:gap-4" aria-label="Điều hướng chính"><Link href="#templates" className="hidden text-sm text-slate-300 hover:text-white sm:inline">Mẫu thiết kế</Link><Link href="/login" className="rounded-xl border border-slate-600 px-3 py-2 text-xs font-bold text-slate-100 hover:bg-slate-800 sm:px-4">Đăng nhập</Link><Link href="/dashboard" className="rounded-xl bg-orange-500 px-3 py-2 text-xs font-bold text-white hover:bg-orange-400 sm:px-5">Vào Studio</Link></nav>
+  </header>
+  <section className="relative mx-auto grid min-h-[600px] max-w-7xl items-center gap-12 px-4 pb-14 pt-16 sm:px-8 lg:grid-cols-[1.08fr_.92fr] lg:py-24">
+   <div className="pointer-events-none absolute -left-40 top-0 size-[450px] rounded-full bg-orange-600/10 blur-[100px]" aria-hidden="true"/>
+   <div className="relative">
+    <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-orange-400/25 bg-orange-500/10 px-4 py-2 text-xs font-semibold text-orange-200"><Sparkles size={15}/> Một nơi để làm website, ứng dụng và game 2D</div>
+    <h1 className="max-w-3xl text-4xl font-black leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl">Biến ý tưởng thành <span className="bg-gradient-to-r from-orange-300 via-orange-500 to-amber-300 bg-clip-text text-transparent">sản phẩm thật.</span></h1>
+    <p className="mt-7 max-w-xl text-base leading-8 text-slate-300 sm:text-lg">Chọn một mẫu có nội dung sẵn, chỉnh bằng kéo thả, đổi màu, chèn ảnh và xuất bản ngay trên trình duyệt. Từng dự án và lần lưu đều gắn với tài khoản của bạn.</p>
+    <div className="mt-9 flex flex-wrap items-center gap-3"><Link href="/login?mode=register" className="inline-flex items-center gap-2 rounded-2xl bg-orange-500 px-6 py-4 text-sm font-bold shadow-xl shadow-orange-600/20 transition hover:bg-orange-400">Tạo tài khoản miễn phí <ArrowUpRight size={18}/></Link><Link href="#templates" className="inline-flex items-center gap-2 rounded-2xl border border-slate-600 bg-white/5 px-6 py-4 text-sm font-semibold hover:border-slate-400">Khám phá mẫu có sẵn <ChevronRight size={18}/></Link></div>
+    <div className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-400"><span className="flex items-center gap-2"><Check size={15} className="text-emerald-400"/> Không cần viết code để bắt đầu</span><span className="flex items-center gap-2"><Check size={15} className="text-emerald-400"/> Tự lưu vào Supabase</span><span className="flex items-center gap-2"><Check size={15} className="text-emerald-400"/> Chỉnh sửa trên di động</span></div>
+   </div>
+   <div className="relative rounded-[30px] border border-slate-600/70 bg-slate-900 p-3 shadow-[0_40px_100px_rgba(0,0,0,.45)] sm:p-5">
+    <div className="mb-4 flex items-center justify-between border-b border-slate-700 pb-3 text-[11px] text-slate-400"><div className="flex items-center gap-1.5"><i className="size-2.5 rounded-full bg-rose-500"/><i className="size-2.5 rounded-full bg-amber-400"/><i className="size-2.5 rounded-full bg-emerald-400"/></div><span>Không gian làm việc</span><span className="rounded bg-slate-800 px-2 py-1">Preview</span></div>
+    <div className="grid grid-cols-[85px_minmax(0,1fr)] gap-3 sm:grid-cols-[130px_minmax(0,1fr)_95px]">
+     <aside className="space-y-2 rounded-2xl bg-slate-800/70 p-3">{["Văn bản","Bố cục","Hình ảnh","Mẫu","Trò chơi"].map((name,i)=><div key={name} className={"rounded-lg p-2 text-[10px] "+(i===3?"bg-orange-500/20 text-orange-200":"bg-slate-700/60 text-slate-300")}>{name}</div>)}</aside>
+     <div className="overflow-hidden rounded-2xl bg-white p-4 text-slate-900 sm:p-5"><div className="mb-4 h-2 w-20 rounded-full bg-orange-200"/><div className="rounded-xl bg-gradient-to-br from-orange-100 to-amber-50 p-4"><div className="w-max rounded bg-orange-200 px-2 py-1 text-[10px] font-bold text-orange-800">STUDIO</div><div className="mt-3 text-xl font-black leading-tight sm:text-2xl">Thiết kế theo cách của bạn.</div><p className="mt-2 text-[11px] leading-5 text-slate-600">Mọi khối đều có thể chọn và chỉnh sửa.</p><div className="mt-4 w-max rounded-lg bg-orange-500 px-3 py-2 text-[10px] font-bold text-white">Bắt đầu</div></div><div className="mt-4 grid grid-cols-2 gap-2"><div className="h-20 rounded-xl bg-slate-100"/><div className="h-20 rounded-xl bg-slate-100"/></div></div>
+     <aside className="hidden space-y-3 rounded-2xl bg-slate-800/70 p-3 sm:block">{["Màu sắc","Cỡ chữ","Bố cục","Khoảng cách"].map((item,i)=><div key={item} className="text-[10px] text-slate-300">{item}<div className="mt-1.5 h-5 rounded bg-slate-700" style={i===0?{background:"#f97316"}:undefined}/></div>)}</aside>
+    </div>
+    <div className="mt-4 flex items-center justify-between rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-[11px] text-emerald-300"><span className="flex items-center gap-2"><ShieldCheck size={14}/> Dự án có quyền truy cập riêng</span><span>Supabase</span></div>
+   </div>
+  </section>
+  <section id="templates" className="border-t border-slate-800 bg-[#101b2e] px-4 py-16 sm:px-8"><div className="mx-auto max-w-7xl">
+   <div className="mb-8 flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.25em] text-orange-400">Bắt đầu nhanh</p><h2 className="mt-3 text-3xl font-black">Mẫu sản phẩm có thể chỉnh sửa</h2><p className="mt-3 max-w-xl text-sm leading-7 text-slate-400">Các mẫu đọc từ thư viện thật trong database. Đăng nhập để khởi tạo một bản sao riêng.</p></div><Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-semibold text-orange-300">Xem toàn bộ mẫu <ArrowUpRight size={16}/></Link></div>
+   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{(templates??[]).map((item,i)=>{const Icon=item.kind==="game"?Gamepad2:item.kind==="app"?MonitorPlay:i%2===0?Store:Globe2;return <article key={item.id} className="group flex flex-col rounded-2xl border border-slate-700 bg-[#17243a] p-5 transition hover:-translate-y-1 hover:border-orange-400/60"><div className="mb-5 flex size-12 items-center justify-center rounded-xl bg-slate-800 text-orange-300"><Icon size={24}/></div><p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-orange-300">{item.kind==="game"?"Game":item.kind==="app"?"Ứng dụng":"Website"}</p><h3 className="text-lg font-bold">{item.name}</h3><p className="mt-3 min-h-16 flex-1 text-xs leading-6 text-slate-400">{item.description}</p><Link href={"/dashboard?template="+encodeURIComponent(item.id)} className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-slate-100">Sử dụng mẫu <ArrowUpRight size={15}/></Link></article>})}</div>
+  </div></section>
+  <section className="mx-auto grid max-w-7xl gap-5 px-4 py-16 sm:grid-cols-3 sm:px-8">
+   {[[Palette,"Thiết kế linh hoạt","Chọn bố cục, màu, hình ảnh và 12 biến thể cho mỗi thành phần."],[Workflow,"Thao tác có hướng dẫn","Dùng thư viện, bảng thuộc tính, xem trước, hoàn tác và tự lưu."],[BookOpen,"Sở hữu dự án","Tạo nhiều trang, lưu bản nháp riêng và xuất bản khi sẵn sàng."]].map(([Icon,label,desc],i)=>{const I=Icon as typeof Palette;return <div key={String(i)} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6"><I className="mb-4 text-orange-400" size={26}/><h3 className="font-bold">{String(label)}</h3><p className="mt-3 text-sm leading-7 text-slate-400">{String(desc)}</p></div>})}
+  </section>
+  <footer className="border-t border-slate-800 px-4 py-7 text-center text-xs text-slate-500">{siteTitle} · <Link href="/login" className="text-orange-300">Đăng nhập</Link> · <Link href="/resources" className="text-orange-300">Thư viện tài nguyên</Link></footer>
+ </main>;
+}

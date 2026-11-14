@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { motion } from "framer-motion";
-import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, pointerWithin, rectIntersection, useSensor, useSensors, type CollisionDetection, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core";
+import { DndContext, DragOverlay, KeyboardSensor, MouseSensor, TouchSensor, pointerWithin, rectIntersection, useSensor, useSensors, type CollisionDetection, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { CheckCircle2, ChevronDown, CloudUpload, Code2, Download, Eye, ExternalLink, Globe2, Monitor, Smartphone, Tablet, Rocket, FileCode2, LoaderCircle, Plus, Redo2, Save, Settings2, Undo2, X } from "lucide-react";
 import ComponentPalette from "./ComponentPalette";
@@ -15,6 +15,8 @@ import { findLocation, findNode, insertNode, moveNode, removeNode, updateNode, t
 import { generateHtmlCode, generateReactCode } from "@/lib/code-generator";
 import { savePageTree, publishProject, unpublishProject } from "@/app/builder/actions";
 import LivePage from "./LivePage";
+import StudioAssistant from "./StudioAssistant";
+import BuilderTour from "./BuilderTour";
 
 type History = { past: BuilderNode[][]; nodes: BuilderNode[]; future: BuilderNode[][]; selectedId: string | null };
 type Action =
@@ -27,6 +29,9 @@ type Action =
   | { type: "move"; id: string; target: DropTarget }
   | { type: "undo" } | { type: "redo" };
 
+function countNodes(node:BuilderNode):number{
+ return 1+node.children.reduce((sum,child)=>sum+countNodes(child),0);
+}
 function commit(state: History, nodes: BuilderNode[], selectedId: string | null = state.selectedId): History {
   if (nodes === state.nodes) return state;
   return { nodes, selectedId, past: [...state.past.slice(-49), state.nodes], future: [] };
@@ -176,7 +181,7 @@ export default function BuilderWorkspace({ pageId, projectId, userId, projectKin
   const version = useRef(initialVersion);
   const isSaving = useRef(false);
   useEffect(()=>{if(window.innerWidth < 640)setDevice("mobile");},[]);
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
+  const sensors = useSensors(useSensor(MouseSensor, { activationConstraint: { distance: 8 } }), useSensor(TouchSensor, { activationConstraint: { delay: 260, tolerance: 9 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
 
   // Restore unsaved edits if this tab was refreshed. Supabase is the canonical store.
   useEffect(() => {
@@ -332,6 +337,8 @@ export default function BuilderWorkspace({ pageId, projectId, userId, projectKin
       <div className="hidden items-center gap-1 rounded-lg border border-slate-700 bg-slate-900 p-1 sm:flex">
        {([{id:"mobile",Icon:Smartphone},{id:"tablet",Icon:Tablet},{id:"desktop",Icon:Monitor}] as const).map(({id,Icon})=><button key={id} type="button" title={id} aria-label={"Xem "+id} aria-pressed={device===id} onClick={()=>setDevice(id)} className={"rounded-lg p-2 "+(device===id?"bg-orange-500 text-white":"text-slate-400 hover:bg-slate-700")}><Icon size={16}/></button>)}
       </div>
+      <BuilderTour onOpenComponents={()=>setMobilePaletteOpen(true)} onOpenProperties={()=>setMobilePropertiesOpen(true)}/>
+      <StudioAssistant projectId={projectId} pageId={pageId} selectedId={state.selectedId} selectedType={selectedNode?.type??null} blockCount={state.nodes.reduce((total,node)=>total+countNodes(node),0)}/>
       <a href="/assets" target="_blank" rel="noopener noreferrer" title="Kho ảnh và nguồn tài nguyên" className="flex h-9 items-center gap-1 rounded-xl border border-slate-600 bg-slate-800 px-2 text-xs font-semibold text-slate-200 hover:border-orange-400 sm:h-10">🖼️<span className="hidden lg:inline">Tài nguyên</span></a>
       {projectKind === "game" && <a href={"/game-builder?project="+projectId} title="Thiết kế game 2D có màn chơi" className="flex h-9 items-center gap-1 rounded-xl border border-orange-500/50 bg-orange-500/10 px-3 text-xs font-bold text-orange-300 hover:bg-orange-500/20 sm:h-10"><span className="text-base">🎮</span><span className="hidden sm:inline">Game 2D</span></a>}
       <button type="button" title="Chạy thử tương tác" onClick={()=>{setPreviewPath(pagePath);setPreviewError("");setPreviewOpen(true);}} className="flex size-9 items-center justify-center rounded-xl border border-slate-600 bg-slate-700 text-white sm:size-10"><Eye size={18}/></button>

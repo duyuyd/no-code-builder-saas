@@ -37,7 +37,7 @@ export default async function BuilderPage({ searchParams }: {
       </div>
       <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-orange-400/20 bg-orange-500/10 px-3 py-1 text-xs font-semibold text-orange-300"><Sparkles size={13}/> Không gian sáng tạo</div>
       <h1 className="mb-3 text-3xl font-bold tracking-tight">Tạo dự án đầu tiên</h1>
-      <p className="mb-8 text-sm leading-6 text-slate-400">Thiết kế trang web với thao tác kéo thả, tùy chỉnh mọi thành phần và lưu trực tiếp vào không gian của bạn.</p><Link href="/projects" className="mb-4 inline-flex rounded-xl border border-slate-600 px-4 py-2 text-sm text-orange-300">Quản lý / Khôi phục dự án trong Thùng rác</Link>
+      <p className="mb-8 text-sm leading-6 text-slate-400">Thiết kế trang web với thao tác kéo thả, tùy chỉnh mọi thành phần và lưu trực tiếp vào không gian của bạn.</p><div className="mb-4 flex flex-wrap gap-2"><Link href="/dashboard" className="inline-flex rounded-xl border border-orange-500 px-4 py-2 text-sm text-orange-300">Trang chủ Studio · Chọn mẫu</Link><Link href="/projects" className="inline-flex rounded-xl border border-slate-600 px-4 py-2 text-sm text-orange-300">Quản lý / Khôi phục dự án</Link></div>
       <form action={createProject} className="space-y-4">
         <label className="block text-sm font-medium text-slate-200" htmlFor="project-name">Tên dự án
           <input id="project-name" name="name" required maxLength={120} autoFocus placeholder="Nhập tên dự án của bạn" className="mt-2 w-full rounded-xl border border-slate-600 bg-slate-900/75 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15"/>
@@ -66,7 +66,7 @@ export default async function BuilderPage({ searchParams }: {
 
   return <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-[#0f172a] text-slate-100">
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-slate-700/75 bg-[#0f172a] px-3 sm:px-5">
-      <Link href="/builder" className="flex shrink-0 items-center gap-2.5 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-orange-500" aria-label="Trang dự án">
+      <Link href="/dashboard" className="flex shrink-0 items-center gap-2.5 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-orange-500" aria-label="Trang dự án">
         <span className="flex size-9 items-center justify-center rounded-xl bg-orange-500 text-white shadow-md shadow-orange-500/20"><Blocks size={19}/></span>
         <span className="hidden text-sm font-bold tracking-tight text-white sm:block">{siteTitle}</span>
       </Link>
@@ -93,6 +93,7 @@ export default async function BuilderPage({ searchParams }: {
           <nav className="absolute right-0 z-50 mt-2 w-48 space-y-1 rounded-xl border border-slate-700 bg-[#1e293b] p-2 shadow-2xl">
             <Link href="/domains" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🌐 Tên miền & thương hiệu</Link>
             <Link href="/sign" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">✍️ Ký tài liệu PDF</Link>
+            <Link href="/characters" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🧍 Xưởng nhân vật 3D</Link>
             <Link href="/assets" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🖼️ Kho ảnh của tôi</Link>
             <Link href="/resources" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🧩 Game Asset / Icon / Thời trang</Link>
             <Link href="/pricing" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">💳 Bảng giá</Link>
