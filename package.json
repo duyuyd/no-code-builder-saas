@@ -9,7 +9,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:export": "node tests/export-regression.cjs",
+    "test:ai": "node tests/ai-provider-regression.cjs"
   },
   "dependencies": {
     "next": "15.5.29",

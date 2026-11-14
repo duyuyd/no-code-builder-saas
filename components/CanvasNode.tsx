@@ -5,6 +5,7 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, ArrowUp, ArrowDown, Copy, Image as ImageIcon } from "lucide-react";
 import { getDefinition, nodeCss, safeUrl, sanitizeNumeric, type BuilderNode } from "@/lib/component-registry";
+import { responsiveLayoutClass } from "@/lib/responsive-layout";
 export type CanvasNodeProps = { node: BuilderNode; selectedId: string | null; onSelect: (id: string) => void; onReorder?:(id:string,direction:-1|1)=>void; onDuplicate?:(id:string)=>void };
 
 function DropInside({ id }: { id: string }) {
@@ -64,7 +65,7 @@ function RenderElement({ node, selectedId, onSelect, onReorder, onDuplicate }: C
         </SortableContext>
         <DropInside id={node.id} />
       </>;
-      return createElement(def.tag, { style, className: "min-h-24 w-full min-w-0 rounded-xl border border-slate-200 shadow-sm "+((node.type==="grid"||node.type.endsWith("-grid"))?"studio-responsive-grid":"") }, children);
+      return createElement(def.tag, { style, className: "min-h-24 w-full min-w-0 rounded-xl border border-slate-200 shadow-sm "+responsiveLayoutClass(node.type,"studio-responsive") }, children);
     }
   }
 }
@@ -73,6 +74,7 @@ export default function CanvasNode({ node, selectedId, onSelect, onReorder, onDu
     id: `node:${node.id}`, data: { kind: "node", id: node.id },
   });
   return <div ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }}
+    data-layout-container={getDefinition(node.type)?.allowsChildren ? "true" : undefined}
     className={`builder-node group min-w-0 rounded-xl border-2 border-dashed bg-white p-2.5 shadow-sm transition-[border-color,box-shadow,background-color] duration-150 sm:p-3 ${isDragging ? "border-orange-400 shadow-2xl shadow-black/30" : selectedId === node.id ? "border-orange-400 bg-orange-50/30 ring-2 ring-orange-400/15" : "border-slate-200 hover:border-sky-400 hover:shadow-lg hover:shadow-slate-200/80"}`}
     onClick={e => { e.stopPropagation(); onSelect(node.id); }}>
     <div className="mb-2 flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-2 py-1 text-[11px] text-slate-500">

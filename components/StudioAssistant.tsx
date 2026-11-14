@@ -50,7 +50,7 @@ export default function StudioAssistant({projectId,pageId,selectedId,selectedTyp
      <div className="flex size-11 items-center justify-center rounded-xl bg-orange-500/15 text-orange-300"><Sparkles size={24}/></div>
      <div className="min-w-0 flex-1"><Dialog.Title className="text-sm font-black">Trợ lý Studio</Dialog.Title><Dialog.Description className="mt-1 text-[11px] text-slate-400">{status?.active?
    "AI "+status.provider+" • hiểu trang và hội thoại nhiều lượt":
-   "Offline • Admin có thể bật Gemini / DeepSeek / OpenAI"}</Dialog.Description></div>
+   "Offline • Admin có thể bật Gemini / DeepSeek / OpenAI / OrcaRouter"}</Dialog.Description></div>
      <button type="button" onClick={()=>{setMessages([]);setError("");}} className="rounded-lg border border-slate-600 p-2 text-slate-300 hover:bg-slate-700" title="Xóa hội thoại trong phiên" aria-label="Xóa đoạn chat"><RotateCcw size={18}/></button>
      <Dialog.Close className="rounded-lg border border-slate-600 p-2 text-slate-300 hover:bg-slate-700" aria-label="Đóng trợ lý"><X size={18}/></Dialog.Close>
     </header>
@@ -64,7 +64,7 @@ export default function StudioAssistant({projectId,pageId,selectedId,selectedTyp
       <div className="mt-4 flex flex-wrap gap-2">{suggestions.map(s=><button key={s} type="button" disabled={busy} onClick={()=>void send(s)} className="rounded-lg border border-orange-500/30 bg-orange-500/10 px-3 py-2 text-left text-xs leading-5 text-orange-100 hover:border-orange-400">{s}</button>)}</div>
      </div>}
      {messages.map((m,i)=><div key={i} className={"flex "+(m.from==="user"?"justify-end":"justify-start")}><div className={"max-w-[94%] rounded-2xl p-4 text-xs leading-6 "+(m.from==="user"?"rounded-br-sm bg-orange-500 text-white":"rounded-bl-sm border border-slate-700 bg-slate-800 text-slate-100")}>
-      {m.from==="studio"&&<p className="mb-2 flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-orange-300"><Sparkles size={13}/>{m.mode==="gemini"?"Google Gemini AI":m.mode==="deepseek"?"DeepSeek AI":m.mode==="openai"?"OpenAI AI":"Hướng dẫn offline (không dùng API)"}</p>}
+      {m.from==="studio"&&<p className="mb-2 flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-orange-300"><Sparkles size={13}/>{m.mode==="gemini"?"Google Gemini AI":m.mode==="deepseek"?"DeepSeek AI":m.mode==="openai"?"OpenAI AI":m.mode==="orcarouter"?"OrcaRouter AI":"Hướng dẫn offline (không dùng API)"}</p>}
       <p className="whitespace-pre-line">{m.text}</p>
      </div></div>)}
      {busy&&<p role="status" className="flex items-center gap-2 text-xs text-slate-300"><LoaderCircle size={16} className="animate-spin"/> Đang phân tích câu hỏi...</p>}

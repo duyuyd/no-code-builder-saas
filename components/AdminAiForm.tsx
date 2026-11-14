@@ -1,7 +1,7 @@
 "use client";
 import {useActionState,useState} from "react";
 import {CheckCircle2,LockKeyhole,Save,ShieldAlert} from "lucide-react";
-import {saveStudioAiConfig,type AiAdminState} from "@/app/admin/ai/actions";
+import {saveStudioAiConfig,testStudioAiConnection,type AiAdminState} from "@/app/admin/ai/actions";
 import {AI_DEFAULT_MODELS,type AiConfig,type AiProvider} from "@/lib/studio-ai";
 
 const input="mt-2 w-full rounded-xl border border-slate-600 bg-[#101d30] px-4 py-3 text-sm text-white outline-none focus:border-orange-500";
@@ -11,6 +11,14 @@ export default function AdminAiForm({initial,keys}:{initial:AiConfig;keys:Record
  const [provider,setProvider]=useState<AiProvider>(initial.provider);
  const [model,setModel]=useState(initial.model);
  const [enabled,setEnabled]=useState(initial.enabled);
+ const [checking,setChecking]=useState(false);
+ const [testResult,setTestResult]=useState<AiAdminState|null>(null);
+ const testConnection=async()=>{
+  if(checking)return;
+  setChecking(true);setTestResult(null);
+  try{setTestResult(await testStudioAiConnection());}catch{setTestResult({ok:false,message:"Không kiểm tra được kết nối AI."});}
+  finally{setChecking(false);}
+ };
  return <form action={action} className="mt-6 space-y-5 rounded-2xl border border-slate-700 bg-[#1c293d] p-4 sm:p-6">
   <div className="flex items-start justify-between gap-3">
    <div><h2 className="text-base font-black">Nhà cung cấp AI</h2><p className="mt-2 text-xs leading-5 text-slate-400">Chỉ gọi API khi khóa tồn tại và bạn chủ động bật.</p></div>
@@ -55,6 +63,8 @@ export default function AdminAiForm({initial,keys}:{initial:AiConfig;keys:Record
    Không kích hoạt API tự động, không tự thử lại khi nhà cung cấp báo lỗi. Giới hạn theo người và toàn nền tảng được kiểm soát trong PostgreSQL. Hội thoại không lưu lâu dài trên máy chủ; các lượt gần đây được gửi cùng ngữ cảnh trang/game tới nhà cung cấp đang bật.
   </div>
   {state.message&&<p role="status" className={"rounded-xl border p-3 text-xs leading-6 "+(state.ok?"border-emerald-700 bg-emerald-950/20 text-emerald-300":"border-rose-700 bg-rose-950/20 text-rose-200")}>{state.message}</p>}
+  {testResult&&<p role="status" className={"rounded-xl border p-3 text-xs leading-6 "+(testResult.ok?"border-emerald-700 bg-emerald-950/20 text-emerald-300":"border-rose-700 bg-rose-950/20 text-rose-200")}>{testResult.message}</p>}
+  <button type="button" onClick={()=>void testConnection()} disabled={checking||pending} className="w-full rounded-xl border border-orange-500/50 px-5 py-3 text-sm font-bold text-orange-200 disabled:opacity-50">{checking?"Đang kiểm tra…":"Kiểm tra kết nối OrcaRouter Free đã lưu"}</button>
   <button type="submit" disabled={pending} className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 py-3.5 text-sm font-black text-white disabled:opacity-50"><Save size={18}/>{pending?"Đang lưu":"Lưu cấu hình AI"}</button>
  </form>;
 }

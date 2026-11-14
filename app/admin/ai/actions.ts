@@ -1,7 +1,7 @@
 "use server";
 import {revalidatePath} from "next/cache";
 import {createClient} from "@/lib/supabase/server";
-import {providerKey,validAiModel,type AiProvider,type AiConfig} from "@/lib/studio-ai";
+import {askProvider,providerKey,readAiConfig,validAiModel,type AiProvider,type AiConfig} from "@/lib/studio-ai";
 
 export type AiAdminState={ok:boolean;message:string};
 export async function saveStudioAiConfig(_prev:AiAdminState,form:FormData):Promise<AiAdminState>{
@@ -30,4 +30,25 @@ export async function saveStudioAiConfig(_prev:AiAdminState,form:FormData):Promi
   revalidatePath("/admin/ai");
   return {ok:true,message:enabled?"Đã bật "+provider+" cho Studio. API key chỉ lưu trong Vercel; lượt gọi được giới hạn.":"Đã lưu cấu hình. Các yêu cầu trả lời AI tính phí đang tắt."};
  }catch(error){return {ok:false,message:error instanceof Error?error.message:"Không lưu được cấu hình AI."};}
+}
+
+// Deliberate admin-initiated check. It sends only a fixed test message and
+// is restricted to the free model; the key stays on the server.
+export async function testStudioAiConnection():Promise<AiAdminState>{
+ try{
+  const db=await createClient();
+  const {data:{user}}=await db.auth.getUser();
+  if(!user)throw new Error("Phiên đăng nhập hết hạn.");
+  const {data:profile}=await db.from("profiles").select("role").eq("id",user.id).maybeSingle();
+  if(profile?.role!=="admin")throw new Error("Chỉ quản trị viên được kiểm tra kết nối AI.");
+  const {data:setting,error}=await db.from("platform_settings").select("value").eq("key","studio_ai_config").maybeSingle();
+  if(error||!setting)throw new Error("Không đọc được cấu hình AI đã lưu.");
+  const config=readAiConfig(setting.value);
+  if(!config.enabled||config.provider!=="orcarouter"||config.model!=="orcarouter/free")throw new Error("Hãy lưu và bật OrcaRouter Free trước khi kiểm tra miễn phí.");
+  if(!providerKey("orcarouter"))throw new Error("Chưa tìm thấy ORCAROUTER_API_KEY trên máy chủ.");
+  const {data:allowed,error:quotaError}=await db.rpc("studio_ai_claim_slot");
+  if(quotaError||allowed!==true)throw new Error("Không còn lượt AI hôm nay hoặc cấu hình đã thay đổi.");
+  await askProvider({...config,maxOutputTokens:64},"Đây là kiểm tra kết nối. Hãy trả lời ngắn gọn bằng tiếng Việt.",[{role:"user",content:"Xin chào, kết nối đã hoạt động chưa?"}]);
+  return {ok:true,message:"OrcaRouter Free đã trả lời thành công. Bạn có thể mở Trợ lý Studio để trò chuyện."};
+ }catch(error){return {ok:false,message:error instanceof Error?error.message:"Không kiểm tra được kết nối AI."};}
 }

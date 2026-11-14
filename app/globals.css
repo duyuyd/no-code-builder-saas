@@ -39,6 +39,26 @@ input, textarea, select, button { font: inherit; }
     max-width: 100% !important;
     overflow-wrap: anywhere;
   }
+  .studio-responsive-row { flex-wrap: wrap !important; }
+  .studio-responsive-row > * {
+    min-width: 0;
+    max-width: 100%;
+    flex: 1 1 min(100%, 15rem) !important;
+    width: auto !important;
+    overflow-wrap: anywhere;
+  }
+  .studio-responsive-grid > .builder-node[data-layout-container="true"] > div:last-child > *,
+  .studio-responsive-row > .builder-node[data-layout-container="true"] > div:last-child > * { width: 100% !important; }
 }
-.studio-responsive-grid { min-width: 0; max-width: 100%; }
+.studio-responsive-grid, .studio-responsive-row { min-width: 0; max-width: 100%; }
 .studio-responsive-grid img { max-width: 100%; height: auto; }
+@supports not (container-type: inline-size) {
+  @media (max-width: 620px) {
+    .studio-responsive-grid { grid-template-columns: minmax(0, 1fr) !important; }
+    .studio-responsive-grid > *, .studio-responsive-row > * { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+    .studio-responsive-row { flex-wrap: wrap !important; }
+    .studio-responsive-row > * { flex: 1 1 100% !important; width: auto !important; }
+    .studio-responsive-grid > .builder-node[data-layout-container="true"] > div:last-child > *,
+    .studio-responsive-row > .builder-node[data-layout-container="true"] > div:last-child > * { width: 100% !important; }
+  }
+}

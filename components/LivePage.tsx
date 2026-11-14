@@ -2,6 +2,7 @@
 import { createElement, useMemo, useState, type CSSProperties, type ReactNode, type FormEvent, type MouseEvent } from "react";
 import { ArrowRight, RotateCcw, Trophy, Image as ImageIcon } from "lucide-react";
 import { getDefinition, nodeCss, safeUrl, sanitizeNumeric, type BuilderNode } from "@/lib/component-registry";
+import { responsiveLayoutClass } from "@/lib/responsive-layout";
 import dynamic from "next/dynamic";
 const MemoryMatchGame = dynamic(() => import("./MemoryMatchGame"), { ssr: false, loading: () => <div className="rounded-2xl bg-slate-900 p-6 text-sm text-slate-300">Đang tải trò chơi...</div> });
 
@@ -51,7 +52,7 @@ function Item({node,projectId,onNavigate}:{node:BuilderNode;projectId?:string;on
     const submit=(e:FormEvent<HTMLFormElement>)=>{e.preventDefault();const email=p.recipientEmail?.trim()||"";if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){setFeedback("Thiếu email nhận biểu mẫu.");return;}const body=Array.from(new FormData(e.currentTarget).entries()).filter((x)=>typeof x[1]==="string").map(([k,v])=>k+": "+v).join("\n");window.location.href="mailto:"+email+"?subject="+encodeURIComponent("Liên hệ từ website")+"&body="+encodeURIComponent(body.slice(0,6000));};
     return <form onSubmit={submit} style={s} className="flex min-w-0 flex-col gap-3 rounded-xl">{children}{feedback&&<p role="alert" className="text-xs text-rose-600">{feedback}</p>}</form>;
    }
-   return createElement(def.tag,{style:s,className:"min-w-0 max-w-full rounded-xl "+((node.type==="grid"||node.type.endsWith("-grid"))?"studio-responsive-grid":"")},children);
+   return createElement(def.tag,{style:s,className:"min-w-0 max-w-full rounded-xl "+responsiveLayoutClass(node.type,"studio-responsive")},children);
   }
  }
 }

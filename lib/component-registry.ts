@@ -250,6 +250,7 @@ export function validateUiTree(value: unknown): value is BuilderNode[] {
 
 export function safeUrl(value: string): string {
   const url = value.trim();
+  if (/[\u0000-\u001f\u007f\\]/.test(url)) return "";
   if (url.startsWith("/") && !url.startsWith("//")) return url;
   if (/^#[a-z][a-z0-9_-]*$/i.test(url)) return url;
   try { const parsed = new URL(url); if (["https:", "http:", "mailto:"].includes(parsed.protocol)) return url; } catch { /* invalid */ }
