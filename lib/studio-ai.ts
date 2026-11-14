@@ -1,18 +1,18 @@
 // This module is only imported by Server Actions and server components.
 // API credentials are read from process.env at request time and never passed to a client.
-export type AiProvider="gemini"|"deepseek"|"openai";
+export type AiProvider="gemini"|"deepseek"|"openai"|"orcarouter";
 export type AiMode="offline"|AiProvider;
 export type AiConfig={
  enabled:boolean;provider:AiProvider;model:string;dailyUserLimit:number;dailyGlobalLimit:number;maxOutputTokens:number;
 };
 export type ChatTurn={role:"user"|"assistant";content:string};
-const providers:AiProvider[]=["gemini","deepseek","openai"];
+const providers:AiProvider[]=["gemini","deepseek","openai","orcarouter"];
 export const AI_DEFAULT_MODELS:Record<AiProvider,string>={
- gemini:"gemini-3.5-flash-lite",deepseek:"deepseek-flash",openai:"gpt-5-mini"
+ gemini:"gemini-3.5-flash-lite",deepseek:"deepseek-flash",openai:"gpt-5-mini",orcarouter:"orcarouter/free"
 };
 export const AI_DEFAULT_CONFIG:AiConfig={enabled:false,provider:"gemini",model:AI_DEFAULT_MODELS.gemini,dailyUserLimit:10,dailyGlobalLimit:80,maxOutputTokens:900};
 export function validAiModel(value:string):boolean{
- return /^[a-zA-Z][a-zA-Z0-9._-]{2,79}$/.test(value);
+ return /^[a-zA-Z][a-zA-Z0-9._\/-]{2,79}$/.test(value);
 }
 export function readAiConfig(raw:unknown):AiConfig{
  if(!raw||typeof raw!=="object"||Array.isArray(raw))return AI_DEFAULT_CONFIG;
@@ -30,6 +30,7 @@ export function readAiConfig(raw:unknown):AiConfig{
 export function providerKey(provider:AiProvider):string{
  if(provider==="gemini")return process.env.GEMINI_API_KEY?.trim()??"";
  if(provider==="deepseek")return process.env.DEEPSEEK_API_KEY?.trim()??"";
+ if(provider==="orcarouter")return process.env.ORCAROUTER_API_KEY?.trim()??"";
  return process.env.OPENAI_API_KEY?.trim()??"";
 }
 export function aiIsAvailable(config:AiConfig):boolean{
@@ -52,6 +53,7 @@ function parseResponse(provider:AiProvider,value:unknown):string{
 }
 export async function askProvider(config:AiConfig,instructions:string,messages:ChatTurn[]):Promise<string>{
  const key=providerKey(config.provider);
+ if(config.provider==="orcarouter"&&config.model!=="orcarouter/free")throw new Error("OrcaRouter chỉ được gọi qua model miễn phí orcarouter/free.");
  if(!key||!config.enabled)throw new Error("Nhà cung cấp AI chưa được quản trị viên bật và cấu hình API key.");
  const signal=AbortSignal.timeout(18000);
  let url:string;
