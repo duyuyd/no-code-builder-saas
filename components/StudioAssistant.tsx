@@ -5,8 +5,8 @@ import {ArrowRight,BookOpen,LoaderCircle,MessageCircle,Send,Sparkles,X} from "lu
 import {askStudioAssistant,type AssistantResponse} from "@/app/builder/assistant-actions";
 
 type Message={from:"user"|"studio";text:string;mode?:"guidance"|"gemini"};
-export default function StudioAssistant({projectId,pageId,selectedId,selectedType,blockCount}:{
- projectId:string;pageId:string;selectedId:string|null;selectedType:string|null;blockCount:number
+export default function StudioAssistant({projectId,pageId,selectedId,selectedType,blockCount,contextKind="builder"}:{
+ projectId:string;pageId:string;selectedId:string|null;selectedType:string|null;blockCount:number;contextKind?:"builder"|"game"
 }){
  const [open,setOpen]=useState(false);
  const [question,setQuestion]=useState("");
@@ -19,14 +19,18 @@ export default function StudioAssistant({projectId,pageId,selectedId,selectedTyp
   setQuestion("");setError("");setBusy(true);
   setMessages(messages=>[...messages,{from:"user",text:q}]);
   try{
-   const result:AssistantResponse=await askStudioAssistant({projectId,pageId,question:q,selectedId});
+   const result:AssistantResponse=await askStudioAssistant({projectId,pageId,question:q,selectedId,contextKind});
    if(result.ok)setMessages(messages=>[...messages,{from:"studio",text:result.answer,mode:result.mode}]);
    else setError(result.error);
   }catch{setError("Không thể kết nối máy chủ. Hãy thử lại.");}
   finally{setBusy(false);}
  };
  const submit=(event:FormEvent<HTMLFormElement>)=>{event.preventDefault();void send(question);};
- const suggestions=["Thêm component trên điện thoại thế nào?","Cách tạo website thời trang từ mẫu?","Chỉnh ảnh và màu cho khối này?","Xuất bản và tải ZIP ra sao?"];
+ const suggestions=contextKind==="game"
+  ?["Hướng dẫn đánh quái và thắng màn này?","Cách đổi sang bản đồ võ hiệp hoặc bóng đá?","Làm sao đặt và chỉnh máu đối thủ?","Tôi lấy ảnh sprite và bối cảnh ở đâu?"]
+  :selectedType==="image"||selectedType==="fashion-photo"
+   ?["Chèn ảnh từ kho vào thành phần này?","Làm sao chỉnh kích thước ảnh này?","Kho tài nguyên có nguồn nào phù hợp?","Xuất bản trang hiện tại thế nào?"]
+   :["Sắp xếp khối Android bằng nút lên xuống?","Cách tạo website thời trang từ mẫu?","Chỉnh màu và bố cục khối đang chọn?","Xuất bản và tải ZIP ra sao?"];
  return <Dialog.Root open={open} onOpenChange={setOpen}>
   <Dialog.Trigger asChild><button type="button" title="Trợ lý hướng dẫn theo ngữ cảnh" className="flex h-9 shrink-0 items-center gap-1.5 rounded-xl border border-orange-500/50 bg-orange-500/10 px-2 text-xs font-bold text-orange-200 hover:bg-orange-500/20 sm:h-10 sm:px-3"><MessageCircle size={17}/><span className="hidden sm:inline">Trợ lý</span></button></Dialog.Trigger>
   <Dialog.Portal>
@@ -34,11 +38,11 @@ export default function StudioAssistant({projectId,pageId,selectedId,selectedTyp
    <Dialog.Content className="fixed inset-x-0 bottom-0 z-[86] flex h-[min(87dvh,810px)] flex-col overflow-hidden rounded-t-[26px] border border-slate-700 bg-[#111d2e] text-white shadow-2xl outline-none sm:bottom-5 sm:left-auto sm:right-5 sm:h-[min(82dvh,760px)] sm:w-[min(440px,calc(100vw-40px))] sm:rounded-3xl">
     <header className="flex shrink-0 items-center gap-3 border-b border-slate-700 bg-[#1b2a40] p-4">
      <div className="flex size-11 items-center justify-center rounded-xl bg-orange-500/15 text-orange-300"><Sparkles size={24}/></div>
-     <div className="min-w-0 flex-1"><Dialog.Title className="text-sm font-black">Trợ lý Studio</Dialog.Title><Dialog.Description className="mt-1 text-[11px] text-slate-400">Hướng dẫn theo ngữ cảnh · AI Gemini nếu được bật</Dialog.Description></div>
+     <div className="min-w-0 flex-1"><Dialog.Title className="text-sm font-black">Trợ lý Studio</Dialog.Title><Dialog.Description className="mt-1 text-[11px] text-slate-400">{contextKind==="game"?"Hiểu bản đồ và vật thể đã lưu · không tốn API":"Hiểu trang, cây khối và ảnh · Gemini chỉ khi Admin tự bật"}</Dialog.Description></div>
      <Dialog.Close className="rounded-lg border border-slate-600 p-2 text-slate-300 hover:bg-slate-700" aria-label="Đóng trợ lý"><X size={18}/></Dialog.Close>
     </header>
     <div className="shrink-0 border-b border-slate-700/60 bg-slate-900/30 px-4 py-3 text-xs text-slate-400">
-     <span className="font-bold text-orange-200">Đang làm việc:</span> {blockCount} khối trên trang · {selectedType?"Chọn "+selectedType:"Chưa chọn khối"}
+     <span className="font-bold text-orange-200">Đang làm việc:</span> {blockCount} {contextKind==="game"?"vật thể trên bản đồ":"khối trên trang"} · {selectedType?"Chọn "+selectedType:"Chưa chọn khối"}
     </div>
     <section aria-label="Nội dung trao đổi" aria-live="polite" className="editor-scroll min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
      {messages.length===0&&<div className="rounded-2xl border border-slate-700 bg-[#1b2a40] p-5">

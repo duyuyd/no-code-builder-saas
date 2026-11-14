@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import * as Dialog from "@radix-ui/react-dialog";
 import {ArrowLeft,CloudUpload,ExternalLink,Eye,EyeOff,Gamepad2,ImagePlus,Plus,Redo2,Save,Trash2,Undo2,X} from "lucide-react";
 import GameStage from "@/components/GameStage";
+import StudioAssistant from "@/components/StudioAssistant";
 import {validateGameScene,type GameObjectKind,type GameScene,type GameSceneTemplate} from "@/lib/game-scene";
 import {saveGameScene,publishGameScene,unpublishGameScene} from "@/app/game-builder/actions";
 
@@ -134,6 +135,7 @@ export default function GameWorkspace({projectId,projectName,userId,initialScene
     <h1 className="flex items-center gap-2 text-xl font-black sm:text-2xl"><Gamepad2 className="text-orange-400"/> Game Builder 2D</h1>
     <p className="mt-1 text-xs text-slate-400">{projectName} · {scene.objects.length} vật thể · {dirty?"Chưa lưu":"Đã đồng bộ"}</p></div>
    <div className="flex flex-wrap gap-2">
+    <StudioAssistant contextKind="game" projectId={projectId} pageId="" selectedId={selected} selectedType={chosen?.kind??null} blockCount={scene.objects.length}/>
     <button type="button" onClick={undo} disabled={!past.length} title="Hoàn tác" className={button+" border border-slate-600 bg-slate-800"}><Undo2 size={17}/></button>
     <button type="button" onClick={redo} disabled={!future.length} title="Làm lại" className={button+" border border-slate-600 bg-slate-800"}><Redo2 size={17}/></button>
     <button type="button" onClick={()=>setPreview(v=>!v)} className={button+" border border-orange-500/60 bg-orange-500/10 text-orange-300"}>{preview?<EyeOff size={17}/>:<Eye size={17}/>} {preview?"Chỉnh sửa":"Chơi thử"}</button>
