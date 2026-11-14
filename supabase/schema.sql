@@ -94,6 +94,9 @@ begin
 end;
 $$;
 
+-- Called only by the auth.users trigger, never as an RPC.
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created after insert on auth.users
 for each row execute function public.handle_new_user();
@@ -106,7 +109,7 @@ returns boolean language sql stable security definer set search_path = '' as $$
   );
 $$;
 
-revoke all on function public.is_admin() from public;
+revoke all on function public.is_admin() from public, anon, authenticated;
 grant execute on function public.is_admin() to authenticated;
 
 alter table public.profiles enable row level security;
