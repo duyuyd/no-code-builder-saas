@@ -2,6 +2,7 @@
 import { createElement, useMemo, useState, type CSSProperties, type ReactNode, type FormEvent, type MouseEvent } from "react";
 import { ArrowRight, RotateCcw, Trophy } from "lucide-react";
 import { getDefinition, nodeCss, safeUrl, sanitizeNumeric, type BuilderNode } from "@/lib/component-registry";
+import MemoryMatchGame from "./MemoryMatchGame";
 
 function Quiz({node}:{node:BuilderNode}) {
  const questions=useMemo(()=>(node.props.questions??"").split(/\r?\n/).map(row=>row.split("|").map(s=>s.trim()))
@@ -25,6 +26,7 @@ function Item({node,projectId,onNavigate}:{node:BuilderNode;projectId?:string;on
  const text=p.text??"";
  switch(def.kind){
   case "quiz":return <Quiz node={node}/>;
+  case "memory":return <MemoryMatchGame node={node}/>;
   case "text":return createElement(def.tag,{style:s,className:"max-w-full whitespace-pre-wrap break-words"},text);
   case "button":return node.type==="submit-button"?<button type="submit" style={s} className="w-fit rounded-xl shadow-sm">{text}</button>:href?<a href={url} onClick={navigate} style={s} className="inline-flex w-fit max-w-full items-center gap-2 rounded-xl shadow-sm hover:brightness-95">{text}<ArrowRight size={15}/></a>:<button type="button" style={s} onClick={()=>setFeedback("Chưa cấu hình liên kết.")} className="w-fit rounded-xl shadow-sm">{text}{feedback&&<span className="ml-2 text-xs">{feedback}</span>}</button>;
   case "link":return <a href={url||"#"} onClick={navigate} style={s} className="break-all underline underline-offset-4">{text}</a>;

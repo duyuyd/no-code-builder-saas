@@ -1,6 +1,6 @@
 export type FieldType = "text" | "textarea" | "url" | "color" | "number" | "boolean";
 export type ComponentCategory = "basic" | "layout" | "form" | "media" | "data";
-export type RenderKind = "text" | "button" | "link" | "image" | "video" | "audio" | "divider" | "input" | "textarea" | "select" | "checkbox" | "range" | "table" | "chart" | "progress" | "list" | "iframe" | "container" | "quiz";
+export type RenderKind = "text" | "button" | "link" | "image" | "video" | "audio" | "divider" | "input" | "textarea" | "select" | "checkbox" | "range" | "table" | "chart" | "progress" | "list" | "iframe" | "container" | "quiz" | "memory";
 export type FieldSchema = { label: string; type: FieldType; defaultValue: string };
 export type ComponentDefinition = {
   type: string;
@@ -41,6 +41,7 @@ const propsByKind: Record<RenderKind, Record<string, FieldSchema>> = {
   iframe: { src: field("URL nhúng", "url"), title: field("Tiêu đề", "text", "Embedded Content") },
   container: { label: field("Nhãn vùng chứa", "text"), recipientEmail: field("Email nhận biểu mẫu", "text", "") },
   quiz: { title: field("Tên trò chơi", "text", "Trắc nghiệm"), questions: field("Mỗi dòng: câu hỏi|A|B|C|D|đáp án (1-4)", "textarea", "") },
+  memory: { title: field("Tên game", "text", "Lật thẻ trí nhớ"), symbols: field("Biểu tượng ghép cặp, ngăn bằng |", "textarea", "🎮|🚀|💎|🌙|⚡|🎯"), pairCount: field("Số cặp (3-10)", "number", "6") },
 };
 const baseStyles = {
   color: field("Màu chữ", "color", "#1e293b"),
@@ -121,6 +122,7 @@ export const COMPONENT_REGISTRY: readonly ComponentDefinition[] = [
   define("range", "Thanh khoảng giá trị", "form", "range", "input"),
   define("progress", "Tiến trình", "data", "progress", "progress"),
   define("quiz", "Trắc nghiệm tương tác", "data", "quiz", "div"),
+  define("memory", "Game lật thẻ trí nhớ", "data", "memory", "div"),
   define("meter", "Thước đo", "data", "progress", "meter"),
   define("table", "Bảng dữ liệu", "data", "table", "table"),
   define("chart", "Biểu đồ", "data", "chart", "div"),

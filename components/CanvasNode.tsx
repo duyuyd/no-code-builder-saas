@@ -41,6 +41,7 @@ function RenderElement({ node, selectedId, onSelect }: CanvasNodeProps) {
       const rows = (p.csv ?? "").split(/\r?\n/).filter(Boolean).slice(0, 100).map(r => r.split(",").slice(0, 40));
       return <table style={style} className="w-full overflow-hidden rounded-xl border border-slate-200 bg-white text-xs shadow-sm"><tbody>{rows.map((row,i) => <tr key={i}>{row.map((cell,j) => i === 0 ? <th className="border-b border-r border-slate-200 bg-slate-100 p-2 text-left" key={j}>{cell}</th> : <td className="border-b border-r border-slate-100 p-2" key={j}>{cell}</td>)}</tr>)}</tbody></table>;
     }
+    case "memory": return <div style={style} className="rounded-2xl border border-orange-200 bg-slate-900 p-5 text-white"><p className="text-xl font-bold">{p.title || "Lật thẻ trí nhớ"}</p><div className="mt-3 grid grid-cols-4 gap-2">{Array.from({length:8},(_,i)=><span key={i} className="rounded-xl border border-slate-700 bg-slate-800 p-3 text-center text-lg">✦</span>)}</div><p className="mt-3 text-xs text-slate-300">Bấm Chạy thử để chơi, Thuộc tính để đổi biểu tượng và số cặp.</p></div>;
     case "quiz": return <div style={style} className="rounded-2xl border border-indigo-200 bg-indigo-50 p-5 text-indigo-900"><p className="font-bold">{p.title || "Trắc nghiệm"}</p><p className="mt-2 text-sm">Chạy thử để chơi và tính điểm. Chọn Thuộc tính để sửa câu hỏi.</p></div>;
     case "chart": {
       const values = (p.values ?? "").split(",").map(value => value.trim()).filter(Boolean)

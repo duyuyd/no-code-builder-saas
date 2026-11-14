@@ -55,6 +55,7 @@ function nodeToHtml(node: BuilderNode): string {
     case "iframe": return `<iframe${style} src="${escapeHtml(safeUrl(p.src ?? ""))}" title="${escapeHtml(p.title ?? "")}" sandbox="allow-scripts allow-forms" loading="lazy"></iframe>`;
     case "container": return `<${def.tag}${style}>${node.children.map(nodeToHtml).join("\n")}</${def.tag}>`;
     case "button": return p.href && safeUrl(p.href) ? `<a${style} href="${escapeHtml(safeUrl(p.href))}">${escapeHtml(p.text ?? "")}</a>` : `<button type="${node.type === "submit-button" ? "submit" : "button"}"${style}>${escapeHtml(p.text ?? "")}</button>`;
+    case "memory": return `<section${style}><h2>${escapeHtml(p.title ?? "Lật thẻ trí nhớ")}</h2><p>Game tương tác chạy trong bản xuất bản trên nền tảng. Bản HTML tĩnh chưa bao gồm logic chơi.</p></section>`;
     case "quiz": return `<section${style}><h2>${escapeHtml(p.title ?? "Trắc nghiệm")}</h2><p>Trò chơi tương tác chỉ chạy khi xuất bản website.</p></section>`;
     case "text": return `<${def.tag}${style}>${escapeHtml(p.text ?? "")}</${def.tag}>`;
   }
@@ -85,6 +86,7 @@ function nodeToJsx(node: BuilderNode): string {
     case "iframe": return `<iframe${style} src=${jsxAttr(safeUrl(p.src ?? ""))} title=${jsxAttr(p.title ?? "")} sandbox="allow-scripts allow-forms" loading="lazy" />`;
     case "container": return `<${def.tag}${style}>${node.children.map(nodeToJsx).join("\n")}</${def.tag}>`;
     case "button": return p.href && safeUrl(p.href) ? `<a${style} href=${jsxAttr(safeUrl(p.href))}>${escapeJsx(p.text ?? "")}</a>` : `<button type="${node.type === "submit-button" ? "submit" : "button"}"${style}>${escapeJsx(p.text ?? "")}</button>`;
+    case "memory": return `<section${style}><h2>${escapeJsx(p.title ?? "Lật thẻ trí nhớ")}</h2><p>Game tương tác chạy trong bản xuất bản trên nền tảng. Bản React tĩnh chưa bao gồm logic chơi.</p></section>`;
     case "quiz": return `<section${style}><h2>${escapeJsx(p.title ?? "Trắc nghiệm")}</h2><p>Trò chơi tương tác chỉ chạy khi xuất bản website.</p></section>`;
     case "text": return `<${def.tag}${style}>${escapeJsx(p.text ?? "")}</${def.tag}>`;
   }
