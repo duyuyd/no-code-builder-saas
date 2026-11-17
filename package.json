@@ -18,7 +18,8 @@
     "test:growth": "node tests/growth-regression.cjs",
     "test:ecosystem": "node tests/ecosystem-regression.cjs",
     "test:chai": "node tests/chaibuilder-bridge-regression.cjs",
-    "test:forms": "node tests/auto-database-regression.cjs"
+    "test:forms": "node tests/auto-database-regression.cjs",
+    "test:unified": "node tests/unified-editor-regression.cjs"
   },
   "dependencies": {
     "next": "15.5.29",

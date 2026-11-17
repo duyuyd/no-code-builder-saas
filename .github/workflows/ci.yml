@@ -41,3 +41,5 @@ jobs:
         run: npm run test:chai
       - name: Auto-Database regression
         run: npm run test:forms
+      - name: Unified editor data preservation regression
+        run: npm run test:unified
