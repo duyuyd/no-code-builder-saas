@@ -64,7 +64,7 @@ function Item({node,projectId,onNavigate}:{node:BuilderNode;projectId?:string;on
      try{
       const res=await fetch("/api/forms/submit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({projectId,nodeId:node.id,values})});
       const result=await res.json() as {ok?:boolean;error?:string};
-      if(!res.ok||!result.ok){setFeedback(result.error??"Không thể gửi biểu mẫu.");return;}
+      if(!res.ok||!result.ok){if(res.status===401&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.recipientEmail??"")){const recipient=p.recipientEmail!.trim();const message=Object.entries(values).map(([k,v])=>k+": "+String(v)).join("\n");window.location.href="mailto:"+recipient+"?subject="+encodeURIComponent("Liên hệ từ website")+"&body="+encodeURIComponent(message.slice(0,6000));setFeedback("Chưa đăng nhập: đã mở ứng dụng email để gửi liên hệ.");return;}setFeedback(result.error??"Không thể gửi biểu mẫu.");return;}
       form.reset();setFeedback("Đã lưu thông tin thành công.");
      }catch{setFeedback("Không kết nối được hệ thống lưu biểu mẫu.");}
     };
