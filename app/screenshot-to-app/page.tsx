@@ -1,0 +1,5 @@
+import Link from "next/link";
+import type {Metadata} from "next";
+import ScreenshotUpload from "@/components/vision/ScreenshotUpload";
+export const metadata:Metadata={title:"Screenshot to App | Vision-to-Editable UI",description:"Upload a website screenshot and use multimodal AI to reconstruct editable page blocks in NuvoraCraft.",robots:{index:true,follow:true}};
+export default function ScreenshotToApp(){return <main className="min-h-dvh bg-[#080f1f] px-4 py-12 text-white"><div className="mx-auto max-w-3xl"><Link href="/" className="text-sm text-orange-300">← Home</Link><p className="mt-12 text-xs font-black uppercase tracking-[.2em] text-orange-400">AI Vision · Screen to editable canvas</p><h1 className="mt-4 text-4xl font-black sm:text-5xl">Screenshot to App</h1><p className="my-8 max-w-2xl text-sm leading-7 text-slate-300">Turn a screenshot of your own design into a responsive, editable component tree with Gemini or OpenAI Vision. After generation you arrive directly in the visual Builder.</p><ScreenshotUpload/></div></main>}
