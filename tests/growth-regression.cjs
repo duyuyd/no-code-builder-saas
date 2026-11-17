@@ -1,0 +1,52 @@
+const assert=require("node:assert/strict");
+const fs=require("node:fs");
+const ts=require("typescript");
+const Y=require("yjs");
+const {webcrypto}=require("node:crypto");
+function load(file,aliases={}){
+ const {outputText}=ts.transpileModule(fs.readFileSync(file,"utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}});
+ const mod={exports:{}};
+ const dependent=(name)=>aliases[name]??require(name);
+ new Function("require","module","exports","crypto",outputText)(dependent,mod,mod.exports,webcrypto);
+ return mod.exports;
+}
+const registry=load("lib/component-registry.ts");
+const alias={"@/lib/component-registry":registry};
+const ai=load("lib/ai-website-generator.ts",alias);
+const figma=load("lib/figma-import.ts",alias);
+const collab=load("lib/collab/y-tree.ts",alias);
+const generated=ai.parseAiWebsiteResponse(JSON.stringify({name:"Coffee test",ui_tree:[{type:"hero",props:{label:"Coffee hero"},children:[{type:"heading",props:{text:"Hello coffee"}},{type:"paragraph",props:{text:"Fresh beans"}}]}]}));
+assert.equal(generated.name,"Coffee test");
+assert.ok(registry.validateUiTree(generated.tree));
+assert.equal(generated.tree[0].children[0].props.text,"Hello coffee");
+assert.throws(()=>ai.parseAiWebsiteResponse(JSON.stringify({name:"Oops",ui_tree:[{type:"script"}]})),/Unsupported/);
+assert.throws(()=>figma.extractFigmaFileLink("https://evil.example/design/abcd1234/test"),/Only https/);
+const f=figma.extractFigmaFileLink("https://www.figma.com/design/abcdef12345678/Test?node-id=1-2");
+assert.equal(f.fileKey,"abcdef12345678");
+assert.equal(f.nodeId,"1:2");
+const imported=figma.figmaToUiTree({type:"FRAME",name:"Coffee",fills:[{type:"SOLID",color:{r:1,g:0.5,b:0}}],children:[{type:"TEXT",name:"Title",characters:"Coffee Shop",style:{fontSize:36}}]});
+assert.ok(registry.validateUiTree(imported));
+assert.equal(imported[0].children[0].props.text,"Coffee Shop");
+const root=registry.createBuilderNode("section");
+root.children=[registry.createBuilderNode("paragraph")];
+const initial=[root],a=collab.createStudioYTree(initial),b=collab.createStudioYTree(JSON.parse(JSON.stringify(initial)));
+Y.applyUpdate(b.doc,Y.encodeStateAsUpdate(a.doc),"network");
+Y.applyUpdate(a.doc,Y.encodeStateAsUpdate(b.doc),"network");
+assert.equal(JSON.stringify(a.snapshot()),JSON.stringify(b.snapshot()));
+const ta=a.snapshot(),tb=b.snapshot();
+ta[0].children[0].props.text="Edited by A";
+tb[0].style.backgroundColor="#123456";
+a.applyLocal(ta);
+b.applyLocal(tb);
+Y.applyUpdate(b.doc,Y.encodeStateAsUpdate(a.doc),"network");
+Y.applyUpdate(a.doc,Y.encodeStateAsUpdate(b.doc),"network");
+const xa=a.snapshot(),xb=b.snapshot();
+assert.ok(xa&&xb);
+assert.equal(xa[0].children[0].props.text,"Edited by A");
+assert.equal(xb[0].style.backgroundColor,"#123456");
+assert.equal(JSON.stringify(xa),JSON.stringify(xb));
+a.doc.destroy();b.doc.destroy();
+for(const path of ["app/sitemap.ts","app/robots.ts","app/opengraph-image.tsx"]){
+ assert.ok(fs.existsSync(path),"SEO route missing "+path);
+}
+console.log("Growth, Figma, AI tree, Yjs CRDT and SEO smoke tests passed");

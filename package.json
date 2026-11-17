@@ -14,7 +14,8 @@
     "test:ai": "node tests/ai-provider-regression.cjs",
     "test:timeline": "node tests/timeline-regression.cjs",
     "test:npc": "node tests/npc-runtime-regression.cjs",
-    "test:native": "node tests/native-workflow-regression.cjs"
+    "test:native": "node tests/native-workflow-regression.cjs",
+    "test:growth": "node tests/growth-regression.cjs"
   },
   "dependencies": {
     "next": "15.5.29",
@@ -37,7 +38,8 @@
     "@alife-sdk/core": "0.4.2",
     "@aws-sdk/client-s3": "3.1169.0",
     "@aws-sdk/s3-request-presigner": "3.1169.0",
-    "@react-three/xr": "6.6.32"
+    "@react-three/xr": "6.6.32",
+    "yjs": "^13.6.28"
   },
   "devDependencies": {
     "typescript": "^5.8.3",
