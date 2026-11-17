@@ -53,7 +53,7 @@ export function createStudioYTree(initial:BuilderNode[]):StudioYTree{
    if(typeof type!=="string"||!(props instanceof Y.Map)||!(style instanceof Y.Map)||!(children instanceof Y.Array))return null;
    seen.add(id);
    const node:BuilderNode={id,type,props:Object.fromEntries(props.entries()),style:Object.fromEntries(style.entries()),children:[]};
-   for(const childId of children.toArray()){
+   for(const childId of new Set(children.toArray())){
     const child=read(String(childId),depth+1);
     if(!child)return null;
     node.children.push(child);
@@ -61,7 +61,7 @@ export function createStudioYTree(initial:BuilderNode[]):StudioYTree{
    return node;
   };
   const result:BuilderNode[]=[];
-  for(const id of root.toArray()){const node=read(id,0);if(!node)return null;result.push(node);}
+  for(const id of new Set(root.toArray())){const node=read(id,0);if(!node)return null;result.push(node);}
   return validateUiTree(result)?result:null;
  };
  applyLocal(initial);
