@@ -12,6 +12,6 @@ export default async function Image(){
    <div style={{fontSize:76,fontWeight:900,lineHeight:1.06}}>Build Beyond Boundaries.</div>
    <div style={{fontSize:34,color:"#cbd5e1"}}>Websites · Mobile apps · 3D worlds · AI · XR</div>
   </div>
-  <div style={{display:"flex",gap:18,fontSize:23,color:"#fb923c"}}><span>VISUAL BUILDER</span><span>3D ENGINE</span><span>INSTANT EXPORT</span></div>
+  <div style={{display:"flex",gap:18,alignItems:"center",fontSize:23,color:"#fb923c"}}><span>VISUAL BUILDER</span><span>3D ENGINE</span><span>BY NPTduy</span></div>
  </div>,size);
 }
