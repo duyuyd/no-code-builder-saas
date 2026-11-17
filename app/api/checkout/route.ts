@@ -10,6 +10,10 @@ export async function POST(req:NextRequest){
  const data=body as {productId?:unknown;itemId?:unknown;quantity?:unknown}|null,productId=data?.productId,quantity=data?.quantity??1;
  if((typeof productId!=="string"||!/^[a-f0-9-]{36}$/i.test(productId)) && (typeof data?.itemId!=="string"||!/^[a-f0-9-]{36}$/i.test(data.itemId)) || !Number.isInteger(quantity)||Number(quantity)<1||Number(quantity)>30)
   return NextResponse.json({error:"Invalid product or quantity."},{status:400});
+ if(typeof data?.itemId==="string"&&process.env.MARKETPLACE_SETTLEMENTS_ENABLED!=="true")
+  return NextResponse.json({error:"Paid marketplace sales are disabled until the owner configures creator settlement and explicitly approves payments."},{status:503});
+ if(typeof data?.productId==="string"&&process.env.COMMERCE_PAYMENTS_ENABLED!=="true")
+  return NextResponse.json({error:"Store payments require explicit merchant approval and settlement setup."},{status:503});
  if(!process.env.PAYOS_CLIENT_ID||!process.env.PAYOS_API_KEY||!process.env.PAYOS_CHECKSUM_KEY||!process.env.SUPABASE_SERVICE_ROLE_KEY)
   return NextResponse.json({error:"Checkout is not enabled. Merchant configuration is required."},{status:503});
  try{
@@ -35,7 +39,7 @@ export async function POST(req:NextRequest){
     const payment=await createPayOsLink(orderCode,Number(item.price_vnd),"Template "+orderCode,new URL(req.url).origin);
     return NextResponse.json({checkoutUrl:payment.checkoutUrl,orderId:order.id},{headers:{"cache-control":"no-store"}});
    }catch(e){
-    await admin.from("marketplace_orders").update({status:"refunded"}).eq("id",order.id).eq("status","pending");
+    await admin.from("marketplace_orders").update({status:"cancelled"}).eq("id",order.id).eq("status","pending");
     return NextResponse.json({error:e instanceof Error?e.message:"PayOS unavailable."},{status:502});
    }
   }
