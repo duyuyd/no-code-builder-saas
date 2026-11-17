@@ -20,8 +20,9 @@ Repository: `duyuyd/no-code-builder-saas`; production branch: `main`.
 ## Task 1 — Unified editor + branding (IN PROGRESS)
 - [x] Existing Chai editor and reversible legacy JSON bridge found.
 - [x] Existing manual Chai JSON import found (append-only + owner-scoped).
-- [ ] Fix any proven loss-of-content or unsafe save regression in the bridge.
-- [ ] Add regression tests for legacy round-trip, unsupported blocks, cycles and persistence fallback.
+- [x] Fixed missing Chai `content` clearing legacy text in `lib/unified-chai-bridge.ts` (commit `6a196c8`).
+- [x] Added missing-content/explicit-text-edit regression cases to `tests/unified-editor-regression.cjs` (commit `505cb52`); existing tests already cover round-trip, unsupported blocks and cycles.
+- [ ] Run updated regression suite and verify new CI result before claiming completion.
 - [ ] Audit landing, README, metadata and public UI for obsolete product titles; retain historical technical references where needed.
 - [ ] Verify tests, TypeScript, build and deploy before replacing any active editor.
 
