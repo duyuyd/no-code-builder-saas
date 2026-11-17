@@ -36,4 +36,8 @@ assert.match(builderPage,/query\.mode==="legacy"\s*\?\s*<BuilderWorkspace/,"lega
 assert.match(chaiEditor,/mode=legacy/,"Chai toolbar must offer a legacy fallback");
 assert.throws(()=>bridge.fromUnifiedChai(flat.map(x=>({...x,_parent:x._id}))),/cycle|Disconnected|Invalid/);
 assert.throws(()=>bridge.fromUnifiedChai([{_id:"bad",_type:"Nonexistent"}]),/Unsupported/);
+assert.throws(()=>bridge.fromUnifiedChai([...flat,flat[0]]),/duplicate Chai id/,"duplicate block IDs must be rejected");
+assert.throws(()=>bridge.fromUnifiedChai(flat.map((block,i)=>i===0?{...block,_parent:"missing-parent"}:block)),/missing parent/,"missing parent must reject instead of silently losing content");
+assert.throws(()=>bridge.fromUnifiedChai(flat.map((block,i)=>i===0?{...block,source:"{not-json"}:block)),/SyntaxError|JSON/,"corrupt source JSON must reject instead of replacing existing nodes");
+assert.equal(JSON.stringify(bridge.fromUnifiedChai(flat)),JSON.stringify([root]),"failed imports must not mutate the original blocks");
 console.log("PASS Chai unified round-trip preserves original editable components and detects corrupt graphs.");
