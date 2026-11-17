@@ -15,7 +15,6 @@ export async function generateMetadata():Promise<Metadata>{
   description,
   applicationName:siteTitle,
   keywords:["no-code website builder","app builder","3D game creator","visual editor","AI website generator","timeline editor","WebXR","responsive websites"],
-  alternates:{canonical:"/"},
   openGraph:{type:"website",locale:"en_US",siteName:siteTitle,url:root,images:[{url:"/opengraph-image",width:1200,height:630,alt:siteTitle+" visual creation studio"}],title:siteTitle+" — build websites, apps & 3D games",description},
   twitter:{card:"summary_large_image",title:siteTitle+" — Visual Creation Studio",description,images:["/opengraph-image"]},
   robots:{index:true,follow:true,googleBot:{index:true,follow:true,"max-image-preview":"large","max-snippet":-1}}

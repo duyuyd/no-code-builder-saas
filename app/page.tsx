@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type {Metadata} from "next";
 import {ArrowUpRight,Check,ChevronRight,Code2,Cpu,Gamepad2,Globe2,Layers3,Orbit,Rocket,ShieldCheck,Smartphone,Sparkles,Users,Workflow} from "lucide-react";
 import {getSiteSettings} from "@/lib/platform-settings";
 import {getGrowthSettings} from "@/lib/growth-settings";
@@ -6,6 +7,7 @@ import {createClient} from "@/lib/supabase/server";
 import InteractiveDemo from "@/components/landing/InteractiveDemo";
 import PromptGenerator from "@/components/landing/PromptGenerator";
 export const dynamic="force-dynamic";
+export const metadata:Metadata={alternates:{canonical:"/"}};
 const icons=[Layers3,Orbit,Workflow,Sparkles,Cpu,Users] as const;
 export default async function Home(){
  const [{siteTitle},content,db]=await Promise.all([getSiteSettings(),getGrowthSettings(),createClient()]);

@@ -31,3 +31,6 @@ jobs:
         run: npm run test:npc
       - name: Native build workflow contracts
         run: npm run test:native
+
+      - name: SEO, AI Generator, Figma and Yjs collaboration regression
+        run: npm run test:growth
