@@ -58,7 +58,7 @@ function Item({node,projectId,onNavigate}:{node:BuilderNode;projectId?:string;on
      e.preventDefault();const form=e.currentTarget;const data=new FormData(form);
      const values:Record<string,string|boolean>={};
      for(const [key,val] of data.entries())if(typeof val==="string"&&key.length<=40)values[key]=val.slice(0,2000);
-     for(const field of Array.from(form.querySelectorAll('input[type="checkbox"]')))if(field.name)values[field.name]=field.checked;
+     for(const field of Array.from(form.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')))if(field.name)values[field.name]=field.checked;
      if(!projectId){setFeedback("Biểu mẫu cần được xuất bản trong dự án.");return;}
      setFeedback("Đang gửi biểu mẫu...");
      try{
