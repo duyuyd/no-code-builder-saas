@@ -39,7 +39,8 @@
     "@aws-sdk/client-s3": "3.1169.0",
     "@aws-sdk/s3-request-presigner": "3.1169.0",
     "@react-three/xr": "6.6.32",
-    "yjs": "^13.6.28"
+    "yjs": "^13.6.28",
+    "qrcode": "1.5.4"
   },
   "devDependencies": {
     "typescript": "^5.8.3",
@@ -49,6 +50,7 @@
     "tailwindcss": "^4.1.0",
     "@tailwindcss/postcss": "^4.1.0",
     "postcss": "^8.4.0",
-    "@types/three": "0.187.0"
+    "@types/three": "0.187.0",
+    "@types/qrcode": "1.5.6"
   }
 }
