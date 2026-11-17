@@ -11,6 +11,7 @@ export default async function NativeBuildPage({searchParams}:{searchParams:Promi
  return <main className="min-h-dvh bg-[#0f172a] p-4 text-white sm:p-8"><div className="mx-auto max-w-3xl space-y-6">
   <header className="flex flex-wrap items-center justify-between gap-2"><div><h1 className="text-2xl font-bold">Native Build Center</h1><p className="text-sm text-slate-400">{project.name}</p></div>
    <Link href={"/builder?project="+projectId} className="text-sm text-orange-300">Về Builder</Link></header>
+  <div><Link href="/auth-diagnostics" className="text-xs text-emerald-300 underline">Kiểm tra đăng nhập, ghi và đọc Supabase trên production</Link></div>
   <NativeBuildPanel projectId={projectId}/>
  </div></main>;
 }
