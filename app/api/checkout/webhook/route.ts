@@ -10,7 +10,16 @@ export async function POST(req:NextRequest){
  if(code!=="00"||success!==true)return NextResponse.json({ok:true});
  const admin=privilegedSupabase();
  const {data:order}=await admin.from("commerce_orders").select("id,amount_vnd,status").eq("provider_order_code",data.orderCode).maybeSingle();
- if(!order||Number(order.amount_vnd)!==data.amount)return new Response("Order mismatch",{status:422});
+ if(!order){
+  const {data:market}=await admin.from("marketplace_orders").select("id,amount_vnd,status").eq("provider_order_code",data.orderCode).maybeSingle();
+  if(!market||Number(market.amount_vnd)!==data.amount)return new Response("Order mismatch",{status:422});
+  if(market.status==="pending"){
+   const {error}=await admin.from("marketplace_orders").update({status:"paid"}).eq("id",market.id).eq("status","pending");
+   if(error)return new Response("Marketplace status update failed",{status:503});
+  }
+  return NextResponse.json({ok:true});
+ }
+ if(Number(order.amount_vnd)!==data.amount)return new Response("Order mismatch",{status:422});
  if(order.status==="pending"){
   const {error}=await admin.from("commerce_orders").update({status:"paid"}).eq("id",order.id).eq("status","pending");
   if(error)return new Response("Status write failed",{status:503});
