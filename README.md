@@ -28,7 +28,7 @@ It is an actively developing product—not a claim of feature parity with Unity,
 
 ### See it in motion
 
-[▶ Watch the 45-second NuvoraCraft product tour (MP4)](./public/demo/nuvoracraft-product-tour.mp4)
+[▶ **Watch the 45-second original NuvoraCraft product tour (MP4)**](./public/demo/nuvoracraft-product-tour.mp4)
 
 The video is an **illustrated feature overview**, not a recording of an authenticated production account. It presents visual editing, Screenshot to App, NPC logic, commerce, and community collaboration.
 
@@ -98,6 +98,11 @@ We welcome thoughtful **first-time contributors, UI designers, TypeScript engine
 - Read **[Roadmap](./docs/ROADMAP.md)** for prioritized modules.
 - Report vulnerabilities privately using **[SECURITY.md](./SECURITY.md)**.
 - Use the pull request template; small, testable changes are preferred.
+
+**Start with an open task:**
+- [#10 · Beginner-friendly bilingual onboarding](https://github.com/duyuyd/no-code-builder-saas/issues/10) — `good first issue`
+- [#11 · OpenAI route integration tests](https://github.com/duyuyd/no-code-builder-saas/issues/11) — `help wanted`
+- [#12 · Accessible visual Builder](https://github.com/duyuyd/no-code-builder-saas/issues/12) — `help wanted`
 
 New to the codebase? A documentation correction or responsive UI improvement is a meaningful first contribution.
 
