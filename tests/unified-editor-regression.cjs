@@ -41,6 +41,8 @@ assert.match(builderPage,/query\.mode==="legacy"\s*\?\s*<BuilderWorkspace/,"lega
 assert.match(chaiEditor,/mode=legacy/,"Chai toolbar must offer a legacy fallback");
 assert.throws(()=>bridge.fromUnifiedChai(flat.map(x=>({...x,_parent:x._id}))),/cycle|Disconnected|Invalid/);
 assert.throws(()=>bridge.fromUnifiedChai([{_id:"bad",_type:"Nonexistent"}]),/Unsupported/);
+assert.throws(()=>bridge.fromUnifiedChai([{_id:"link1",_type:"Link",content:"Visit",link:{href:42}}]),/Invalid Chai link/,"numeric link href must not be coerced or crash conversion");
+assert.throws(()=>bridge.fromUnifiedChai([{_id:"link1",_type:"Link",content:"Visit",link:"https://example.com"}]),/Invalid Chai link/,"link payload must be an object");
 assert.throws(()=>bridge.fromUnifiedChai([...flat,flat[0]]),/duplicate Chai id/,"duplicate block IDs must be rejected");
 assert.throws(()=>bridge.fromUnifiedChai(flat.map((block,i)=>i===1?{...block,_parent:0}:block)),/Invalid Chai parent id/,"numeric parent identifiers must not silently become root nodes");
 assert.throws(()=>bridge.fromUnifiedChai(flat.map((block,i)=>i===1?{...block,_parent:"   "}:block)),/Invalid Chai parent id/,"blank parent identifiers must not silently become root nodes");
