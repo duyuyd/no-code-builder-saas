@@ -1,0 +1,23 @@
+const fs=require("node:fs"),assert=require("node:assert/strict"),vm=require("node:vm"),ts=require("typescript"),crypto=require("node:crypto");
+const src=fs.readFileSync("lib/unified-chai-bridge.ts","utf8");
+const registry=fs.readFileSync("lib/component-registry.ts","utf8");
+const modules={};
+function readModule(code,name,requires){
+ const js=ts.transpileModule(code,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
+ const exports={};const context={exports,require:(p)=>{if(p in requires)return requires[p];throw new Error("Unexpected require "+p);},crypto,URL,console};
+ vm.runInNewContext(js,context,{filename:name});return exports;
+}
+const regs=readModule(registry,"registry",{});const bridge=readModule(src,"bridge",{"@/lib/component-registry":regs});
+const types=["section","row","card","h1","heading","h3","paragraph","button","badge","strong","caption","footer","header","hero","grid","progress","memory","quiz","form","input"];
+let n=0;const make=(type)=>{const o=regs.createBuilderNode(type);o.id="n"+(++n);return o;};
+const root=make("section");root.children=types.filter(x=>x!=="section").map(make);root.children[0].children=[make("text")];
+root.children.find(x=>x.type==="quiz").props.questions="What?|A|B|C|D|1";
+root.children.find(x=>x.type==="memory").props.symbols="a|b|c";
+assert.ok(regs.validateUiTree([root]));
+const flat=bridge.toUnifiedChai([root]);
+const back=bridge.fromUnifiedChai(flat);
+assert.equal(JSON.stringify(back),JSON.stringify([root]),"lossless legacy ui_tree round trip");
+assert.equal(flat.length,types.length+1);
+assert.throws(()=>bridge.fromUnifiedChai(flat.map(x=>({...x,_parent:x._id}))),/cycle|Disconnected|Invalid/);
+assert.throws(()=>bridge.fromUnifiedChai([{_id:"bad",_type:"Nonexistent"}]),/Unsupported/);
+console.log("PASS Chai unified round-trip preserves original editable components and detects corrupt graphs.");

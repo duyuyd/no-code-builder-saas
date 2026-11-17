@@ -1,0 +1,15 @@
+const fs=require("node:fs"),assert=require("node:assert/strict");
+const sql=fs.readFileSync("supabase/migrations/20261118_auto_database_forms.sql","utf8");
+assert.match(sql,/create schema if not exists private_forms/);
+assert.match(sql,/enable row level security/g);
+assert.match(sql,/security definer set search_path=''/g);
+assert.match(sql,/owner_id=v_uid/);
+assert.match(sql,/grant execute on function public.submit_nuvora_form/);
+const actions=fs.readFileSync("app/builder/actions.ts","utf8");
+assert.match(actions,/ensure_nuvora_form/);
+const live=fs.readFileSync("components/LivePage.tsx","utf8");
+assert.match(live,/fetch\("\/api\/forms\/submit"/);
+const api=fs.readFileSync("app/api/forms/submit/route.ts","utf8");
+assert.match(api,/db\.auth\.getUser/);
+assert.match(api,/submit_nuvora_form/);
+console.log("PASS Auto-Database private form tables, authorized RPC and live form API contracts");

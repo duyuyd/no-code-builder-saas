@@ -4,7 +4,7 @@ import { Blocks, ChevronRight, CircleHelp, FolderPlus, LayoutDashboard, LogOut, 
 import { createClient } from "@/lib/supabase/server";
 import { getSiteSettings } from "@/lib/platform-settings";
 import { validateUiTree } from "@/lib/component-registry";
-import BuilderWorkspace from "@/components/BuilderWorkspace";
+import UnifiedChaiEditor from "@/components/chaibuilder/UnifiedChaiEditor";
 import { createPage, createProject } from "./actions";
 import { signOut } from "@/app/login/actions";
 
@@ -104,7 +104,7 @@ export default async function BuilderPage({ searchParams }: {
             <Link href="/sign" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">✍️ Ký tài liệu PDF</Link>
             <Link href="/characters" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🧍 Xưởng nhân vật 3D</Link>
             <Link href="/assets" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🖼️ Kho ảnh của tôi</Link>
-            <Link href={"/builder/chai-import?project="+project.id+"&page="+page.id} className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🫖 Chai Builder Import</Link><Link href="/resources" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🧩 Game Asset / Icon / Thời trang</Link>
+            <Link href={"/builder/chai-import?project="+project.id+"&page="+page.id} className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🫖 Chai Builder Import</Link><Link href="/import-figma" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🎨 Import Figma</Link><Link href={"/video-studio?project="+project.id+"&page="+page.id} className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🎬 Video Studio</Link><Link href={"/form-data?project="+project.id} className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🗃️ Auto-Database</Link><Link href="/resources" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🧩 Game Asset / Icon / Thời trang</Link>
             <Link href="/pricing" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">💳 Bảng giá</Link>
           </nav>
         </details>
@@ -119,6 +119,6 @@ export default async function BuilderPage({ searchParams }: {
         <form action={createPage} className="absolute right-0 z-50 mt-2 flex w-64 gap-2 rounded-xl border border-slate-700 bg-slate-800 p-3 shadow-2xl"><input type="hidden" name="project_id" value={project.id}/><input name="path" required placeholder="/trang-moi" aria-label="Đường dẫn trang mới" className="min-w-0 flex-1 rounded-lg border border-slate-600 bg-slate-900 px-2 py-2 text-xs outline-none focus:border-orange-500"/><button className="rounded-lg bg-orange-500 px-2 text-white" title="Thêm trang" aria-label="Thêm trang"><Plus size={16}/></button></form>
       </details>
     </div>
-    <BuilderWorkspace key={page.id} userId={user.id} pageId={page.id} projectId={project.id} projectKind={project.kind} canInvite={project.owner_id===user.id} pagePath={page.path} previewPages={(pages??[]).map(p=>({path:p.path,ui_tree:p.ui_tree}))} initiallyPublished={Boolean(published?.length)} projectName={project.name} initialNodes={page.ui_tree} initialVersion={page.version}/>
+    <UnifiedChaiEditor key={page.id} pageId={page.id} projectId={project.id} projectName={project.name} pagePath={page.path} initialNodes={page.ui_tree} initialVersion={page.version} initiallyPublished={Boolean(published?.length)}/>
   </div>;
 }

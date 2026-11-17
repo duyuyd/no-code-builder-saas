@@ -4,8 +4,9 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { validateUiTree, type BuilderNode } from "@/lib/component-registry";
 import { mergeUiTrees } from "@/lib/merge-ui-tree";
+import { extractFormSchemas } from "@/lib/auto-database";
 import { validateGameScene } from "@/lib/game-scene";
-export type SaveResult = { ok: true; version: number; tree: BuilderNode[] } | { ok: false; error: string; reason?: "conflict" | "forbidden" | "invalid" };
+export type SaveResult = { ok: true; version: number; tree: BuilderNode[]; warnings?: string[] } | { ok: false; error: string; reason?: "conflict" | "forbidden" | "invalid" };
 export async function createProject(formData: FormData) {
   const templateId = String(formData.get("template_id") ?? "").trim();
   if (templateId && !/^[a-f0-9-]{36}$/i.test(templateId)) throw new Error("Mẫu không hợp lệ.");
@@ -93,7 +94,15 @@ export async function savePageTree(pageId: string, tree: BuilderNode[], expected
       .eq("version", version)
       .select("version").maybeSingle();
     if (error) return { ok: false, error: error.message };
-    if (data) return { ok: true, version: data.version as number, tree: mergedTree };
+    if(data){
+      const forms=extractFormSchemas(mergedTree);
+      const warnings:string[]=[];
+      for(const form of forms){
+       const sync=await supabase.rpc("ensure_nuvora_form",{p_page_id:pageId,p_node_id:form.nodeId,p_fields:form.fields});
+       if(sync.error)warnings.push("Auto-Database: "+sync.error.message);
+      }
+      return {ok:true,version:data.version as number,tree:mergedTree,...(warnings.length?{warnings}: {})};
+    }
 
     // Read back under RLS to distinguish a genuine version conflict from denied access.
     const { data: current, error: readError } = await supabase.from("pages")
@@ -119,9 +128,15 @@ export async function publishProject(projectId:string):Promise<PublishResult> {
   if(!user)return {ok:false,error:"Cần đăng nhập."};
   const {data:project}=await supabase.from("projects").select("id,name,owner_id").eq("id",projectId).is("archived_at",null).maybeSingle();
   if(!project||project.owner_id!==user.id)return {ok:false,error:"Bạn không sở hữu dự án."};
-  const {data:pages,error}=await supabase.from("pages").select("path,ui_tree").eq("project_id",projectId);
+  const {data:pages,error}=await supabase.from("pages").select("id,path,ui_tree").eq("project_id",projectId);
   if(error||!pages?.length)return {ok:false,error:error?.message??"Dự án chưa có trang."};
   if(pages.some(p=>!validateUiTree(p.ui_tree)))return {ok:false,error:"Dữ liệu trang không hợp lệ."};
+  for(const p of pages){
+    for(const form of extractFormSchemas(p.ui_tree)){
+      const sync=await supabase.rpc("ensure_nuvora_form",{p_page_id:p.id,p_node_id:form.nodeId,p_fields:form.fields});
+      if(sync.error)return {ok:false,error:"Auto-Database failed: "+sync.error.message};
+    }
+  }
   const {error:writeError}=await supabase.from("published_pages").upsert(pages.map(p=>({
     project_id:projectId,path:p.path,ui_tree:p.ui_tree,site_title:project.name,is_live:true,published_at:new Date().toISOString()
   })),{onConflict:"project_id,path"});

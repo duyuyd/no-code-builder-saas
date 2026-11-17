@@ -17,7 +17,9 @@
     "test:native": "node tests/native-workflow-regression.cjs",
     "test:growth": "node tests/growth-regression.cjs",
     "test:ecosystem": "node tests/ecosystem-regression.cjs",
-    "test:chai": "node tests/chaibuilder-bridge-regression.cjs"
+    "test:chai": "node tests/chaibuilder-bridge-regression.cjs",
+    "test:forms": "node tests/auto-database-regression.cjs",
+    "test:unified": "node tests/unified-editor-regression.cjs"
   },
   "dependencies": {
     "next": "15.5.29",
@@ -29,7 +31,7 @@
     "@dnd-kit/sortable": "10.0.0",
     "@dnd-kit/utilities": "3.2.2",
     "lucide-react": "1.73.0",
-    "framer-motion": "^14.14.0",
+    "framer-motion": "12.23.20",
     "@radix-ui/react-dialog": "1.3.1",
     "pdf-lib": "1.17.1",
     "pdfjs-dist": "6.5.438",
@@ -49,7 +51,11 @@
     "@chaibuilder/core": "0.1.0",
     "drizzle-orm": "0.45.1",
     "@next/third-parties": "15.5.29",
-    "sync-ammo": "0.1.2"
+    "sync-ammo": "0.1.2",
+    "remotion": "4.0.543",
+    "@remotion/player": "4.0.543",
+    "@remotion/web-renderer": "4.0.543",
+    "@chaibuilder/sdk": "4.0.0-beta.51"
   },
   "devDependencies": {
     "typescript": "^5.8.3",
@@ -61,5 +67,8 @@
     "postcss": "^8.4.0",
     "@types/three": "0.187.0",
     "@types/qrcode": "1.5.6"
+  },
+  "overrides": {
+    "motion-dom": "12.23.20"
   }
 }
