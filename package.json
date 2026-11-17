@@ -12,7 +12,9 @@
     "typecheck": "tsc --noEmit",
     "test:export": "node tests/export-regression.cjs",
     "test:ai": "node tests/ai-provider-regression.cjs",
-    "test:timeline": "node tests/timeline-regression.cjs"
+    "test:timeline": "node tests/timeline-regression.cjs",
+    "test:npc": "node tests/npc-runtime-regression.cjs",
+    "test:native": "node tests/native-workflow-regression.cjs"
   },
   "dependencies": {
     "next": "15.5.29",

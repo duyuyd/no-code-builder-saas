@@ -26,3 +26,8 @@ jobs:
         run: npm run test:ai
       - name: Timeline regression
         run: npm run test:timeline
+
+      - name: NPC state machine regression
+        run: npm run test:npc
+      - name: Native build workflow contracts
+        run: npm run test:native
