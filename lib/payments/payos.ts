@@ -14,7 +14,8 @@ export function verifyPayOsWebhook(payload:unknown):payload is {code:string;succ
  if(!payload||typeof payload!=="object")return false;
  const v=payload as Record<string,unknown>,data=v.data;
  if(!data||typeof data!=="object"||!v.signature||typeof v.signature!=="string")return false;
- let check:string;try{check=credentials().checksum;}catch{return false;}
+ const check=process.env.PAYOS_CHECKSUM_KEY;
+ if(!check)return false;
  const expected=signPayOsObject(data as Record<string,unknown>,check);
  const signature=v.signature.toLowerCase();
  return /^[a-f0-9]{64}$/.test(signature)&&timingSafeEqual(Buffer.from(expected,"hex"),Buffer.from(signature,"hex"))&&typeof (data as {orderCode?:unknown}).orderCode==="number";
