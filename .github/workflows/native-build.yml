@@ -1,0 +1,112 @@
+name: Native APK and signed IPA
+on:
+  workflow_dispatch:
+    inputs:
+      job_id:
+        description: Supabase build job UUID
+        required: true
+        type: string
+      platform:
+        description: Target platform
+        required: true
+        type: choice
+        options:
+          - android
+          - ios
+permissions:
+  contents: read
+concurrency:
+  group: native-${{ inputs.job_id }}
+  cancel-in-progress: false
+jobs:
+  native:
+    runs-on: ${{ inputs.platform == 'ios' && 'macos-15' || 'ubuntu-24.04' }}
+    timeout-minutes: 60
+    env:
+      JOB_ID: ${{ inputs.job_id }}
+      TARGET: ${{ inputs.platform }}
+      STUDIO_BASE_URL: ${{ vars.STUDIO_BASE_URL }}
+      RUNNER_TOKEN: ${{ secrets.STUDIO_RUNNER_TOKEN }}
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      CI: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        if: inputs.platform == 'android'
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Validate configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$JOB_ID" =~ ^[0-9a-fA-F-]{36}$ ]]
+          [[ "$STUDIO_BASE_URL" =~ ^https://[a-zA-Z0-9.-]+$ ]] || { echo "STUDIO_BASE_URL is missing or invalid"; exit 1; }
+          test -n "$RUNNER_TOKEN" || { echo "STUDIO_RUNNER_TOKEN missing"; exit 1; }
+          if [[ "$TARGET" == "ios" ]]; then test -n "$EXPO_TOKEN" || { echo "EXPO_TOKEN missing"; exit 1; }; fi
+      - name: Claim job and fetch project source
+        shell: bash
+        run: |
+          set -euo pipefail
+          ENDPOINT="$STUDIO_BASE_URL/api/native-build/runner/$JOB_ID"
+          curl -fsS --connect-timeout 10 --max-time 25 -X POST "$ENDPOINT" -H "Authorization: Bearer $RUNNER_TOKEN" -H "Content-Type: application/json" -d '{"kind":"start"}' >/dev/null
+          curl -fsS --connect-timeout 10 --max-time 30 "$ENDPOINT" -H "Authorization: Bearer $RUNNER_TOKEN" -o "$RUNNER_TEMP/native-source.zip"
+          mkdir -p "$RUNNER_TEMP/mobile"
+          unzip -q "$RUNNER_TEMP/native-source.zip" -d "$RUNNER_TEMP/mobile"
+      - name: Install Expo SDK dependencies
+        working-directory: ${{ runner.temp }}/mobile
+        run: npm install --no-audit --no-fund
+      - name: Build installable Android debug APK
+        if: inputs.platform == 'android'
+        working-directory: ${{ runner.temp }}/mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx expo prebuild --platform android --non-interactive
+          cd android
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug --no-daemon
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          cp app/build/outputs/apk/debug/app-debug.apk "$RUNNER_TEMP/app.apk"
+      - name: Build signed iOS IPA with configured Expo account
+        if: inputs.platform == 'ios'
+        working-directory: ${{ runner.temp }}/mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n' '{"build":{"internal":{"distribution":"internal","ios":{"simulator":false}}}}' > eas.json
+          npx --yes eas-cli@27.10.0 build --platform ios --profile internal --non-interactive --wait --json > "$RUNNER_TEMP/eas-result.json"
+          node -e 'const f=require("fs"),x=JSON.parse(f.readFileSync(process.argv[1],"utf8"));const v=Array.isArray(x)?x[0]:x;const url=v?.artifacts?.buildUrl;if(typeof url!=="string"||!url.startsWith("https://"))process.exit(1);f.writeFileSync(process.argv[2],url)' "$RUNNER_TEMP/eas-result.json" "$RUNNER_TEMP/eas-url"
+          curl -fsSL --max-time 240 "$(cat "$RUNNER_TEMP/eas-url")" -o "$RUNNER_TEMP/app.ipa"
+          test -s "$RUNNER_TEMP/app.ipa"
+      - name: Upload binary to private Cloudflare R2
+        shell: bash
+        run: |
+          set -euo pipefail
+          ENDPOINT="$STUDIO_BASE_URL/api/native-build/runner/$JOB_ID"
+          curl -fsS -X POST "$ENDPOINT" -H "Authorization: Bearer $RUNNER_TOKEN" -H "Content-Type: application/json" -d '{"kind":"upload_url"}' > "$RUNNER_TEMP/upload.json"
+          node -e 'const f=require("fs"),x=JSON.parse(f.readFileSync(process.argv[1],"utf8"));if(typeof x.url!=="string"||!x.url.startsWith("https://"))process.exit(1);f.writeFileSync(process.argv[2],x.url);f.writeFileSync(process.argv[3],x.contentType)' "$RUNNER_TEMP/upload.json" "$RUNNER_TEMP/upload-url" "$RUNNER_TEMP/content-type"
+          ARTIFACT="$RUNNER_TEMP/app.apk"
+          if [[ "$TARGET" == "ios" ]]; then ARTIFACT="$RUNNER_TEMP/app.ipa"; fi
+          curl -fsS --max-time 240 -X PUT -H "Content-Type: $(cat "$RUNNER_TEMP/content-type")" --data-binary @"$ARTIFACT" "$(cat "$RUNNER_TEMP/upload-url")"
+          curl -fsS -X POST "$ENDPOINT" -H "Authorization: Bearer $RUNNER_TOKEN" -H "Content-Type: application/json" -d '{"kind":"completed"}'
+      - name: Preserve binary in GitHub Actions artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ inputs.platform }}-${{ inputs.job_id }}
+          path: ${{ runner.temp }}/app.*
+          retention-days: 3
+          if-no-files-found: error
+      - name: Report failure to build queue
+        if: failure()
+        shell: bash
+        run: |
+          if [[ -n "$STUDIO_BASE_URL" && -n "$RUNNER_TOKEN" ]]; then
+            curl -sS --max-time 15 -X POST "$STUDIO_BASE_URL/api/native-build/runner/$JOB_ID" -H "Authorization: Bearer $RUNNER_TOKEN" -H "Content-Type: application/json" -d '{"kind":"failed","message":"Native build failed; check GitHub Actions logs."}' || true
+          fi

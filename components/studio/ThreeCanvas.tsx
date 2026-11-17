@@ -5,8 +5,9 @@ import type { ThreeElements } from "@react-three/fiber";
 import type { StudioScene, SceneObject, Vec3 } from "@/packages/engine-3d/src";
 import type { Timeline } from "@/packages/engine-4d/src";
 import { evaluateTimeline } from "@/packages/engine-4d/src";
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { WebGLRenderer } from "three";
+import { useEffect, useMemo, useState } from "react";
+import {XR,createXRStore} from "@react-three/xr";
+const xrStore=createXRStore();
 
 type Props = { scene:StudioScene; selectedId:string|null; onSelect:(id:string|null)=>void; timeline:Timeline; timeMs:number; };
 function PrimitiveMesh({item,selected,onSelect,overrides}:{item:SceneObject;selected:boolean;onSelect:()=>void;overrides:Record<string,number>}) {
@@ -22,7 +23,7 @@ function PrimitiveMesh({item,selected,onSelect,overrides}:{item:SceneObject;sele
  </mesh>;
 }
 type XrClient = { isSessionSupported(mode:string):Promise<boolean>; requestSession(mode:string,options?:object):Promise<unknown> };
-function XRButtons({renderer}:{renderer:React.RefObject<WebGLRenderer|null>}){
+function XRButtons(){
  const [availability,setAvailability]=useState({ar:false,vr:false});
  const [message,setMessage]=useState("");
  useEffect(()=>{
@@ -35,11 +36,7 @@ function XRButtons({renderer}:{renderer:React.RefObject<WebGLRenderer|null>}){
  },[]);
  const begin=async(mode:"immersive-ar"|"immersive-vr")=>{
   try{
-   const xr=(navigator as Navigator & {xr?:XrClient}).xr;
-   if(!xr||!renderer.current){setMessage("Thiết bị không hỗ trợ XR.");return;}
-   const session=await xr.requestSession(mode,{optionalFeatures:["local-floor","bounded-floor"]});
-   renderer.current.xr.enabled=true;
-   await renderer.current.xr.setSession(session as Parameters<WebGLRenderer["xr"]["setSession"]>[0]);
+   if(mode==="immersive-ar")await xrStore.enterAR();else await xrStore.enterVR();
    setMessage("");
   }catch{setMessage("Không khởi động được XR. Kiểm tra HTTPS, trình duyệt và quyền thiết bị.");}
  };
@@ -50,11 +47,11 @@ function XRButtons({renderer}:{renderer:React.RefObject<WebGLRenderer|null>}){
  </div>;
 }
 export default function ThreeCanvas({scene,selectedId,onSelect,timeline,timeMs}:Props){
- const renderer=useRef<WebGLRenderer|null>(null);
  const overrides=useMemo(()=>evaluateTimeline(timeline,timeMs),[timeline,timeMs]);
  return <div className="relative h-full min-h-[280px] w-full overflow-hidden rounded-xl border border-slate-700 bg-[#101827]">
   <Canvas shadows dpr={[1,1.6]} camera={{position:[7,5,8],fov:50,near:0.1,far:500}}
-    onPointerMissed={()=>onSelect(null)} gl={{antialias:true,alpha:true}} onCreated={({gl})=>{renderer.current=gl;gl.xr.enabled=true;}}>
+    onPointerMissed={()=>onSelect(null)} gl={{antialias:true,alpha:true}}>
+    <XR store={xrStore}>
     <color attach="background" args={["#101827"]}/>
     <ambientLight intensity={0.7}/>
     <directionalLight position={[6,12,7]} intensity={2} castShadow shadow-mapSize={[1024,1024]}/>
@@ -62,7 +59,8 @@ export default function ThreeCanvas({scene,selectedId,onSelect,timeline,timeMs}:
     {scene.objects.map(item=><PrimitiveMesh key={item.id} item={item} selected={selectedId===item.id}
       onSelect={()=>onSelect(item.id)} overrides={overrides}/>)}
     <OrbitControls enableDamping makeDefault minDistance={1} maxDistance={90}/>
+    </XR>
   </Canvas>
-  <XRButtons renderer={renderer}/>
+  <XRButtons/>
  </div>;
 }
