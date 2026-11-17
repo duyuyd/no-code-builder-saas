@@ -33,7 +33,7 @@ export function fromUnifiedChai(input:unknown):BuilderNode[]{
    if(!raw||raw.id!==block._id||typeof raw.type!=="string"||!getDefinition(raw.type))throw Error("Nuvora source is not a valid legacy component");
    const props=asObject(raw.props),style=asObject(raw.style);
    if(!props||!style)throw Error("Legacy component props or styles missing");
-   n={id:block._id,type:raw.type,props:props as Record<string,string>,style:style as Record<string,string>,children:[]};
+   n={id:block._id,type:raw.type,props:{...(props as Record<string,string>)},style:{...(style as Record<string,string>)},children:[]};
    const edited=typeof block.content==="string"?block.content.slice(0,12000):"";
    if(n.props.text!==undefined&&edited!==n.props.text)n.props.text=edited;
    else if(n.props.label!==undefined&&edited!==n.props.label)n.props.label=edited;
@@ -59,6 +59,7 @@ export function fromUnifiedChai(input:unknown):BuilderNode[]{
    parent.children.push(n);
   }else roots.push(n);
  }
+ const seen=new Set<string>();const visit=(nodes:BuilderNode[],depth:number)=>{if(depth>24)throw Error("Chai tree too deep");for(const n of nodes){if(seen.has(n.id))throw Error("Chai parent graph contains a cycle");seen.add(n.id);visit(n.children,depth+1);}};visit(roots,0);if(seen.size!==flat.length)throw Error("Disconnected Chai blocks would be lost");
  if(!validateUiTree(roots)||JSON.stringify(roots).length>600000)throw Error("Chai changes are incompatible with legacy output (possibly a cycle, too much nesting or unsupported child). Existing page was not overwritten.");
  return roots;
 }
