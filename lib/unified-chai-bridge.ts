@@ -26,6 +26,7 @@ export function fromUnifiedChai(input:unknown):BuilderNode[]{
  const ids=new Set<string>();
  for(const block of flat){
   if(!block||typeof block!=="object"||typeof block._id!=="string"||!/^[-_a-z0-9]{1,100}$/i.test(block._id)||ids.has(block._id))throw Error("Invalid or duplicate Chai id");
+  if(block._parent!==undefined&&block._parent!==null&&(typeof block._parent!=="string"||!/^[-_a-z0-9]{1,100}$/i.test(block._parent)))throw Error("Invalid Chai parent id");
   ids.add(block._id);
   let n:BuilderNode;
   if(block._type==="NuvoraNode"){
