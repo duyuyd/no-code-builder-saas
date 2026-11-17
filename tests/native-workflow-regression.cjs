@@ -3,7 +3,7 @@ const fs=require("node:fs");
 const workflow=fs.readFileSync(".github/workflows/native-build.yml","utf8");
 const action=fs.readFileSync("app/native-build/actions.ts","utf8");
 const runner=fs.readFileSync("app/api/native-build/runner/[jobId]/route.ts","utf8");
-for(const name of ["workflow_dispatch","assembleDebug","eas build","upload_url","completed","STUDIO_RUNNER_TOKEN","upload-artifact@v4"])assert.ok(workflow.includes(name),"Missing "+name);
+for(const name of ["workflow_dispatch","assembleDebug","eas-cli@27.10.0 build","upload_url","completed","STUDIO_RUNNER_TOKEN","upload-artifact@v4"])assert.ok(workflow.includes(name),"Missing "+name);
 for(const name of ["GITHUB_BUILD_TOKEN","SUPABASE_SERVICE_ROLE_KEY","R2_ACCOUNT_ID","R2_ACCESS_KEY_ID"])assert.ok(action.includes(name),"Missing server-side gate "+name);
 assert.ok(runner.includes("timingSafeEqual"));
 assert.ok(runner.includes("HeadObjectCommand"));
