@@ -19,6 +19,8 @@ import LivePage from "./LivePage";
 import dynamic from "next/dynamic";
 import BuilderTour from "./BuilderTour";
 import FigmaImportPanel from "./studio/FigmaImportPanel";
+import CollaborationPanel from "./studio/CollaborationPanel";
+import {useCollaborativeCanvas} from "@/lib/collab/useCollaborativeCanvas";
 const ThreeStudio = dynamic(() => import("./studio/ThreeStudio"), { ssr: false, loading: () => <div role="status" className="p-5 text-slate-300">Đang tải trình biên tập 3D…</div> });
 
 type History = { past: BuilderNode[][]; nodes: BuilderNode[]; future: BuilderNode[][]; selectedId: string | null };
@@ -174,6 +176,7 @@ export default function BuilderWorkspace({ pageId, projectId, userId, projectKin
   projectId: string;
   userId: string;
   projectKind: string;
+  canInvite: boolean;
   previewPages: {path:string;ui_tree:BuilderNode[]}[];
   initiallyPublished: boolean;
   pageId: string;
@@ -183,6 +186,18 @@ export default function BuilderWorkspace({ pageId, projectId, userId, projectKin
   initialVersion: number;
 }) {
   const [state, dispatch] = useReducer(reducer, { nodes: initialNodes, selectedId: null, past: [], future: [] });
+  const incomingRemote=useRef(false);
+  const onRemoteTree=useCallback((tree:BuilderNode[])=>{
+    incomingRemote.current=true;
+    dispatch({type:"restore",nodes:tree});
+  },[]);
+  const {connected:collabConnected,peers,shareCursor,applyLocal}=useCollaborativeCanvas({
+    pageId,userId,initialNodes,onRemote:onRemoteTree
+  });
+  useEffect(()=>{
+    if(incomingRemote.current){incomingRemote.current=false;return;}
+    applyLocal(state.nodes);
+  },[state.nodes,applyLocal]);
   const [dragging, setDragging] = useState("");
   const [editorMode,setEditorMode]=useState<"2d"|"3d"|"timeline">("2d");
   const [status, setStatus] = useState<"saved" | "unsaved" | "saving" | "error">("saved");
@@ -349,7 +364,16 @@ export default function BuilderWorkspace({ pageId, projectId, userId, projectKin
   };
   const iconButtonClass = "flex size-9 items-center justify-center rounded-xl border border-slate-700 bg-slate-800 text-slate-300 transition hover:border-slate-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-35 sm:size-10";
 
-  return <section className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#0f172a] text-slate-100">
+  return <section
+    onPointerMove={event=>{
+      const r=event.currentTarget.getBoundingClientRect();
+      if(r.width&&r.height)shareCursor((event.clientX-r.left)/r.width*100,(event.clientY-r.top)/r.height*100);
+    }}
+    className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#0f172a] text-slate-100">
+    <div aria-label="Collaborator cursors" className="pointer-events-none absolute inset-0 z-50 overflow-hidden">
+      {peers.map(peer=><div key={peer.userId} className="absolute flex items-start gap-1 text-orange-300"
+        style={{left:peer.x+"%",top:peer.y+"%"}}><span className="block size-3 rotate-45 border-l-2 border-t-2 border-orange-400"/><span className="rounded bg-slate-900 px-2 py-0.5 text-[10px] font-bold text-white shadow-lg">{peer.name}</span></div>)}
+    </div>
     <div className="flex min-h-14 shrink-0 flex-wrap items-center gap-2 border-b border-slate-700/80 bg-[#1e293b] px-3 py-2 sm:px-5">
       <div className="mr-auto min-w-0"><p className="truncate text-xs font-bold text-white sm:text-sm">{projectName}<span className="font-normal text-slate-500"> · {pagePath}</span></p>
         <p role="status" aria-live="polite" className={`mt-0.5 flex items-center gap-1 text-[10px] ${status === "error" ? "text-rose-400" : status === "saved" ? "text-emerald-400" : "text-amber-400"}`}>
@@ -364,6 +388,7 @@ export default function BuilderWorkspace({ pageId, projectId, userId, projectKin
         <a href={"/ai-logic?project="+encodeURIComponent(projectId)} className="shrink-0 whitespace-nowrap rounded-lg px-2 py-2 text-[11px] font-bold text-slate-300 hover:bg-slate-700 sm:px-3">AI Logic</a>
        </nav>
        <FigmaImportPanel projectId={projectId} pageId={pageId} unsaved={status!=="saved"}/>
+       <CollaborationPanel projectId={projectId} canInvite={canInvite} connected={collabConnected} peers={peers.length}/>
        <BuilderTour onOpenComponents={()=>setMobilePaletteOpen(true)} onOpenProperties={()=>setMobilePropertiesOpen(true)}/>
       <a href={"/native-build?project="+projectId} className="shrink-0 whitespace-nowrap rounded-lg border border-orange-500 px-3 py-2 text-xs font-bold text-orange-300">Xuất App</a>
       <a href="/assets" target="_blank" rel="noopener noreferrer" title="Kho ảnh và nguồn tài nguyên" className="flex h-9 items-center gap-1 rounded-xl border border-slate-600 bg-slate-800 px-2 text-xs font-semibold text-slate-200 hover:border-orange-400 sm:h-10">🖼️<span className="hidden lg:inline">Tài nguyên</span></a>

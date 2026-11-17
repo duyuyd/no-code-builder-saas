@@ -19,13 +19,21 @@ export default async function BuilderPage({ searchParams }: {
   const [settings, templateResult, projectResult] = await Promise.all([
     getSiteSettings(),
     supabase.from("starter_templates").select("id,name,kind,description").eq("is_active",true).order("name"),
-    supabase.from("projects").select("id,name,kind").eq("owner_id",user.id).is("archived_at",null).order("created_at", { ascending: false })
+    supabase.from("projects").select("id,name,kind,owner_id").eq("owner_id",user.id).is("archived_at",null).order("created_at", { ascending: false })
   ]);
   const {siteTitle}=settings;
   const {data:templates,error:templatesError}=templateResult;
   if(templatesError)throw new Error(templatesError.message);
-  const {data:projects,error:projectsError}=projectResult;
-  if (projectsError) throw new Error(projectsError.message);
+  const {data:ownedProjects,error:projectsError}=projectResult;
+  if(projectsError)throw new Error(projectsError.message);
+  const {data:shares,error:sharedError}=await supabase.from("project_collaborators").select("project_id").eq("user_id",user.id);
+  if(sharedError)throw new Error(sharedError.message);
+  const sharedIds=(shares??[]).map(s=>s.project_id);
+  const {data:sharedProjects,error:sharedProjectsError}=sharedIds.length?
+    await supabase.from("projects").select("id,name,kind,owner_id").in("id",sharedIds).is("archived_at",null).order("created_at",{ascending:false}):
+    {data:[] as NonNullable<typeof ownedProjects>,error:null};
+  if(sharedProjectsError)throw new Error(sharedProjectsError.message);
+  const projects=[...(ownedProjects??[]),...(sharedProjects??[])];
   const project = query.project ? projects?.find(p => p.id === query.project) : (projects?.find(p=>p.kind!=="game")??projects?.[0]);
   if (query.project && !project) notFound();
   if (project?.kind==="game" && query.mode!=="website") redirect("/game-builder?project="+project.id);
@@ -111,6 +119,6 @@ export default async function BuilderPage({ searchParams }: {
         <form action={createPage} className="absolute right-0 z-50 mt-2 flex w-64 gap-2 rounded-xl border border-slate-700 bg-slate-800 p-3 shadow-2xl"><input type="hidden" name="project_id" value={project.id}/><input name="path" required placeholder="/trang-moi" aria-label="Đường dẫn trang mới" className="min-w-0 flex-1 rounded-lg border border-slate-600 bg-slate-900 px-2 py-2 text-xs outline-none focus:border-orange-500"/><button className="rounded-lg bg-orange-500 px-2 text-white" title="Thêm trang" aria-label="Thêm trang"><Plus size={16}/></button></form>
       </details>
     </div>
-    <BuilderWorkspace key={page.id} userId={user.id} pageId={page.id} projectId={project.id} projectKind={project.kind} pagePath={page.path} previewPages={(pages??[]).map(p=>({path:p.path,ui_tree:p.ui_tree}))} initiallyPublished={Boolean(published?.length)} projectName={project.name} initialNodes={page.ui_tree} initialVersion={page.version}/>
+    <BuilderWorkspace key={page.id} userId={user.id} pageId={page.id} projectId={project.id} projectKind={project.kind} canInvite={project.owner_id===user.id} pagePath={page.path} previewPages={(pages??[]).map(p=>({path:p.path,ui_tree:p.ui_tree}))} initiallyPublished={Boolean(published?.length)} projectName={project.name} initialNodes={page.ui_tree} initialVersion={page.version}/>
   </div>;
 }
