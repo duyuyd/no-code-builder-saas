@@ -30,6 +30,7 @@ export function fromUnifiedChai(input:unknown):BuilderNode[]{
   ids.add(block._id);
   let n:BuilderNode;
   if(block._type==="NuvoraNode"){
+   if(block.content!==undefined&&typeof block.content!=="string")throw Error("Invalid legacy Chai content type");
    const raw=asObject(JSON.parse(typeof block.source==="string"?block.source:"null"));
    if(!raw||raw.id!==block._id||typeof raw.type!=="string"||!getDefinition(raw.type))throw Error("Nuvora source is not a valid legacy component");
    const props=asObject(raw.props),style=asObject(raw.style);
