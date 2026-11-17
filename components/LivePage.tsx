@@ -1,4 +1,6 @@
 "use client";
+import CommerceNode from "@/components/commerce/CommerceNode";
+import PluginSlot from "@/components/plugins/PluginSlot";
 import { createElement, useMemo, useState, type CSSProperties, type ReactNode, type FormEvent, type MouseEvent } from "react";
 import { ArrowRight, RotateCcw, Trophy, Image as ImageIcon } from "lucide-react";
 import { getDefinition, nodeCss, safeUrl, sanitizeNumeric, type BuilderNode } from "@/lib/component-registry";
@@ -26,6 +28,8 @@ function Item({node,projectId,onNavigate}:{node:BuilderNode;projectId?:string;on
  const url=href.startsWith("/")&&projectId?"/s/"+projectId+(href==="/"? "":href):href;
  const navigate=(event:MouseEvent<HTMLAnchorElement>)=>{if(href.startsWith("/")&&onNavigate){event.preventDefault();onNavigate(href)}};
  const text=p.text??"";
+ if(["product-card","product-grid","cart","checkout-form"].includes(node.type))return <CommerceNode node={node} projectId={projectId}/>;
+ if(node.type==="plugin-slot")return <PluginSlot pluginId={node.props.pluginId??""}/>;
  switch(def.kind){
   case "quiz":return <Quiz node={node}/>;
   case "memory":return <MemoryMatchGame node={node}/>;

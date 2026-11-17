@@ -1,5 +1,5 @@
 export type FieldType = "text" | "textarea" | "url" | "color" | "number" | "boolean" | "select";
-export type ComponentCategory = "basic" | "layout" | "form" | "media" | "data";
+export type ComponentCategory = "basic" | "layout" | "form" | "media" | "data" | "commerce";
 export type RenderKind = "text" | "button" | "link" | "image" | "video" | "audio" | "divider" | "input" | "textarea" | "select" | "checkbox" | "range" | "table" | "chart" | "progress" | "list" | "iframe" | "container" | "quiz" | "memory";
 export type FieldSchema = { label: string; type: FieldType; defaultValue: string; options?: readonly string[] };
 export type ComponentDefinition = {
@@ -68,6 +68,24 @@ function define(type: string, label: string, category: ComponentCategory, kind: 
   };
 }
 
+function commerceDefine(type:string,label:string):ComponentDefinition{
+ const def=define(type,label,"commerce","container","section",true);
+ def.propsSchema={
+  ...def.propsSchema,
+  productName:field("Tên sản phẩm","text",""),
+  priceVnd:field("Giá VND","number","1000"),
+  imageUrl:field("Ảnh HTTPS","url",""),
+  description:field("Mô tả","textarea",""),
+  buttonText:field("Nhãn mua hàng","text","Mua ngay"),
+  catalogId:field("ID sản phẩm (tự động)","text","")
+ };
+ return def;
+}
+function pluginDefine():ComponentDefinition{
+ const def=define("plugin-slot","Installed plugin","basic","container","section",true);
+ def.propsSchema={pluginId:field("Plugin ID","text",""),label:field("Component label","text","")};
+ return def;
+}
 // Static component definitions, NOT fake application records.
 // All user projects, pages, component values and styles live in Supabase.
 export const COMPONENT_REGISTRY: readonly ComponentDefinition[] = [
@@ -159,7 +177,11 @@ export const COMPONENT_REGISTRY: readonly ComponentDefinition[] = [
   define("outline-button", "Nút viền", "basic", "button", "button", false),
   define("download-link", "Liên kết tải xuống", "basic", "link", "a", false),
   define("feature-grid", "Lưới tính năng", "layout", "container", "div", true),
-  define("product-grid", "Lưới sản phẩm", "layout", "container", "div", true),
+  commerceDefine("product-grid", "Lưới sản phẩm"),
+  commerceDefine("product-card","Thẻ sản phẩm"),
+  pluginDefine(),
+  commerceDefine("cart","Giỏ hàng"),
+  commerceDefine("checkout-form","Biểu mẫu thanh toán"),
   define("portfolio-grid", "Lưới dự án", "layout", "container", "div", true),
   define("game-hud", "HUD trò chơi", "layout", "container", "section", true),
   define("game-menu", "Menu game", "layout", "container", "nav", true),

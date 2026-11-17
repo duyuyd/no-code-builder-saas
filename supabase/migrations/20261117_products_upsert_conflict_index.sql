@@ -1,0 +1,1 @@
+create unique index if not exists products_builder_node_all_idx on public.products(project_id,builder_node_id);

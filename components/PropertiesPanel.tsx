@@ -6,6 +6,8 @@ import {getDefinition,type BuilderNode,type FieldSchema} from "@/lib/component-r
 import {createClient} from "@/lib/supabase/browser";
 import {type ComponentPreset} from "@/lib/component-presets";
 import AssetBrowser from "./AssetBrowser";
+import ProductSync from "@/components/commerce/ProductSync";
+import PluginPicker from "@/components/plugins/PluginPicker";
 
 const presetCache=new Map<string,Promise<ComponentPreset[]>>();
 function getPresets(type:string):Promise<ComponentPreset[]>{
@@ -34,8 +36,8 @@ function PropertyField({field,name,value,onChange}:{field:FieldSchema;name:strin
     <input id={id} value={value} type={field.type==="number"?"number":field.type==="url"?"url":"text"} onChange={e=>onChange(e.target.value)} className={input}/>}
  </label>;
 }
-export default function PropertiesPanel({node,userId,onChange,onDelete,onApplyPreset}:{
- node:BuilderNode|null;userId:string;
+export default function PropertiesPanel({node,userId,projectId,onChange,onDelete,onApplyPreset}:{
+ node:BuilderNode|null;userId:string;projectId:string;
  onChange:(id:string,field:"props"|"style",key:string,value:string)=>void;
  onDelete:(id:string)=>void;
  onApplyPreset:(id:string,preset:ComponentPreset)=>void;
@@ -63,6 +65,9 @@ export default function PropertiesPanel({node,userId,onChange,onDelete,onApplyPr
    <p className="text-xs leading-5 text-slate-400">Mọi thành phần có 12 kiểu và ngữ cảnh. Chọn một kiểu sẽ áp dụng ngay, có thể hoàn tác.</p>
   </div>:
    <div key={node.id} className="editor-scroll min-h-0 flex-1 space-y-5 overflow-y-auto p-4">
+    {["product-card","product-grid","checkout-form"].includes(node.type)&&<ProductSync node={node} projectId={projectId}/>}
+    {node.type==="plugin-slot"&&<PluginPicker value={node.props.pluginId??""} onChange={value=>onChange(node.id,"props","pluginId",value)}/>}
+
     <div className="flex items-center gap-3 rounded-xl border border-orange-400/20 bg-orange-500/10 p-3">
      <Box size={20} className="text-orange-300"/><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold">{definition.label}</p><p className="font-mono text-[11px] text-slate-400">{node.type}</p></div><Layers3 size={17} className="text-orange-300"/>
     </div>
