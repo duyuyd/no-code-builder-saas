@@ -80,8 +80,7 @@ jobs:
         run: |
           set -euo pipefail
           printf '%s\n' '{"build":{"internal":{"distribution":"internal","ios":{"simulator":false}}}}' > eas.json
-          npm install --no-save eas-cli@16.28.0 --no-audit --no-fund
-          npx eas build --platform ios --profile internal --non-interactive --wait --json > "$RUNNER_TEMP/eas-result.json"
+          npx --yes eas-cli@27.10.0 build --platform ios --profile internal --non-interactive --wait --json > "$RUNNER_TEMP/eas-result.json"
           node -e 'const f=require("fs"),x=JSON.parse(f.readFileSync(process.argv[1],"utf8"));const v=Array.isArray(x)?x[0]:x;const url=v?.artifacts?.buildUrl;if(typeof url!=="string"||!url.startsWith("https://"))process.exit(1);f.writeFileSync(process.argv[2],url)' "$RUNNER_TEMP/eas-result.json" "$RUNNER_TEMP/eas-url"
           curl -fsSL --max-time 240 "$(cat "$RUNNER_TEMP/eas-url")" -o "$RUNNER_TEMP/app.ipa"
           test -s "$RUNNER_TEMP/app.ipa"
