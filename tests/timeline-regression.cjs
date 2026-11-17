@@ -13,9 +13,9 @@ const diagnostics = transpiled.diagnostics || [];
 assert.equal(diagnostics.length, 0, ts.formatDiagnosticsWithColorAndContext(diagnostics, {
  getCanonicalFileName: x => x, getCurrentDirectory: () => process.cwd(), getNewLine: () => "\n"
 }));
-const exports = {};
-vm.runInNewContext(transpiled.outputText, { exports, require, Map, Set, Error, TypeError });
-const { evaluateTimeline, validateTimeline } = exports;
+const moduleExports = {};
+vm.runInNewContext(transpiled.outputText, { exports: moduleExports, require, Map, Set, Error, TypeError });
+const { evaluateTimeline, validateTimeline } = moduleExports;
 const timeline = {
  schemaVersion: 1, durationMs: 1000,
  keyframes: [
