@@ -38,7 +38,7 @@ export async function GET(req:NextRequest,ctx:Ctx){
  zip.file("App.tsx",generateReactNativeSource(pages));
  zip.file("index.js","import {registerRootComponent} from 'expo';\nimport App from './App';\nregisterRootComponent(App);\n");
  zip.file("package.json",JSON.stringify({name:slug,version:"1.0.0",private:true,main:"index.js",scripts:{start:"expo start"},dependencies:{expo:"58.0.25",react:"19.3.0","react-native":"0.88.0"},devDependencies:{typescript:"5.9.3","@types/react":"19.3.0"}},null,2));
- zip.file("app.json",JSON.stringify({expo:{name:project.name.slice(0,60),slug,version:"1.0.0",android:{package:"vn.nptduy."+slug},ios:{bundleIdentifier:"vn.nptduy."+slug}}},null,2));
+ zip.file("app.json",JSON.stringify({expo:{name:project.name.slice(0,60),slug,version:"1.0.0",android:{package:"vn.nptduy."+slug},ios:{bundleIdentifier:"vn.nptduy."+slug},extra:{eas:{projectId:process.env.EXPO_PROJECT_ID??""}}}},null,2));
  zip.file("tsconfig.json",JSON.stringify({extends:"expo/tsconfig.base",compilerOptions:{strict:true}},null,2));
  const bytes=await zip.generateAsync({type:"uint8array",compression:"DEFLATE"});
  return new Response(Uint8Array.from(bytes).buffer,{headers:{"content-type":"application/zip","cache-control":"no-store,private"}});
@@ -67,7 +67,7 @@ export async function POST(req:NextRequest,ctx:Ctx){
   return Response.json({url,contentType},{headers:{"cache-control":"no-store"}});
  }
  if(payload.kind==="completed"){
-  try{await createR2Client().send(new HeadObjectCommand({Bucket:r2Bucket(),Key:key}));}
+  try{const head=await createR2Client().send(new HeadObjectCommand({Bucket:r2Bucket(),Key:key}));if(!head.ContentLength||head.ContentLength<65536)throw new Error("Artifact too small");}
   catch{return Response.json({error:"Artifact missing from R2"},{status:422});}
   const {error}=await db.from("build_jobs").update({status:"completed",artifact_key:key,error_message:null}).eq("id",job.id).eq("status","running");
   return error?Response.json({error:"Status write failed"},{status:500}):Response.json({ok:true});
