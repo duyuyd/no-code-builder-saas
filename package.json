@@ -32,7 +32,10 @@
     "@react-three/fiber": "9.8.2",
     "@react-three/drei": "10.7.9",
     "three": "0.187.0",
-    "@alife-sdk/core": "0.4.2"
+    "@alife-sdk/core": "0.4.2",
+    "@aws-sdk/client-s3": "3.1169.0",
+    "@aws-sdk/s3-request-presigner": "3.1169.0",
+    "@react-three/xr": "6.6.32"
   },
   "devDependencies": {
     "typescript": "^5.8.3",
