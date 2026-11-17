@@ -17,5 +17,5 @@ before update of custom_domain,domain_status,domain_verification on public.tenan
 for each row execute function public.protect_tenant_verified_domain();
 revoke execute on function public.protect_tenant_verified_domain() from public,anon,authenticated;
 drop policy if exists tenants_restricted_initial_domain on public.tenants;
-create policy tenants_restricted_initial_domain as restrictive on public.tenants
+create policy tenants_restricted_initial_domain on public.tenants as restrictive
 for insert to authenticated with check (custom_domain is null and domain_status='pending' and plan='free');
