@@ -30,7 +30,7 @@
     "@dnd-kit/sortable": "10.0.0",
     "@dnd-kit/utilities": "3.2.2",
     "lucide-react": "1.73.0",
-    "framer-motion": "^14.14.0",
+    "framer-motion": "12.23.20",
     "@radix-ui/react-dialog": "1.3.1",
     "pdf-lib": "1.17.1",
     "pdfjs-dist": "6.5.438",
