@@ -56,6 +56,10 @@ export function chaiBlocksToTree(input:unknown):ConvertResult{
   nodes.get(parentId)!.children.push(node);
  }
  if(roots.length===0&&blocks.length)throw new Error("Chai block hierarchy has no roots.");
+ const visited=new Set<string>();
+ const inspect=(block:ChaiBlockData,depth:number)=>{if(depth>6||visited.has(block._id))throw new Error("Chai block tree has a cycle or exceeds the depth limit.");visited.add(block._id);for(const child of blocks.filter(x=>x._parent===block._id))inspect(child,depth+1);};
+ for(const root of blocks.filter(x=>!x._parent))inspect(root,0);
+ if(visited.size!==blocks.length)throw new Error("Disconnected or cyclic Chai blocks must not be dropped.");
  if(!validateUiTree(roots))throw new Error("Chai block tree is cyclic, too deep, or incompatible with NuvoraCraft.");
  return {tree:roots,warning:blocks.some(b=>typeof b.styles==="string"&&b.styles.trim())?
   ["Chai Tailwind classes cannot be translated exactly; visual styles were initialized to NuvoraCraft defaults. Review before publishing."]:[]};
@@ -71,8 +75,10 @@ export function treeToChaiBlocks(tree:BuilderNode[]):ChaiBlockData[]{
      throw new Error("Unsupported container type for Chai export: "+node.type);
     type="Box";
    }else if(["heading","h1","h3"].includes(node.type))type="Heading";
-   else if(["text","paragraph","button","link","image","divider"].includes(node.type))
-    type={text:"Text",paragraph:"Paragraph",button:"Button",link:"Link",image:"Image",divider:"Divider"}[node.type]!;
+   else if(["text","paragraph","button","link","image","divider"].includes(node.type)){
+    const mapping:Record<string,string>={text:"Text",paragraph:"Paragraph",button:"Button",link:"Link",image:"Image",divider:"Divider"};
+    type=mapping[node.type];
+   }
    else throw new Error("Unsupported component for Chai export: "+node.type);
    const block:ChaiBlockData={_id:node.id,_type:type,_parent:parentId};
    if(type==="Heading"){block.tag=node.type==="h1"?"h1":node.type==="h3"?"h3":"h2";block.content=node.props.text??"";}
