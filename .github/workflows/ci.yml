@@ -37,3 +37,5 @@ jobs:
 
       - name: Ecosystem component, payments and security regression
         run: npm run test:ecosystem
+      - name: Chai JSONB bridge regression
+        run: npm run test:chai
