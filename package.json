@@ -49,7 +49,7 @@
     "playcanvas": "2.24.1",
     "@playcanvas/react": "0.11.7",
     "@chaibuilder/core": "0.1.0",
-    "drizzle-orm": "0.45.1",
+    "drizzle-orm": "0.45.2",
     "@next/third-parties": "15.5.29",
     "sync-ammo": "0.1.2",
     "remotion": "4.0.543",
