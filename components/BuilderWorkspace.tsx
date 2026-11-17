@@ -18,6 +18,7 @@ import LivePage from "./LivePage";
 
 import dynamic from "next/dynamic";
 import BuilderTour from "./BuilderTour";
+import FigmaImportPanel from "./studio/FigmaImportPanel";
 const ThreeStudio = dynamic(() => import("./studio/ThreeStudio"), { ssr: false, loading: () => <div role="status" className="p-5 text-slate-300">Đang tải trình biên tập 3D…</div> });
 
 type History = { past: BuilderNode[][]; nodes: BuilderNode[]; future: BuilderNode[][]; selectedId: string | null };
@@ -362,6 +363,7 @@ export default function BuilderWorkspace({ pageId, projectId, userId, projectKin
         {([{key:"2d",label:"2D Editor"},{key:"3d",label:"3D Editor"},{key:"timeline",label:"Timeline"}] as const).map(item=><button key={item.key} type="button" onClick={()=>setEditorMode(item.key)} aria-pressed={editorMode===item.key} className={"shrink-0 whitespace-nowrap rounded-lg px-2 py-2 text-[11px] font-bold sm:px-3 "+(editorMode===item.key?"bg-orange-500 text-white":"text-slate-300 hover:bg-slate-700")}>{item.label}</button>)}
         <a href={"/ai-logic?project="+encodeURIComponent(projectId)} className="shrink-0 whitespace-nowrap rounded-lg px-2 py-2 text-[11px] font-bold text-slate-300 hover:bg-slate-700 sm:px-3">AI Logic</a>
        </nav>
+       <FigmaImportPanel projectId={projectId} pageId={pageId} unsaved={status!=="saved"}/>
        <BuilderTour onOpenComponents={()=>setMobilePaletteOpen(true)} onOpenProperties={()=>setMobilePropertiesOpen(true)}/>
       <a href={"/native-build?project="+projectId} className="shrink-0 whitespace-nowrap rounded-lg border border-orange-500 px-3 py-2 text-xs font-bold text-orange-300">Xuất App</a>
       <a href="/assets" target="_blank" rel="noopener noreferrer" title="Kho ảnh và nguồn tài nguyên" className="flex h-9 items-center gap-1 rounded-xl border border-slate-600 bg-slate-800 px-2 text-xs font-semibold text-slate-200 hover:border-orange-400 sm:h-10">🖼️<span className="hidden lg:inline">Tài nguyên</span></a>
