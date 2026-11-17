@@ -38,7 +38,7 @@ export function fromUnifiedChai(input:unknown):BuilderNode[]{
    // Only apply changes to fields represented by the original component.
    // An absent Chai content property is not an instruction to erase text.
    if(edited!==null){
-    if(n.props.text!==undefined&&edited!==n.props.text)n.props.text=edited;
+    if(n.props.text!==undefined){if(edited!==n.props.text)n.props.text=edited;}
     else if(n.props.label!==undefined&&edited!==n.props.label)n.props.label=edited;
    }
   }else{
