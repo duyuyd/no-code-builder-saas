@@ -12,7 +12,7 @@
 
 ## Provider secrets (set in dashboard; never commit)
 - AI: `GEMINI_API_KEY` or `OPENAI_API_KEY`, and platform setting `studio_ai_config.enabled` + provider.
-- Commerce: `PAYOS_CLIENT_ID`, `PAYOS_API_KEY`, `PAYOS_CHECKSUM_KEY`, `SUPABASE_SERVICE_ROLE_KEY`. Register the webhook URL in your payOS merchant dashboard and verify successful signed callbacks before accepting real payments.
+- Commerce: `PAYOS_CLIENT_ID`, `PAYOS_API_KEY`, `PAYOS_CHECKSUM_KEY`, `SUPABASE_SERVICE_ROLE_KEY`. Keep `COMMERCE_PAYMENTS_ENABLED=false` until verified live merchant setup. Register the webhook URL in your payOS merchant dashboard and verify successful signed callbacks before accepting real payments. For marketplace orders, keep `MARKETPLACE_SETTLEMENTS_ENABLED=false` until seller settlement is established; the ledger does not custody funds.
 - Domain: `VERCEL_TOKEN`, `VERCEL_PROJECT_ID`, `VERCEL_TEAM_ID`; tenant must be authorized as Pro/Agency/Admin. No new domain is purchased automatically.
 - Native: GitHub Actions dispatch, R2 and Expo signing prerequisites documented in `docs/PHASE7-OPERATIONS.md`.
 - Scheduled blog: `CRON_SECRET` and explicit `AUTO_BLOG_ENABLED=true` after budget approval. Generated articles remain drafts until an Admin publishes.
