@@ -118,33 +118,11 @@ drop policy if exists marketplace_reviews_edit on public.marketplace_reviews;
 create policy marketplace_reviews_edit on public.marketplace_reviews for update to authenticated
 using (reviewer_id=(select auth.uid())) with check(reviewer_id=(select auth.uid()));
 
-create table if not exists public.tenants(
- id uuid primary key default gen_random_uuid(),
- owner_id uuid not null references auth.users(id),
- project_id uuid not null references public.projects(id) on delete cascade,
- domain text unique,
- logo_url text,
- primary_color text not null default '#f97316' check(primary_color ~ '^#[0-9a-fA-F]{6}$'),
- plan text not null default 'free' check(plan in ('free','pro','agency','enterprise')),
- status text not null default 'pending' check(status in ('pending','verified','active','disabled')),
- created_at timestamptz not null default now(),
- unique(project_id)
-);
-alter table public.tenants enable row level security;
-grant select,insert,update on public.tenants to authenticated;
-grant select on public.tenants to anon;
-drop policy if exists tenants_select on public.tenants;
-create policy tenants_select on public.tenants for select to anon,authenticated
-using (status='active' or owner_id=(select auth.uid()));
-drop policy if exists tenants_insert on public.tenants;
-create policy tenants_insert on public.tenants for insert to authenticated
-with check (owner_id=(select auth.uid()) and status='pending' and domain is null and
-exists(select 1 from public.projects p where p.id=project_id and p.owner_id=(select auth.uid())));
-drop policy if exists tenants_update on public.tenants;
-create policy tenants_update on public.tenants for update to authenticated
-using (owner_id=(select auth.uid())) with check(owner_id=(select auth.uid()) and
-exists(select 1 from public.projects p where p.id=project_id and p.owner_id=(select auth.uid())));
-
+-- Existing tenants table already owns domain, logo, color and project routing.
+-- Extend it instead of recreating or overwriting previously verified domains.
+alter table public.tenants add column if not exists plan text not null default 'free'
+ check(plan in ('free','pro','agency','enterprise'));
+-- Existing owner update policy stays intact; subscription changes are managed by a protected action.
 create table if not exists public.studio_plugins(
  id uuid primary key default gen_random_uuid(),
  owner_id uuid not null references auth.users(id),
