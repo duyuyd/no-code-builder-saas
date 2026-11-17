@@ -42,7 +42,9 @@
     "@react-three/xr": "6.6.32",
     "yjs": "^13.6.28",
     "qrcode": "1.5.4",
-    "openai": "7.55.0"
+    "openai": "7.55.0",
+    "playcanvas": "2.24.1",
+    "@playcanvas/react": "0.11.7"
   },
   "devDependencies": {
     "typescript": "^5.8.3",

@@ -39,6 +39,7 @@ export default async function GameBuilderPage({searchParams}:{searchParams:Promi
      <select name="project" defaultValue={project.id} aria-label="Đổi dự án game" className="rounded-xl border border-slate-600 bg-slate-900 px-3 py-2 text-xs text-white">{(projects??[]).map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select>
      <button className="ml-2 rounded-lg border border-orange-600 px-3 py-2 text-xs text-orange-300">Mở</button>
     </form>
+    <Link href={"/game-builder/playcanvas?project="+encodeURIComponent(project.id)} className="inline-flex items-center rounded-xl border border-orange-500/60 bg-orange-500/10 px-4 py-2 text-sm font-bold text-orange-200">🧊 PlayCanvas 3D Editor</Link>
    </div>
   </div>
   <GameWorkspace key={project.id} userId={user.id} templates={(templateResult.data??[]).filter(t=>validateGameScene(t.scene)) as GameSceneTemplate[]} projectId={project.id} projectName={project.name} mobaMaps={(mobaResult.data??[]).filter(m=>validateArenaMap(m.config)) as Array<{code:string;name:string;config:ArenaMap}>} initialScene={scene as GameScene} initialVersion={game?.version??0} initialPublished={publication?.is_live===true}/>
