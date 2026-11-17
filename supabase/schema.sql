@@ -189,7 +189,7 @@ using (exists (
 -- Only deployer-defined initial configuration; runtime application reads from DB.
 insert into public.platform_settings (key, value)
 values
-  ('site_title', '"No-Code Builder SaaS"'::jsonb),
+  ('site_title', '"NPT Duy"'::jsonb),
   ('primary_color', '"#ea580c"'::jsonb)
 on conflict (key) do nothing;
 
