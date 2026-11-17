@@ -47,6 +47,7 @@ assert.throws(()=>bridge.fromUnifiedChai([{_id:"img1",_type:"Image",image:{url:"
 assert.throws(()=>bridge.fromUnifiedChai([{_id:"img1",_type:"Image",image:"https://example.com/p.png",alt:42}]),/Invalid Chai alt/,"numeric alt must be rejected");
 assert.throws(()=>bridge.fromUnifiedChai([{_id:"input1",_type:"Input",name:42}]),/Invalid Chai name/,"numeric input name must be rejected");
 assert.throws(()=>bridge.fromUnifiedChai([{_id:"input1",_type:"Input",placeholder:{text:"Hi"}}]),/Invalid Chai placeholder/,"object placeholder must be rejected");
+assert.throws(()=>bridge.fromUnifiedChai(flat.map((block,i)=>i===0?{...block,content:42}:block)),/Invalid legacy Chai content type/,"numeric content on legacy blocks must reject without modifying stored nodes");
 assert.throws(()=>bridge.fromUnifiedChai([...flat,flat[0]]),/duplicate Chai id/,"duplicate block IDs must be rejected");
 assert.throws(()=>bridge.fromUnifiedChai(flat.map((block,i)=>i===1?{...block,_parent:0}:block)),/Invalid Chai parent id/,"numeric parent identifiers must not silently become root nodes");
 assert.throws(()=>bridge.fromUnifiedChai(flat.map((block,i)=>i===1?{...block,_parent:"   "}:block)),/Invalid Chai parent id/,"blank parent identifiers must not silently become root nodes");
