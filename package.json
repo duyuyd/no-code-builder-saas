@@ -53,7 +53,8 @@
     "sync-ammo": "0.1.2",
     "remotion": "4.0.543",
     "@remotion/player": "4.0.543",
-    "@remotion/web-renderer": "4.0.543"
+    "@remotion/web-renderer": "4.0.543",
+    "@chaibuilder/sdk": "4.0.0-beta.51"
   },
   "devDependencies": {
     "typescript": "^5.8.3",
