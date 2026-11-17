@@ -1,0 +1,32 @@
+name: Render branded demo video
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/render-demo-video.sh
+      - .github/workflows/brand-demo.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Render illustrated product tour
+        run: |
+          command -v ffmpeg || (sudo apt-get update -qq && sudo apt-get install -y ffmpeg fonts-dejavu-core)
+          bash scripts/render-demo-video.sh
+          ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1 public/demo/nuvoracraft-product-tour.mp4
+      - name: Publish video into repository
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/demo/nuvoracraft-product-tour.mp4
+          if ! git diff --cached --quiet; then
+            git commit -m "docs(demo): publish original 45-second NuvoraCraft illustrated product tour"
+            git push origin HEAD:main
+          fi
