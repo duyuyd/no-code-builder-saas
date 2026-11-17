@@ -1,12 +1,20 @@
 "use client";
 import {useCallback,useEffect,useState} from "react";
-import {requestNativeBuild,listNativeBuilds} from "@/app/native-build/actions";
+import {requestNativeBuild} from "@/app/native-build/actions";
+import {useSupabase} from "@/lib/supabase/useSupabase";
 type Job={id:string;platform:string;status:string;error_message:string|null;artifact_key:string|null;created_at:string};
 export default function NativeBuildPanel({projectId}:{projectId:string}){
  const [jobs,setJobs]=useState<Job[]>([]);
+ const {readWithRetry}=useSupabase();
  const [busy,setBusy]=useState(false);
  const [message,setMessage]=useState("");
- const load=useCallback(async()=>{const result=await listNativeBuilds(projectId);if(result.ok)setJobs(result.jobs);else setMessage(result.error);},[projectId]);
+ const load=useCallback(async()=>{
+  try{
+   const rows=await readWithRetry(client=>client.from("build_jobs").select("id,platform,status,error_message,artifact_key,created_at")
+     .eq("project_id",projectId).order("created_at",{ascending:false}).limit(20));
+   setJobs(rows as Job[]);
+  }catch(e){setMessage(e instanceof Error?e.message:"Mất kết nối Supabase.");}
+ },[projectId,readWithRetry]);
  useEffect(()=>{void load();const timer=window.setInterval(()=>void load(),15000);return()=>window.clearInterval(timer);},[load]);
  const start=async(platform:"android"|"ios")=>{
   if(busy)return;setBusy(true);setMessage("");
