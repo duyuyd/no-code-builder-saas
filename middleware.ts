@@ -28,7 +28,13 @@ export async function middleware(request: NextRequest) {
     for(const {name,value,options} of items)response.cookies.set(name,value,options);
   }
  }});
- await supabase.auth.getUser();
+ try{
+  const {error}=await supabase.auth.getUser();
+  if(error)response.headers.set("x-studio-auth-status","refresh-failed");
+ }catch{
+  // Network errors must not crash middleware. Protected Server Components enforce auth.
+  response.headers.set("x-studio-auth-status","unavailable");
+ }
  return response;
 }
 export const config={matcher:["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|webp|ico)$).*)"]};

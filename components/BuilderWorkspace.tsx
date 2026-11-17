@@ -349,7 +349,7 @@ export default function BuilderWorkspace({ pageId, projectId, userId, projectKin
   const iconButtonClass = "flex size-9 items-center justify-center rounded-xl border border-slate-700 bg-slate-800 text-slate-300 transition hover:border-slate-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-35 sm:size-10";
 
   return <section className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#0f172a] text-slate-100">
-    <div className="flex min-h-14 shrink-0 items-center gap-2 border-b border-slate-700/80 bg-[#1e293b] px-3 py-2 sm:px-5">
+    <div className="flex min-h-14 shrink-0 flex-wrap items-center gap-2 border-b border-slate-700/80 bg-[#1e293b] px-3 py-2 sm:px-5">
       <div className="mr-auto min-w-0"><p className="truncate text-xs font-bold text-white sm:text-sm">{projectName}<span className="font-normal text-slate-500"> · {pagePath}</span></p>
         <p role="status" aria-live="polite" className={`mt-0.5 flex items-center gap-1 text-[10px] ${status === "error" ? "text-rose-400" : status === "saved" ? "text-emerald-400" : "text-amber-400"}`}>
           {status === "saving" ? <LoaderCircle size={12} className="animate-spin"/> : status === "saved" ? <CheckCircle2 size={12}/> : <CloudUpload size={12}/>} {status === "saved" ? "Đã lưu vào Supabase" : status === "saving" ? "Đang lưu..." : status === "error" ? "Lưu thất bại" : "Có thay đổi chưa lưu"}
@@ -358,7 +358,7 @@ export default function BuilderWorkspace({ pageId, projectId, userId, projectKin
       <div className="hidden items-center gap-1 rounded-lg border border-slate-700 bg-slate-900 p-1 sm:flex">
        {([{id:"mobile",Icon:Smartphone},{id:"tablet",Icon:Tablet},{id:"desktop",Icon:Monitor}] as const).map(({id,Icon})=><button key={id} type="button" title={id} aria-label={"Xem "+id} aria-pressed={device===id} onClick={()=>setDevice(id)} className={"rounded-lg p-2 "+(device===id?"bg-orange-500 text-white":"text-slate-400 hover:bg-slate-700")}><Icon size={16}/></button>)}
       </div>
-      <nav aria-label="Chế độ biên tập" className="flex max-w-[55vw] shrink-0 items-center gap-1 overflow-x-auto rounded-xl border border-slate-600 bg-slate-900 p-1 sm:max-w-none">
+      <nav aria-label="Chế độ biên tập" className="order-last flex w-full min-w-0 shrink-0 items-center gap-1 overflow-x-auto rounded-xl border border-slate-600 bg-slate-900 p-1 sm:order-none sm:w-auto sm:max-w-[42vw]">
         {([{key:"2d",label:"2D Editor"},{key:"3d",label:"3D Editor"},{key:"timeline",label:"Timeline"}] as const).map(item=><button key={item.key} type="button" onClick={()=>setEditorMode(item.key)} aria-pressed={editorMode===item.key} className={"shrink-0 whitespace-nowrap rounded-lg px-2 py-2 text-[11px] font-bold sm:px-3 "+(editorMode===item.key?"bg-orange-500 text-white":"text-slate-300 hover:bg-slate-700")}>{item.label}</button>)}
         <a href={"/ai-logic?project="+encodeURIComponent(projectId)} className="shrink-0 whitespace-nowrap rounded-lg px-2 py-2 text-[11px] font-bold text-slate-300 hover:bg-slate-700 sm:px-3">AI Logic</a>
        </nav>
