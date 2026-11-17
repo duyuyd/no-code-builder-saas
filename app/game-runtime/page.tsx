@@ -1,10 +1,10 @@
 import Link from "next/link";
-import dynamic from "next/dynamic";
+import dynamicImport from "next/dynamic";
 import {redirect,notFound} from "next/navigation";
 import {createClient} from "@/lib/supabase/server";
 import {validateNpcBehavior,type NpcBehavior} from "@/lib/npc-behavior";
 import {validateScene,type StudioScene} from "@/packages/engine-3d/src";
-const NpcRuntime=dynamic(()=>import("@/components/studio/NpcRuntime"),{ssr:true});
+const NpcRuntime=dynamicImport(()=>import("@/components/studio/NpcRuntime"),{ssr:true});
 export const dynamic="force-dynamic";
 export default async function GameRuntimePage({searchParams}:{searchParams:Promise<{project?:string}>}){
  const db=await createClient();const {data:{user},error:auth}=await db.auth.getUser();
