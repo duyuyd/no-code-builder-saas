@@ -46,6 +46,9 @@ export function fromUnifiedChai(input:unknown):BuilderNode[]{
    if(!eligible.has(block._type))throw Error("Unsupported Chai block: "+String(block._type));
    if(block.content!==undefined&&typeof block.content!=="string")throw Error("Invalid Chai content type");
    if(block.link!==undefined&&(!asObject(block.link)||(block.link.href!==undefined&&typeof block.link.href!=="string")))throw Error("Invalid Chai link");
+   for(const field of ["image","alt","name","placeholder"] as const){
+    if(block[field]!==undefined&&typeof block[field]!=="string")throw Error("Invalid Chai "+field);
+   }
    const kind:Record<string,string>={Box:"container",Row:"row",Column:"column",Heading:"heading",Text:"text",Paragraph:"paragraph",Button:"button",Link:"link",Image:"image",Divider:"divider",Form:"form",Input:"input",TextArea:"textarea",Checkbox:"checkbox",Select:"select"};
    n=createBuilderNode(kind[block._type]);
    n.id=block._id;n.children=[];
