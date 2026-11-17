@@ -12,8 +12,7 @@ export async function saveStudioAiConfig(_prev:AiAdminState,form:FormData):Promi
   const dailyUserLimit=Number(form.get("dailyUserLimit"));
   const dailyGlobalLimit=Number(form.get("dailyGlobalLimit"));
   const maxOutputTokens=Number(form.get("maxOutputTokens"));
-  if(!["gemini","deepseek","openai","orcarouter"].includes(provider))throw new Error("Nhà cung cấp không hợp lệ.");
-  if(provider==="orcarouter"&&model!=="orcarouter/free")throw new Error("Chỉ hỗ trợ model OrcaRouter miễn phí.");
+  if(!["gemini","deepseek","openai"].includes(provider))throw new Error("Nhà cung cấp không hợp lệ.");
   if(!validAiModel(model))throw new Error("Tên model không hợp lệ (3–80 ký tự).");
   if(!Number.isInteger(dailyUserLimit)||dailyUserLimit<1||dailyUserLimit>20)throw new Error("Hạn mức mỗi người: 1–20 lượt/ngày.");
   if(!Number.isInteger(dailyGlobalLimit)||dailyGlobalLimit<1||dailyGlobalLimit>300)throw new Error("Hạn mức toàn nền tảng: 1–300 lượt/ngày.");
@@ -32,8 +31,7 @@ export async function saveStudioAiConfig(_prev:AiAdminState,form:FormData):Promi
  }catch(error){return {ok:false,message:error instanceof Error?error.message:"Không lưu được cấu hình AI."};}
 }
 
-// Deliberate admin-initiated check. It sends only a fixed test message and
-// is restricted to the free model; the key stays on the server.
+// Admin-only connection check. Costs a single rate-limited OpenAI/Gemini/DeepSeek request.
 export async function testStudioAiConnection():Promise<AiAdminState>{
  try{
   const db=await createClient();
@@ -44,11 +42,10 @@ export async function testStudioAiConnection():Promise<AiAdminState>{
   const {data:setting,error}=await db.from("platform_settings").select("value").eq("key","studio_ai_config").maybeSingle();
   if(error||!setting)throw new Error("Không đọc được cấu hình AI đã lưu.");
   const config=readAiConfig(setting.value);
-  if(!config.enabled||config.provider!=="orcarouter"||config.model!=="orcarouter/free")throw new Error("Hãy lưu và bật OrcaRouter Free trước khi kiểm tra miễn phí.");
-  if(!providerKey("orcarouter"))throw new Error("Chưa tìm thấy ORCAROUTER_API_KEY trên máy chủ.");
+  if(!config.enabled||!providerKey(config.provider))throw new Error("Hãy bật nhà cung cấp có API key server-side trước khi kiểm tra.");
   const {data:allowed,error:quotaError}=await db.rpc("studio_ai_claim_slot");
   if(quotaError||allowed!==true)throw new Error("Không còn lượt AI hôm nay hoặc cấu hình đã thay đổi.");
   await askProvider({...config,maxOutputTokens:64},"Đây là kiểm tra kết nối. Hãy trả lời ngắn gọn bằng tiếng Việt.",[{role:"user",content:"Xin chào, kết nối đã hoạt động chưa?"}]);
-  return {ok:true,message:"OrcaRouter Free đã trả lời thành công. Bạn có thể mở Trợ lý Studio để trò chuyện."};
+  return {ok:true,message:config.provider+" đã trả lời thành công bằng API thực."};
  }catch(error){return {ok:false,message:error instanceof Error?error.message:"Không kiểm tra được kết nối AI."};}
 }
