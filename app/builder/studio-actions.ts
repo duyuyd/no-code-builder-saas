@@ -31,7 +31,12 @@ export async function loadStudioScene(projectId:string,pageId:string):Promise<Re
   let {data:timeline,error:timelineError}=await db.from("studio_timelines").select("id,timeline,version").eq("scene_id",scene.id).order("created_at").limit(1).maybeSingle();
   if(timelineError)return {ok:false,error:timelineError.message};
   if(!timeline){
-   const fresh:Timeline={schemaVersion:1,durationMs:10000,keyframes:[]};
+   const firstObject=scene.scene.objects[0];
+   const fresh:Timeline={schemaVersion:1,durationMs:10000,keyframes:firstObject?[{
+    id:crypto.randomUUID(),objectId:firstObject.id,path:"rotation.y",timeMs:0,value:0,interpolation:"linear"
+   },{
+    id:crypto.randomUUID(),objectId:firstObject.id,path:"rotation.y",timeMs:10000,value:Math.PI*2,interpolation:"linear"
+   }]:[]};
    const created=await db.from("studio_timelines").insert({scene_id:scene.id,timeline:fresh}).select("id,timeline,version").single();
    if(created.error||!created.data)return {ok:false,error:created.error?.message??"Không tạo được Timeline."};
    timeline=created.data;

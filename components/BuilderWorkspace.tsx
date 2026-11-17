@@ -15,7 +15,7 @@ import { findLocation, findNode, insertNode, moveNode, removeNode, updateNode, t
 import { generateHtmlCode, generateReactCode } from "@/lib/code-generator";
 import { savePageTree, publishProject, unpublishProject } from "@/app/builder/actions";
 import LivePage from "./LivePage";
-import StudioAssistant from "./StudioAssistant";
+
 import dynamic from "next/dynamic";
 import BuilderTour from "./BuilderTour";
 const ThreeStudio = dynamic(() => import("./studio/ThreeStudio"), { ssr: false, loading: () => <div role="status" className="p-5 text-slate-300">Đang tải trình biên tập 3D…</div> });
@@ -363,7 +363,6 @@ export default function BuilderWorkspace({ pageId, projectId, userId, projectKin
         <a href={"/ai-logic?project="+encodeURIComponent(projectId)} className="shrink-0 whitespace-nowrap rounded-lg px-2 py-2 text-[11px] font-bold text-slate-300 hover:bg-slate-700 sm:px-3">AI Logic</a>
        </nav>
        <BuilderTour onOpenComponents={()=>setMobilePaletteOpen(true)} onOpenProperties={()=>setMobilePropertiesOpen(true)}/>
-      {editorMode==="2d" && <StudioAssistant projectId={projectId} pageId={pageId} selectedId={state.selectedId} selectedType={selectedNode?.type??null} blockCount={state.nodes.reduce((total,node)=>total+countNodes(node),0)}/> }
       <a href="/assets" target="_blank" rel="noopener noreferrer" title="Kho ảnh và nguồn tài nguyên" className="flex h-9 items-center gap-1 rounded-xl border border-slate-600 bg-slate-800 px-2 text-xs font-semibold text-slate-200 hover:border-orange-400 sm:h-10">🖼️<span className="hidden lg:inline">Tài nguyên</span></a>
       {projectKind === "game" && <a href={"/game-builder?project="+projectId} title="Thiết kế game 2D có màn chơi" className="flex h-9 items-center gap-1 rounded-xl border border-orange-500/50 bg-orange-500/10 px-3 text-xs font-bold text-orange-300 hover:bg-orange-500/20 sm:h-10"><span className="text-base">🎮</span><span className="hidden sm:inline">Game 2D</span></a>}
       <button type="button" title="Chạy thử tương tác" onClick={()=>{setPreviewPath(pagePath);setPreviewError("");setPreviewOpen(true);}} className="flex size-9 items-center justify-center rounded-xl border border-slate-600 bg-slate-700 text-white sm:size-10"><Eye size={18}/></button>

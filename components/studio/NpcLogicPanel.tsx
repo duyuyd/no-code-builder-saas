@@ -1,14 +1,16 @@
 "use client";
 import {useState,type FormEvent} from "react";
 import {Bot,Code2,Download,LoaderCircle} from "lucide-react";
-import {generateNpcLogic,type LogicResult} from "@/app/ai-logic/actions";
+import {generateNpcLogic,approveNpcLogic,type LogicResult} from "@/app/ai-logic/actions";
 export default function NpcLogicPanel({projectId}:{projectId:string}){
  const [prompt,setPrompt]=useState("");
  const [busy,setBusy]=useState(false);
  const [result,setResult]=useState<LogicResult|null>(null);
+ const [approved,setApproved]=useState(false);
+ const [approvalError,setApprovalError]=useState("");
  const submit=async(event:FormEvent<HTMLFormElement>)=>{
   event.preventDefault();if(busy)return;
-  setBusy(true);setResult(null);
+  setBusy(true);setResult(null);setApproved(false);setApprovalError("");
   try{setResult(await generateNpcLogic(projectId,prompt));}
   catch{setResult({ok:false,error:"Kết nối thất bại. Hãy kiểm tra mạng."});}
   finally{setBusy(false);}
@@ -33,8 +35,12 @@ export default function NpcLogicPanel({projectId}:{projectId:string}){
   {result&&!result.ok&&<p role="alert" className="rounded-xl border border-rose-700 bg-rose-900/30 p-4 text-sm text-rose-200">{result.error}</p>}
   {result?.ok&&<section className="space-y-3 rounded-2xl border border-emerald-700/40 bg-slate-800 p-4">
    <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="flex items-center gap-2 text-sm font-bold"><Code2 size={17}/> NPC JavaScript — {result.provider}</h2>
-    <button onClick={download} className="flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold"><Download size={15}/> Tải mã .mjs</button></div>
-   <p className="text-xs text-slate-400">Đã lưu prompt và mã nguồn vào Supabase với trạng thái đề xuất; chưa tự động kích hoạt trong game.</p>
+    <div className="flex flex-wrap gap-2">
+     <button onClick={async()=>{if(!result?.ok||approved)return;setApprovalError("");const r=await approveNpcLogic(result.id);if(r.ok)setApproved(true);else setApprovalError(r.error);}}
+      disabled={approved} className="rounded-lg bg-orange-500 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60">{approved?"Đã phê duyệt":"Phê duyệt logic"}</button>
+     <button onClick={download} className="flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold"><Download size={15}/> Tải mã .mjs</button></div></div>
+   <p className="text-xs text-slate-400">{approved?"Đã phê duyệt. Logic đủ điều kiện được đưa vào ZIP export.":"Đã lưu vào Supabase với trạng thái đề xuất. Cần phê duyệt trước khi đưa vào ZIP export."}</p>
+   {approvalError&&<p role="alert" className="text-xs text-rose-300">{approvalError}</p>}
    <pre className="max-h-[460px] overflow-auto rounded-lg bg-slate-950 p-3 text-xs leading-5 text-emerald-200"><code>{result.source}</code></pre>
   </section>}
  </section>;

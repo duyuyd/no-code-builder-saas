@@ -55,3 +55,25 @@ State ID chỉ dùng chữ a-z, số, dấu gạch dưới. Không trả mã Jav
   return {ok:false,error:"Không kết nối được Supabase hoặc dịch vụ AI."};
  }
 }
+
+export async function approveNpcLogic(id:string):Promise<{ok:true}|{ok:false;error:string}>{
+ if(!uuid.test(id))return {ok:false,error:"Mã logic không hợp lệ."};
+ try{
+  const db=await createClient();
+  const {data:{user},error:authError}=await db.auth.getUser();
+  if(authError||!user)return {ok:false,error:"Bạn cần đăng nhập."};
+  const {data:entry,error}=await db.from("studio_ai_prompts").select("id,project_id,proposal,status").eq("id",id).single();
+  if(error||!entry||entry.status!=="proposed")return {ok:false,error:"Logic không tồn tại hoặc chưa sẵn sàng."};
+  const {data:project}=await db.from("projects").select("id").eq("id",entry.project_id).eq("owner_id",user.id).single();
+  if(!project)return {ok:false,error:"Bạn không có quyền phê duyệt."};
+  if(!entry.proposal||typeof entry.proposal!=="object"||Array.isArray(entry.proposal))
+   return {ok:false,error:"Dữ liệu logic không hợp lệ."};
+  const proposal=entry.proposal as {behavior?:unknown;source?:unknown};
+  if(!validateNpcBehavior(proposal.behavior)||proposal.source!==compileNpcBehavior(proposal.behavior))
+   return {ok:false,error:"Logic cần được tạo lại trước khi phê duyệt."};
+  const {data, error:updateError}=await db.from("studio_ai_prompts").update({status:"approved",updated_at:new Date().toISOString()})
+    .eq("id",id).eq("status","proposed").select("id").maybeSingle();
+  if(updateError||!data)return {ok:false,error:updateError?.message??"Logic đã thay đổi trước khi phê duyệt."};
+  return {ok:true};
+ }catch{return {ok:false,error:"Không thể phê duyệt vì mất kết nối."};}
+}
