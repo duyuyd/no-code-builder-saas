@@ -6,7 +6,7 @@
 | --- | --- | --- | --- |
 | [PlayCanvas Engine](https://github.com/playcanvas/engine) / [PlayCanvas React](https://github.com/playcanvas/react) | MIT | Installed `playcanvas@2.24.1`, `@playcanvas/react@0.11.7`; scene editor at `/game-builder/playcanvas` | Shares existing Supabase `studio_scenes.scene` JSONB, owner-scoped access and optimistic version saves |
 | [Totalum Labs AI App Builder Open](https://github.com/totalumlabs/ai-app-builder-open) | MIT | Adapted prompt-driven UX at `/ai-builder` | Does NOT integrate Totalum proprietary hosted VCAAS API. Reuses NuvoraCraft's real OpenAI provider, schema-validated `ui_tree`, Supabase users/projects/pages |
-| [ChaiBuilder Core](https://github.com/chaibuilder/core) | BSD-3-Clause | Data-compatibility adapter + owner-scoped import/export at `/builder/chai-import` | Its full editor expects its own DB (LibSQL/D1/better-sqlite3) and HTTP action protocol, not Supabase PostgreSQL page JSON. **The native Canvas remains active** until a verified editor migration is lossless |
+| [ChaiBuilder Core](https://github.com/chaibuilder/core) | BSD-3-Clause | Data-compatibility adapter + owner-scoped import/export at `/builder/chai-import` | Read-only Chai preview at \`/builder/chai-preview\` from current Supabase JSONB. Its full editor expects its own DB (LibSQL/D1/better-sqlite3) and HTTP action protocol, not Supabase PostgreSQL page JSON. **The native Canvas remains active** until a verified editor migration is lossless |
 
 Older `chaibuilder/sdk` was archived on 2026-09-12. Do not install a deprecated SDK into production in preference to `@chaibuilder/core`.
 

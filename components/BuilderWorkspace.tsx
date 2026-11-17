@@ -199,7 +199,7 @@ export default function BuilderWorkspace({ pageId, projectId, userId, projectKin
     applyLocal(state.nodes);
   },[state.nodes,applyLocal]);
   const [dragging, setDragging] = useState("");
-  const [editorMode,setEditorMode]=useState<"2d"|"3d"|"timeline">("2d");
+  const [editorMode,setEditorMode]=useState<"2d"|"chai"|"3d"|"timeline">("2d");
   const [status, setStatus] = useState<"saved" | "unsaved" | "saving" | "error">("saved");
   const [errorMessage, setErrorMessage] = useState("");
   const [mobilePaletteOpen, setMobilePaletteOpen] = useState(false);
@@ -384,7 +384,7 @@ export default function BuilderWorkspace({ pageId, projectId, userId, projectKin
        {([{id:"mobile",Icon:Smartphone},{id:"tablet",Icon:Tablet},{id:"desktop",Icon:Monitor}] as const).map(({id,Icon})=><button key={id} type="button" title={id} aria-label={"Xem "+id} aria-pressed={device===id} onClick={()=>setDevice(id)} className={"rounded-lg p-2 "+(device===id?"bg-orange-500 text-white":"text-slate-400 hover:bg-slate-700")}><Icon size={16}/></button>)}
       </div>
       <nav aria-label="Chế độ biên tập" className="order-last flex w-full min-w-0 shrink-0 items-center gap-1 overflow-x-auto rounded-xl border border-slate-600 bg-slate-900 p-1 sm:order-none sm:w-auto sm:max-w-[42vw]">
-        {([{key:"2d",label:"2D Editor"},{key:"3d",label:"3D Editor"},{key:"timeline",label:"Timeline"}] as const).map(item=><button key={item.key} type="button" onClick={()=>setEditorMode(item.key)} aria-pressed={editorMode===item.key} className={"shrink-0 whitespace-nowrap rounded-lg px-2 py-2 text-[11px] font-bold sm:px-3 "+(editorMode===item.key?"bg-orange-500 text-white":"text-slate-300 hover:bg-slate-700")}>{item.label}</button>)}
+        {([{key:"2d",label:"2D Editor"},{key:"chai",label:"Chai Preview"},{key:"3d",label:"3D Editor"},{key:"timeline",label:"Timeline"}] as const).map(item=><button key={item.key} type="button" onClick={()=>setEditorMode(item.key)} aria-pressed={editorMode===item.key} className={"shrink-0 whitespace-nowrap rounded-lg px-2 py-2 text-[11px] font-bold sm:px-3 "+(editorMode===item.key?"bg-orange-500 text-white":"text-slate-300 hover:bg-slate-700")}>{item.label}</button>)}
         <a href={"/ai-logic?project="+encodeURIComponent(projectId)} className="shrink-0 whitespace-nowrap rounded-lg px-2 py-2 text-[11px] font-bold text-slate-300 hover:bg-slate-700 sm:px-3">AI Logic</a>
        </nav>
        <a href={"/store/"+projectId} className="shrink-0 rounded-lg border border-orange-500/40 px-3 py-2 text-xs text-orange-200">Commerce</a>
