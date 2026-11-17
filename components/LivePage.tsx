@@ -5,6 +5,7 @@ import { createElement, useMemo, useState, type CSSProperties, type ReactNode, t
 import { ArrowRight, RotateCcw, Trophy, Image as ImageIcon } from "lucide-react";
 import { getDefinition, nodeCss, safeUrl, sanitizeNumeric, type BuilderNode } from "@/lib/component-registry";
 import { responsiveLayoutClass } from "@/lib/responsive-layout";
+import {formFieldName} from "@/lib/auto-database";
 import dynamic from "next/dynamic";
 const MemoryMatchGame = dynamic(() => import("./MemoryMatchGame"), { ssr: false, loading: () => <div className="rounded-2xl bg-slate-900 p-6 text-sm text-slate-300">Đang tải trò chơi...</div> });
 
@@ -40,10 +41,10 @@ function Item({node,projectId,onNavigate}:{node:BuilderNode;projectId?:string;on
   case "video":return src?<video controls src={src} style={s} className="max-w-full rounded-xl"/>:<div>Chưa có URL video</div>;
   case "audio":return src?<audio controls src={src} style={s} className="max-w-full"/>:<div>Chưa có URL âm thanh</div>;
   case "divider":return def.tag==="hr"?<hr style={s}/>:<div style={{...s,height:20}}/>;
-  case "input":return <input style={s} type={node.type==="email-input"?"email":node.type==="password-input"?"password":node.type==="number-input"?"number":node.type==="date-input"?"date":node.type==="time-input"?"time":node.type==="file-input"?"file":"text"} name={p.name??""} placeholder={p.placeholder??""} className="max-w-full border border-slate-300"/>;
+  case "input":return <input style={s} type={node.type==="email-input"?"email":node.type==="password-input"?"password":node.type==="number-input"?"number":node.type==="date-input"?"date":node.type==="time-input"?"time":node.type==="file-input"?"file":"text"} name={formFieldName(node)} placeholder={p.placeholder??""} className="max-w-full border border-slate-300"/>;
   case "textarea":return <textarea style={s} name={p.name??""} placeholder={p.placeholder??""} rows={3} className="w-full border border-slate-300"/>;
   case "select":return <select style={s} name={p.name??""} className="max-w-full border border-slate-300">{(p.options??"").split(/\r?\n/).filter(Boolean).map((v,i)=><option key={i}>{v}</option>)}</select>;
-  case "checkbox":return <label style={s} className="inline-flex items-center gap-2"><input type={node.type==="radio"?"radio":"checkbox"} name={p.name||node.id} defaultChecked={p.checked==="true"}/>{text}</label>;
+  case "checkbox":return <label style={s} className="inline-flex items-center gap-2"><input type={node.type==="radio"?"radio":"checkbox"} name={formFieldName(node)} defaultChecked={p.checked==="true"}/>{text}</label>;
   case "range":return <input type="range" style={s} min={sanitizeNumeric(p.min??"",0)} max={sanitizeNumeric(p.max??"",100)}/>;
   case "progress":return createElement(def.tag,{style:s,value:sanitizeNumeric(p.value??"",0),max:sanitizeNumeric(p.max??"",100,1,10000)});
   case "list":return createElement(def.tag,{style:s},(p.items??"").split(/\r?\n/).filter(Boolean).map((v,i)=><li key={i}>{v}</li>));
@@ -53,7 +54,20 @@ function Item({node,projectId,onNavigate}:{node:BuilderNode;projectId?:string;on
   case "container":{
    const children:ReactNode=node.children.map(n=><Item key={n.id} node={n} projectId={projectId} onNavigate={onNavigate}/>);
    if(def.tag==="form"){
-    const submit=(e:FormEvent<HTMLFormElement>)=>{e.preventDefault();const email=p.recipientEmail?.trim()||"";if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){setFeedback("Thiếu email nhận biểu mẫu.");return;}const body=Array.from(new FormData(e.currentTarget).entries()).filter((x)=>typeof x[1]==="string").map(([k,v])=>k+": "+v).join("\n");window.location.href="mailto:"+email+"?subject="+encodeURIComponent("Liên hệ từ website")+"&body="+encodeURIComponent(body.slice(0,6000));};
+    const submit=async(e:FormEvent<HTMLFormElement>)=>{
+     e.preventDefault();const form=e.currentTarget;const data=new FormData(form);
+     const values:Record<string,string|boolean>={};
+     for(const [key,val] of data.entries())if(typeof val==="string"&&key.length<=40)values[key]=val.slice(0,2000);
+     for(const field of Array.from(form.querySelectorAll('input[type="checkbox"]')))if(field.name)values[field.name]=field.checked;
+     if(!projectId){setFeedback("Biểu mẫu cần được xuất bản trong dự án.");return;}
+     setFeedback("Đang gửi biểu mẫu...");
+     try{
+      const res=await fetch("/api/forms/submit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({projectId,nodeId:node.id,values})});
+      const result=await res.json() as {ok?:boolean;error?:string};
+      if(!res.ok||!result.ok){setFeedback(result.error??"Không thể gửi biểu mẫu.");return;}
+      form.reset();setFeedback("Đã lưu thông tin thành công.");
+     }catch{setFeedback("Không kết nối được hệ thống lưu biểu mẫu.");}
+    };
     return <form onSubmit={submit} style={s} className="flex min-w-0 flex-col gap-3 rounded-xl">{children}{feedback&&<p role="alert" className="text-xs text-rose-600">{feedback}</p>}</form>;
    }
    return createElement(def.tag,{style:s,className:"min-w-0 max-w-full rounded-xl "+responsiveLayoutClass(node.type,"studio-responsive")},children);

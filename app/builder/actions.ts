@@ -4,8 +4,9 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { validateUiTree, type BuilderNode } from "@/lib/component-registry";
 import { mergeUiTrees } from "@/lib/merge-ui-tree";
+import { extractFormSchemas } from "@/lib/auto-database";
 import { validateGameScene } from "@/lib/game-scene";
-export type SaveResult = { ok: true; version: number; tree: BuilderNode[] } | { ok: false; error: string; reason?: "conflict" | "forbidden" | "invalid" };
+export type SaveResult = { ok: true; version: number; tree: BuilderNode[]; warnings?: string[] } | { ok: false; error: string; reason?: "conflict" | "forbidden" | "invalid" };
 export async function createProject(formData: FormData) {
   const templateId = String(formData.get("template_id") ?? "").trim();
   if (templateId && !/^[a-f0-9-]{36}$/i.test(templateId)) throw new Error("Mẫu không hợp lệ.");
@@ -93,7 +94,15 @@ export async function savePageTree(pageId: string, tree: BuilderNode[], expected
       .eq("version", version)
       .select("version").maybeSingle();
     if (error) return { ok: false, error: error.message };
-    if (data) return { ok: true, version: data.version as number, tree: mergedTree };
+    if(data){
+      const forms=extractFormSchemas(mergedTree);
+      const warnings:string[]=[];
+      for(const form of forms){
+       const sync=await supabase.rpc("ensure_nuvora_form",{p_page_id:pageId,p_node_id:form.nodeId,p_fields:form.fields});
+       if(sync.error)warnings.push("Auto-Database: "+sync.error.message);
+      }
+      return {ok:true,version:data.version as number,tree:mergedTree,...(warnings.length?{warnings}: {})};
+    }
 
     // Read back under RLS to distinguish a genuine version conflict from denied access.
     const { data: current, error: readError } = await supabase.from("pages")
