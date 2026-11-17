@@ -387,6 +387,8 @@ export default function BuilderWorkspace({ pageId, projectId, userId, projectKin
         {([{key:"2d",label:"2D Editor"},{key:"3d",label:"3D Editor"},{key:"timeline",label:"Timeline"}] as const).map(item=><button key={item.key} type="button" onClick={()=>setEditorMode(item.key)} aria-pressed={editorMode===item.key} className={"shrink-0 whitespace-nowrap rounded-lg px-2 py-2 text-[11px] font-bold sm:px-3 "+(editorMode===item.key?"bg-orange-500 text-white":"text-slate-300 hover:bg-slate-700")}>{item.label}</button>)}
         <a href={"/ai-logic?project="+encodeURIComponent(projectId)} className="shrink-0 whitespace-nowrap rounded-lg px-2 py-2 text-[11px] font-bold text-slate-300 hover:bg-slate-700 sm:px-3">AI Logic</a>
        </nav>
+       <a href={"/store/"+projectId} className="shrink-0 rounded-lg border border-orange-500/40 px-3 py-2 text-xs text-orange-200">Commerce</a>
+       <a href="/plugins" className="shrink-0 rounded-lg border border-orange-500/40 px-3 py-2 text-xs text-orange-200">Plugins</a>
        <FigmaImportPanel projectId={projectId} pageId={pageId} unsaved={status!=="saved"}/>
        <CollaborationPanel projectId={projectId} canInvite={canInvite} connected={collabConnected} peers={peers.length}/>
        <BuilderTour onOpenComponents={()=>setMobilePaletteOpen(true)} onOpenProperties={()=>setMobilePropertiesOpen(true)}/>
@@ -418,7 +420,7 @@ export default function BuilderWorkspace({ pageId, projectId, userId, projectKin
       <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[270px_minmax(0,1fr)_320px]">
         <div className="hidden min-h-0 lg:block"><ComponentPalette onAdd={onAdd}/></div>
         <BuilderCanvas onReorder={(id,direction)=>dispatch({type:"nudge",id,direction})} onDuplicate={id=>dispatch({type:"duplicate",id})} device={device} onPreview={()=>{setPreviewPath(pagePath);setPreviewOpen(true);}} nodes={state.nodes} selectedId={state.selectedId} onSelect={onSelect} onRequestAdd={() => setMobilePaletteOpen(true)}/>
-        <div className="hidden min-h-0 lg:block"><PropertiesPanel userId={userId} onApplyPreset={(id,preset)=>dispatch({type:"preset",id,preset})} node={selectedNode} onChange={(id, field, key, value) => dispatch({ type: "edit", id, field, key, value })} onDelete={onDelete}/></div>
+        <div className="hidden min-h-0 lg:block"><PropertiesPanel userId={userId} projectId={projectId} onApplyPreset={(id,preset)=>dispatch({type:"preset",id,preset})} node={selectedNode} onChange={(id, field, key, value) => dispatch({ type: "edit", id, field, key, value })} onDelete={onDelete}/></div>
       </div>
       <DragOverlay dropAnimation={null} zIndex={70}>
         {dragging && <motion.div initial={{ scale: 0.95, opacity: 0.75 }} animate={{ scale: 1.02, opacity: 0.94 }} className="rounded-xl border border-orange-400 bg-[#1e293b] px-5 py-3 text-sm font-semibold text-white shadow-[0_20px_50px_rgba(0,0,0,0.45)]">{dragging}</motion.div>}
@@ -450,7 +452,7 @@ export default function BuilderWorkspace({ pageId, projectId, userId, projectKin
         <ComponentPalette onAdd={onAdd}/>
       </MobileSheet>
       <MobileSheet open={mobilePropertiesOpen} onOpenChange={setMobilePropertiesOpen} title="Chỉnh sửa thành phần">
-        <PropertiesPanel userId={userId} onApplyPreset={(id,preset)=>dispatch({type:"preset",id,preset})} node={selectedNode} onChange={(id, field, key, value) => dispatch({ type: "edit", id, field, key, value })} onDelete={onDelete}/>
+        <PropertiesPanel userId={userId} projectId={projectId} onApplyPreset={(id,preset)=>dispatch({type:"preset",id,preset})} node={selectedNode} onChange={(id, field, key, value) => dispatch({ type: "edit", id, field, key, value })} onDelete={onDelete}/>
       </MobileSheet>
     </DndContext>}
   </section>;

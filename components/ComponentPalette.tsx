@@ -1,12 +1,12 @@
 "use client";
 import { useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
-import { Boxes, ChartNoAxesColumnIncreasing, GripVertical, Image as ImageIcon, LayoutGrid, Plus, Search, SlidersHorizontal, Type, ClipboardList, Database } from "lucide-react";
+import { Boxes, ChartNoAxesColumnIncreasing, GripVertical, Image as ImageIcon, LayoutGrid, Plus, Search, SlidersHorizontal, Type, ClipboardList, Database, ShoppingBag } from "lucide-react";
 import { COMPONENT_REGISTRY, type ComponentCategory, type ComponentDefinition } from "@/lib/component-registry";
 
-const icons = { basic: Type, layout: LayoutGrid, form: ClipboardList, media: ImageIcon, data: Database };
+const icons = { basic: Type, layout: LayoutGrid, form: ClipboardList, media: ImageIcon, data: Database, commerce: ShoppingBag };
 const categoryLabels: Record<ComponentCategory, string> = {
-  basic: "Thành phần cơ bản", layout: "Bố cục", form: "Biểu mẫu", media: "Đa phương tiện", data: "Dữ liệu và biểu đồ",
+  basic: "Thành phần cơ bản", layout: "Bố cục", form: "Biểu mẫu", media: "Đa phương tiện", data: "Dữ liệu và biểu đồ", commerce: "Commerce",
 };
 
 function PaletteItem({ definition, onAdd }: { definition: ComponentDefinition; onAdd: (type: string) => void }) {
@@ -47,7 +47,7 @@ export default function ComponentPalette({ onAdd }: { onAdd: (type: string) => v
       </label>
       <div className="editor-scroll mt-3 flex gap-1.5 overflow-x-auto pb-0.5">
         <button type="button" onClick={() => setCategoryFilter("all")} className={`shrink-0 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition ${categoryFilter === "all" ? "bg-orange-500 text-white" : "bg-slate-700/75 text-slate-300 hover:bg-slate-600"}`}>Tất cả</button>
-        {(Object.keys(categoryLabels) as ComponentCategory[]).map(category => <button type="button" key={category} onClick={() => setCategoryFilter(category)} className={`shrink-0 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition ${categoryFilter === category ? "bg-orange-500 text-white" : "bg-slate-700/75 text-slate-300 hover:bg-slate-600"}`}>{category === "data" ? "Dữ liệu" : category === "media" ? "Media" : category === "basic" ? "Cơ bản" : category === "layout" ? "Bố cục" : "Biểu mẫu"}</button>)}
+        {(Object.keys(categoryLabels) as ComponentCategory[]).map(category => <button type="button" key={category} onClick={() => setCategoryFilter(category)} className={`shrink-0 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition ${categoryFilter === category ? "bg-orange-500 text-white" : "bg-slate-700/75 text-slate-300 hover:bg-slate-600"}`}>{category === "commerce" ? "Commerce" : category === "data" ? "Dữ liệu" : category === "media" ? "Media" : category === "basic" ? "Cơ bản" : category === "layout" ? "Bố cục" : "Biểu mẫu"}</button>)}
       </div>
       <div className="mt-3 flex flex-wrap gap-1.5">
        {(["game","thời trang","nút","lưới"] as const).map(term=><button key={term} type="button" onClick={()=>{setQuery(term);setCategoryFilter("all");}} className="rounded-md border border-slate-600 px-2 py-1 text-[10px] text-slate-300 hover:border-orange-400 hover:text-orange-200">{term}</button>)}

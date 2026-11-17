@@ -80,6 +80,11 @@ function commerceDefine(type:string,label:string):ComponentDefinition{
  };
  return def;
 }
+function pluginDefine():ComponentDefinition{
+ const def=define("plugin-slot","Installed plugin","basic","container","section",true);
+ def.propsSchema={pluginId:field("Plugin ID","text",""),label:field("Component label","text","")};
+ return def;
+}
 // Static component definitions, NOT fake application records.
 // All user projects, pages, component values and styles live in Supabase.
 export const COMPONENT_REGISTRY: readonly ComponentDefinition[] = [
@@ -173,6 +178,7 @@ export const COMPONENT_REGISTRY: readonly ComponentDefinition[] = [
   define("feature-grid", "Lưới tính năng", "layout", "container", "div", true),
   commerceDefine("product-grid", "Lưới sản phẩm"),
   commerceDefine("product-card","Thẻ sản phẩm"),
+  pluginDefine(),
   commerceDefine("cart","Giỏ hàng"),
   commerceDefine("checkout-form","Biểu mẫu thanh toán"),
   define("portfolio-grid", "Lưới dự án", "layout", "container", "div", true),
