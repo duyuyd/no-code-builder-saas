@@ -20,7 +20,7 @@ export async function requestNativeBuild(projectId:string,platform:"android"|"io
  if(!process.env.GITHUB_BUILD_TOKEN||!process.env.STUDIO_RUNNER_TOKEN||!process.env.SUPABASE_SERVICE_ROLE_KEY||
   !process.env.R2_ACCOUNT_ID||!process.env.R2_BUCKET||!process.env.R2_ACCESS_KEY_ID||!process.env.R2_SECRET_ACCESS_KEY)
   return {ok:false,error:"Pipeline chưa được cấu hình GitHub, Supabase service role và R2. Không có build ảo được tạo."};
- if(platform==="ios"&&process.env.ENABLE_IOS_BUILDS!=="true")
+ if(platform==="ios"&&(process.env.ENABLE_IOS_BUILDS!=="true"||!process.env.EXPO_PROJECT_ID))
   return {ok:false,error:"iOS chưa bật do thiếu cấu hình chứng chỉ Apple/Expo hoặc chưa cho phép sử dụng runner iOS."};
  try{
   const db=await createClient();const {data:{user},error:auth}=await db.auth.getUser();
