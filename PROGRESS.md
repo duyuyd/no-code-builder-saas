@@ -25,7 +25,8 @@ Repository: `duyuyd/no-code-builder-saas`; production branch: `main`.
 - [x] CI run `44143605576` passed for previous checkpoint `3a93255`, including typecheck, build and regression steps.
 - [x] Added explicit legacy 2D editor fallback using `?mode=legacy` without overwriting `ui_tree` (commits `638d0aa`, `067bc4d`).
 - [x] Updated root metadata to `NuvoraCraft by NPTduy`, removing the legacy `NPTduy Studio` keyword (commit `87f0769`).
-- [ ] Confirm CI and full brand audit on the new commits.
+- [x] Added a regression assertion protecting the legacy editor fallback route and toolbar (commit `8d349a8`).
+- [ ] Confirm CI on `8d349a8` and finish the complete public brand audit; no Vercel READY confirmation yet.
 - [ ] Audit landing, README, metadata and public UI for obsolete product titles; retain historical technical references where needed.
 - [ ] Verify tests, TypeScript, build and deploy before replacing any active editor.
 
