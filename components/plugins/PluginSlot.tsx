@@ -15,7 +15,7 @@ export default function PluginSlot({pluginId}:{pluginId:string}){
  useEffect(()=>{
   if(!/^[a-f0-9-]{36}$/i.test(pluginId)){setMessage("Choose a plugin from /plugins.");return;}
   let alive=true;const db=createClient();
-  void db.from("studio_plugins").select("manifest").eq("id",pluginId).eq("enabled",true).maybeSingle().then(({data,error})=>{
+  void Promise.resolve(db.from("studio_plugins").select("manifest").eq("id",pluginId).eq("enabled",true).maybeSingle()).then(({data,error})=>{
    if(!alive)return;
    if(error||!validatePluginManifest(data?.manifest)){setMessage("Plugin not enabled or invalid");return;}
    const worker=new Worker(new URL("../../lib/plugins/plugin-runtime.worker.ts",import.meta.url),{type:"module"});
