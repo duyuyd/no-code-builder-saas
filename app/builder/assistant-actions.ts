@@ -136,7 +136,7 @@ export async function askStudioAssistant(input:Input):Promise<AssistantResponse>
  const {data:setting,error:settingError}=await db.from("platform_settings").select("value").eq("key","studio_ai_config").maybeSingle();
  if(settingError)return {ok:false,error:"Không đọc được cấu hình AI."};
  const config=readAiConfig(setting?.value);
- if(!aiIsAvailable(config))return {ok:true,mode:"offline",answer:offlineAnswer(input.question,context,tree,scene,path),context:context.slice(0,350)};
+ if(!aiIsAvailable(config))return {ok:false,error:"Chưa kết nối nhà cung cấp AI. Admin có thể bật provider và cấu hình giới hạn tại /admin/ai. Trợ lý không tạo câu trả lời giả."};
  const {data:allowed,error:quotaError}=await db.rpc("studio_ai_claim_slot");
  if(quotaError||allowed!==true)return {ok:false,error:"Đã đạt hạn mức AI hôm nay hoặc Admin đã tắt AI. Bạn có thể dùng hướng dẫn offline; không tự động gọi dịch vụ tính phí."};
  const history=cleanHistory(input.history);

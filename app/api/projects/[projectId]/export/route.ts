@@ -1,7 +1,10 @@
 import "server-only";
 import JSZip from "jszip";
 import {createClient} from "@/lib/supabase/server";
-import {generateHtmlCode} from "@/lib/code-generator";
+import {generateHtmlCode,generateReactCode} from "@/lib/code-generator";
+import {generateReactNativeSource} from "@/lib/native-generator";
+import {validateScene} from "@/packages/engine-3d/src";
+import {validateTimeline} from "@/packages/engine-4d/src";
 import {validateUiTree,type BuilderNode} from "@/lib/component-registry";
 
 export const dynamic="force-dynamic";
@@ -44,7 +47,22 @@ export async function GET(_request:Request,{params}:{params:Promise<{projectId:s
   if(total>12_000_000)return new Response("Dự án quá lớn để xuất ZIP.",{status:413});
   const filename=page.path==="/"? "index.html":page.path.slice(1)+"/index.html";
   zip.file(filename,html,{createFolders:true});
+  zip.file("react-web/"+(page.path==="/"? "index.tsx":page.path.slice(1)+"/index.tsx"),generateReactCode(page.ui_tree),{createFolders:true});
  }
+ const {data:scenes,error:sceneError}=await db.from("studio_scenes").select("id,page_id,scene").eq("project_id",projectId).limit(100);
+ if(sceneError)return new Response("Không đọc được scene 3D.",{status:500});
+ for(const item of scenes??[]){
+  if(!validateScene(item.scene))return new Response("Scene 3D không hợp lệ.",{status:400});
+  zip.file("studio/scenes/"+item.id+".json",JSON.stringify({pageId:item.page_id,...item.scene},null,2));
+  const {data:timelines,error:timelineError}=await db.from("studio_timelines").select("id,timeline").eq("scene_id",item.id).limit(10);
+  if(timelineError)return new Response("Không đọc được Timeline.",{status:500});
+  for(const t of timelines??[]){
+   if(!validateTimeline(t.timeline))return new Response("Timeline 4D không hợp lệ.",{status:400});
+   zip.file("studio/timelines/"+t.id+".json",JSON.stringify({sceneId:item.id,...t.timeline},null,2));
+  }
+ }
+ zip.file("react-native/App.tsx",generateReactNativeSource(pages));
+ zip.file("react-native/README.md","NPT Duy · React Native source export. Tạo Expo SDK 58 project riêng bằng create-expo-app và thay App.tsx bằng file này. Một số component nâng cao chưa có renderer native; chúng hiển thị thông báo thay vì bị mất khỏi dữ liệu. Scene 3D/Timeline được lưu trong thư mục studio để tích hợp renderer phù hợp. Đây là mã nguồn, chưa phải APK hoặc IPA đã build.");
  zip.file("HUONG-DAN.txt","BẢN XUẤT NO-CODE BUILDER\n\nMở index.html bằng trình duyệt để xem website và chơi game.\nNút điều hướng nội bộ mở các trang HTML trong thư mục tương ứng.\nTrò chơi Lật thẻ và Đố vui hoạt động bằng JavaScript được đóng gói bên trong HTML.\nCác ảnh, video và liên kết bên ngoài vẫn cần kết nối Internet.\nBiểu mẫu liên hệ sử dụng ứng dụng email trên thiết bị (mailto); không có máy chủ lưu thư.\n");
  const bytes=await zip.generateAsync({type:"uint8array",compression:"DEFLATE",compressionOptions:{level:6}});
  const filename="no-code-project-"+projectId.slice(0,8)+".zip";

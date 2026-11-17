@@ -15,8 +15,10 @@ import { findLocation, findNode, insertNode, moveNode, removeNode, updateNode, t
 import { generateHtmlCode, generateReactCode } from "@/lib/code-generator";
 import { savePageTree, publishProject, unpublishProject } from "@/app/builder/actions";
 import LivePage from "./LivePage";
-import StudioAssistant from "./StudioAssistant";
+
+import dynamic from "next/dynamic";
 import BuilderTour from "./BuilderTour";
+const ThreeStudio = dynamic(() => import("./studio/ThreeStudio"), { ssr: false, loading: () => <div role="status" className="p-5 text-slate-300">Đang tải trình biên tập 3D…</div> });
 
 type History = { past: BuilderNode[][]; nodes: BuilderNode[]; future: BuilderNode[][]; selectedId: string | null };
 type Action =
@@ -181,6 +183,7 @@ export default function BuilderWorkspace({ pageId, projectId, userId, projectKin
 }) {
   const [state, dispatch] = useReducer(reducer, { nodes: initialNodes, selectedId: null, past: [], future: [] });
   const [dragging, setDragging] = useState("");
+  const [editorMode,setEditorMode]=useState<"2d"|"3d"|"timeline">("2d");
   const [status, setStatus] = useState<"saved" | "unsaved" | "saving" | "error">("saved");
   const [errorMessage, setErrorMessage] = useState("");
   const [mobilePaletteOpen, setMobilePaletteOpen] = useState(false);
@@ -346,7 +349,7 @@ export default function BuilderWorkspace({ pageId, projectId, userId, projectKin
   const iconButtonClass = "flex size-9 items-center justify-center rounded-xl border border-slate-700 bg-slate-800 text-slate-300 transition hover:border-slate-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-35 sm:size-10";
 
   return <section className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#0f172a] text-slate-100">
-    <div className="flex min-h-14 shrink-0 items-center gap-2 border-b border-slate-700/80 bg-[#1e293b] px-3 py-2 sm:px-5">
+    <div className="flex min-h-14 shrink-0 flex-wrap items-center gap-2 border-b border-slate-700/80 bg-[#1e293b] px-3 py-2 sm:px-5">
       <div className="mr-auto min-w-0"><p className="truncate text-xs font-bold text-white sm:text-sm">{projectName}<span className="font-normal text-slate-500"> · {pagePath}</span></p>
         <p role="status" aria-live="polite" className={`mt-0.5 flex items-center gap-1 text-[10px] ${status === "error" ? "text-rose-400" : status === "saved" ? "text-emerald-400" : "text-amber-400"}`}>
           {status === "saving" ? <LoaderCircle size={12} className="animate-spin"/> : status === "saved" ? <CheckCircle2 size={12}/> : <CloudUpload size={12}/>} {status === "saved" ? "Đã lưu vào Supabase" : status === "saving" ? "Đang lưu..." : status === "error" ? "Lưu thất bại" : "Có thay đổi chưa lưu"}
@@ -355,8 +358,11 @@ export default function BuilderWorkspace({ pageId, projectId, userId, projectKin
       <div className="hidden items-center gap-1 rounded-lg border border-slate-700 bg-slate-900 p-1 sm:flex">
        {([{id:"mobile",Icon:Smartphone},{id:"tablet",Icon:Tablet},{id:"desktop",Icon:Monitor}] as const).map(({id,Icon})=><button key={id} type="button" title={id} aria-label={"Xem "+id} aria-pressed={device===id} onClick={()=>setDevice(id)} className={"rounded-lg p-2 "+(device===id?"bg-orange-500 text-white":"text-slate-400 hover:bg-slate-700")}><Icon size={16}/></button>)}
       </div>
-      <BuilderTour onOpenComponents={()=>setMobilePaletteOpen(true)} onOpenProperties={()=>setMobilePropertiesOpen(true)}/>
-      <StudioAssistant projectId={projectId} pageId={pageId} selectedId={state.selectedId} selectedType={selectedNode?.type??null} blockCount={state.nodes.reduce((total,node)=>total+countNodes(node),0)}/>
+      <nav aria-label="Chế độ biên tập" className="order-last flex w-full min-w-0 shrink-0 items-center gap-1 overflow-x-auto rounded-xl border border-slate-600 bg-slate-900 p-1 sm:order-none sm:w-auto sm:max-w-[42vw]">
+        {([{key:"2d",label:"2D Editor"},{key:"3d",label:"3D Editor"},{key:"timeline",label:"Timeline"}] as const).map(item=><button key={item.key} type="button" onClick={()=>setEditorMode(item.key)} aria-pressed={editorMode===item.key} className={"shrink-0 whitespace-nowrap rounded-lg px-2 py-2 text-[11px] font-bold sm:px-3 "+(editorMode===item.key?"bg-orange-500 text-white":"text-slate-300 hover:bg-slate-700")}>{item.label}</button>)}
+        <a href={"/ai-logic?project="+encodeURIComponent(projectId)} className="shrink-0 whitespace-nowrap rounded-lg px-2 py-2 text-[11px] font-bold text-slate-300 hover:bg-slate-700 sm:px-3">AI Logic</a>
+       </nav>
+       <BuilderTour onOpenComponents={()=>setMobilePaletteOpen(true)} onOpenProperties={()=>setMobilePropertiesOpen(true)}/>
       <a href="/assets" target="_blank" rel="noopener noreferrer" title="Kho ảnh và nguồn tài nguyên" className="flex h-9 items-center gap-1 rounded-xl border border-slate-600 bg-slate-800 px-2 text-xs font-semibold text-slate-200 hover:border-orange-400 sm:h-10">🖼️<span className="hidden lg:inline">Tài nguyên</span></a>
       {projectKind === "game" && <a href={"/game-builder?project="+projectId} title="Thiết kế game 2D có màn chơi" className="flex h-9 items-center gap-1 rounded-xl border border-orange-500/50 bg-orange-500/10 px-3 text-xs font-bold text-orange-300 hover:bg-orange-500/20 sm:h-10"><span className="text-base">🎮</span><span className="hidden sm:inline">Game 2D</span></a>}
       <button type="button" title="Chạy thử tương tác" onClick={()=>{setPreviewPath(pagePath);setPreviewError("");setPreviewOpen(true);}} className="flex size-9 items-center justify-center rounded-xl border border-slate-600 bg-slate-700 text-white sm:size-10"><Eye size={18}/></button>
@@ -380,7 +386,7 @@ export default function BuilderWorkspace({ pageId, projectId, userId, projectKin
     {publishStatus && <div role="status" className="flex items-center justify-between gap-2 border-b border-slate-700 bg-slate-800 px-4 py-2 text-xs text-slate-200"><span>{publishStatus}</span>{published&&<a href={"/s/"+projectId} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-orange-300"><ExternalLink size={14}/>Xem</a>}</div>}
     {published && <div className="flex items-center justify-between gap-2 border-b border-emerald-800 bg-emerald-950/30 px-4 py-1.5 text-xs text-emerald-300"><a href={"/s/"+projectId} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1"><Globe2 size={14}/> Website đang công khai · Mở</a><button type="button" onClick={()=>void hide()} className="rounded-md border border-slate-600 px-2 py-1 text-slate-300">Ẩn website</button></div>}
     <div className="flex shrink-0 items-center gap-2 border-b border-slate-700 bg-slate-900 px-2 py-2 sm:hidden">{([{id:"mobile",Icon:Smartphone,label:"Điện thoại"},{id:"tablet",Icon:Tablet,label:"Máy tính bảng"},{id:"desktop",Icon:Monitor,label:"Web"}] as const).map(({id,Icon,label})=><button key={id} type="button" onClick={()=>setDevice(id)} aria-pressed={device===id} className={"flex min-w-0 flex-1 items-center justify-center gap-1 rounded-lg p-2 text-xs "+(device===id?"bg-orange-500 text-white":"bg-slate-800 text-slate-400")}><Icon size={15}/>{label}</button>)}</div>
-    <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={() => setDragging("")}>
+    {editorMode!=="2d" ? <ThreeStudio key={pageId} projectId={projectId} pageId={pageId} showTimeline={editorMode==="timeline"}/> : <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={() => setDragging("")}>
       <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[270px_minmax(0,1fr)_320px]">
         <div className="hidden min-h-0 lg:block"><ComponentPalette onAdd={onAdd}/></div>
         <BuilderCanvas onReorder={(id,direction)=>dispatch({type:"nudge",id,direction})} onDuplicate={id=>dispatch({type:"duplicate",id})} device={device} onPreview={()=>{setPreviewPath(pagePath);setPreviewOpen(true);}} nodes={state.nodes} selectedId={state.selectedId} onSelect={onSelect} onRequestAdd={() => setMobilePaletteOpen(true)}/>
@@ -418,6 +424,6 @@ export default function BuilderWorkspace({ pageId, projectId, userId, projectKin
       <MobileSheet open={mobilePropertiesOpen} onOpenChange={setMobilePropertiesOpen} title="Chỉnh sửa thành phần">
         <PropertiesPanel userId={userId} onApplyPreset={(id,preset)=>dispatch({type:"preset",id,preset})} node={selectedNode} onChange={(id, field, key, value) => dispatch({ type: "edit", id, field, key, value })} onDelete={onDelete}/>
       </MobileSheet>
-    </DndContext>
+    </DndContext>}
   </section>;
 }

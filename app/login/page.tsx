@@ -6,10 +6,11 @@ import {createClient} from "@/lib/supabase/server";
 import {redirect} from "next/navigation";
 export const dynamic="force-dynamic";
 export const metadata={title:"Đăng nhập và đăng ký — Studio"};
-const errors:Record<string,string>={invalid:"Email không hợp lệ hoặc mật khẩu chưa đủ 8 ký tự.",signin:"Email hoặc mật khẩu không chính xác. Hãy thử lại.",signup:"Không thể tạo tài khoản. Email có thể đã đăng ký hoặc mật khẩu chưa đạt yêu cầu.",config:"Hệ thống xác nhận email chưa được cấu hình. Hãy liên hệ quản trị."};
+const errors:Record<string,string>={invalid:"Email không hợp lệ hoặc mật khẩu chưa đủ 8 ký tự.",signin:"Email hoặc mật khẩu không chính xác. Hãy thử lại.",signup:"Không thể tạo tài khoản. Email có thể đã đăng ký hoặc mật khẩu chưa đạt yêu cầu.",config:"Hệ thống xác nhận email chưa được cấu hình. Hãy liên hệ quản trị.",network:"Mất kết nối tới hệ thống đăng nhập. Kiểm tra mạng và thử lại."};
 export default async function LoginPage({searchParams}:{searchParams:Promise<{error?:string;message?:string;mode?:string}>}){
  const db=await createClient();
- const [{siteTitle},query,{data:{user}}]=await Promise.all([getSiteSettings(),searchParams,db.auth.getUser()]);
+ const [{siteTitle},query,auth]=await Promise.all([getSiteSettings(),searchParams,db.auth.getUser().catch(()=>({data:{user:null}}))]);
+ const user=auth.data.user;
  if(user)redirect("/dashboard");
  const register=query.mode==="register";
  return <main className="grid min-h-dvh grid-cols-1 bg-[#0b1221] text-white lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">

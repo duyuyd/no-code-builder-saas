@@ -20,3 +20,9 @@ jobs:
         run: npm run typecheck
       - name: Production build
         run: npm run build
+      - name: Export regression
+        run: npm run test:export
+      - name: Provider regression
+        run: npm run test:ai
+      - name: Timeline regression
+        run: npm run test:timeline
