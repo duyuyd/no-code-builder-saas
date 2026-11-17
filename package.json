@@ -31,7 +31,8 @@
     "jszip": "3.10.1",
     "@react-three/fiber": "9.8.2",
     "@react-three/drei": "10.7.9",
-    "three": "0.187.0"
+    "three": "0.187.0",
+    "@alife-sdk/core": "0.4.2"
   },
   "devDependencies": {
     "typescript": "^5.8.3",
