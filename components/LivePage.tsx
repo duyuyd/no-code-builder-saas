@@ -1,6 +1,6 @@
+"use client";
 import CommerceNode from "@/components/commerce/CommerceNode";
 import PluginSlot from "@/components/plugins/PluginSlot";
-"use client";
 import { createElement, useMemo, useState, type CSSProperties, type ReactNode, type FormEvent, type MouseEvent } from "react";
 import { ArrowRight, RotateCcw, Trophy, Image as ImageIcon } from "lucide-react";
 import { getDefinition, nodeCss, safeUrl, sanitizeNumeric, type BuilderNode } from "@/lib/component-registry";
