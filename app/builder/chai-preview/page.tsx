@@ -2,7 +2,7 @@ import Link from "next/link";
 import {notFound,redirect} from "next/navigation";
 import {createClient} from "@/lib/supabase/server";
 import {treeToChaiBlocks} from "@/lib/chaibuilder-adapter";
-import {ChaiBlocksRenderer} from "@chaibuilder/core/nextjs/render";
+import {RenderChaiBlocks} from "@chaibuilder/core/nextjs/render";
 import {loadWebBlocks} from "@chaibuilder/core/web-blocks";
 import {validateUiTree} from "@/lib/component-registry";
 export const dynamic="force-dynamic";
@@ -28,14 +28,14 @@ export default async function ChaiPreview({searchParams}:{searchParams:Promise<{
   id:page.id,name:project.name,slug:page.path,lang:"en",fallbackLang:"en",
   primaryPage:true,seo:{},currentEditor:null,pageType:"page",lastSaved:new Date().toISOString(),
   dynamic:false,dynamicSlugCustom:null,parent:null,blocks,metadata:{},breadcrumb:[],alternatePages:[]
- } as unknown as Parameters<typeof ChaiBlocksRenderer>[0]["page"];
+ } as unknown as Parameters<typeof RenderChaiBlocks>[0]["page"];
  return <main className="min-h-dvh bg-slate-50 text-slate-900">
   <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-slate-900 p-4 text-white">
    <div><p className="text-xs font-bold tracking-widest text-orange-300">ChaiBuilder Core · read-only preview</p><h1 className="text-lg font-bold">{project.name} · {page.path}</h1></div>
    <Link href={"/builder?project="+project.id+"&page="+page.id} className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-bold">Back to editable Canvas</Link>
   </header>
   <section className="mx-auto min-h-[65dvh] max-w-6xl px-4 py-12">
-   <ChaiBlocksRenderer page={payload} pageData={{}} settings={{}} pageProps={{slug:page.path}}/>
+   <RenderChaiBlocks page={payload} pageData={{}} settings={{}} pageProps={{slug:page.path}}/>
   </section>
   <p className="border-t border-slate-200 p-4 text-center text-xs text-slate-500">Preview rendered with @chaibuilder/core; edits remain in the Supabase-native Builder. Verify layout before publishing.</p>
  </main>;
