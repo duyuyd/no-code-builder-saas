@@ -34,7 +34,9 @@ Repository: `duyuyd/no-code-builder-saas`; production branch: `main`.
 - [x] Added validation rejecting numeric/blank Chai parent identifiers (commit `ab4cc0c`) and regression coverage (commit `63ca5c1`), preventing silent re-rooting of existing blocks.
 - [x] CI `44175502206` passed for parent validation test commit `63ca5c1`; CI `44175522503` passed for progress checkpoint `0b21f05`. CI `44186230011` passed for subsequent native-content validation `0d1be78`.
 - [x] Reject malformed native Chai link payloads before conversion (commit `9e48933`), with regression cases for numeric `href` and non-object `link` (commit `b864be4`).
-- [ ] Verify CI on the new link validation change; finish public brand audit and verify Vercel READY.
+- [x] CI runs `44186771079` (`9e48933`), `44186784358` (`b864be4`), and `44186802832` (`164f952`) succeeded for native Chai link validation.
+- [x] Added native Chai image/alt/name/placeholder type validation (commit `27f91bb`) and four regression cases (commit `7544ce3`) to reject malformed input without modifying stored pages.
+- [ ] Verify CI on the new attribute validation changes; finish public brand audit and verify Vercel READY.
 - [ ] Audit landing, README, metadata and public UI for obsolete product titles; retain historical technical references where needed.
 - [ ] Verify tests, TypeScript, build and deploy before replacing any active editor.
 
