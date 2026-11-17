@@ -43,6 +43,10 @@ assert.throws(()=>bridge.fromUnifiedChai(flat.map(x=>({...x,_parent:x._id}))),/c
 assert.throws(()=>bridge.fromUnifiedChai([{_id:"bad",_type:"Nonexistent"}]),/Unsupported/);
 assert.throws(()=>bridge.fromUnifiedChai([{_id:"link1",_type:"Link",content:"Visit",link:{href:42}}]),/Invalid Chai link/,"numeric link href must not be coerced or crash conversion");
 assert.throws(()=>bridge.fromUnifiedChai([{_id:"link1",_type:"Link",content:"Visit",link:"https://example.com"}]),/Invalid Chai link/,"link payload must be an object");
+assert.throws(()=>bridge.fromUnifiedChai([{_id:"img1",_type:"Image",image:{url:"https://example.com/p.png"}}]),/Invalid Chai image/,"object image must not crash conversion");
+assert.throws(()=>bridge.fromUnifiedChai([{_id:"img1",_type:"Image",image:"https://example.com/p.png",alt:42}]),/Invalid Chai alt/,"numeric alt must be rejected");
+assert.throws(()=>bridge.fromUnifiedChai([{_id:"input1",_type:"Input",name:42}]),/Invalid Chai name/,"numeric input name must be rejected");
+assert.throws(()=>bridge.fromUnifiedChai([{_id:"input1",_type:"Input",placeholder:{text:"Hi"}}]),/Invalid Chai placeholder/,"object placeholder must be rejected");
 assert.throws(()=>bridge.fromUnifiedChai([...flat,flat[0]]),/duplicate Chai id/,"duplicate block IDs must be rejected");
 assert.throws(()=>bridge.fromUnifiedChai(flat.map((block,i)=>i===1?{...block,_parent:0}:block)),/Invalid Chai parent id/,"numeric parent identifiers must not silently become root nodes");
 assert.throws(()=>bridge.fromUnifiedChai(flat.map((block,i)=>i===1?{...block,_parent:"   "}:block)),/Invalid Chai parent id/,"blank parent identifiers must not silently become root nodes");
