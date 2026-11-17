@@ -29,7 +29,7 @@ export function advanceNpc(npc:NpcEntity,player:{x:number;z:number},dt:number):{
   if(Math.abs(next.x)>10){next.patrolDirection=-direction;next=transitionNpc(next,"patrol_done");}
  }else if(action==="attack"){
   const plan=planner.plan(WorldState.from({visible:true,near:dist<1.7}),WorldState.from({near:true}));
-  if(dist>=1.7&&plan.includes("approach")){
+  if(dist>=1.7&&plan?.some(action=>action.id==="approach")){
     next.x+=(dx/dist)*elapsed*2.0;next.z+=(dz/dist)*elapsed*2.0;
   }
   if(dist<1.7&&next.cooldown===0){next.cooldown=1.1;return {npc:next,hit:true};}
