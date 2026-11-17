@@ -13,7 +13,7 @@ export async function generateMetadata():Promise<Metadata>{
  const description="No-code platform to create websites, apps and interactive 3D games. Visual editor, timeline animation, AI-assisted creation and immersive XR.";
  return {
   metadataBase:root,
-  title:{default:title+" | No-code website, app & 3D game builder",template:"%s | "+siteTitle},
+  title:{default:title+" | No-code website, app & 3D game builder",template:"%s | "+title},
   description,
   applicationName:title,
   keywords:["no-code website builder","app builder","3D game creator","visual editor","AI website generator","timeline editor","WebXR","responsive websites"],
