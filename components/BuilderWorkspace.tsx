@@ -172,7 +172,7 @@ function MobileSheet({ open, onOpenChange, title, children }: {
   </Dialog.Root>;
 }
 
-export default function BuilderWorkspace({ pageId, projectId, userId, projectKind, previewPages, initiallyPublished, pagePath, projectName, initialNodes, initialVersion }: {
+export default function BuilderWorkspace({ pageId, projectId, userId, projectKind, canInvite, previewPages, initiallyPublished, pagePath, projectName, initialNodes, initialVersion }: {
   projectId: string;
   userId: string;
   projectKind: string;
