@@ -71,6 +71,7 @@ function define(type: string, label: string, category: ComponentCategory, kind: 
 function commerceDefine(type:string,label:string):ComponentDefinition{
  const def=define(type,label,"commerce","container","section",true);
  def.propsSchema={
+  ...def.propsSchema,
   productName:field("Tên sản phẩm","text",""),
   priceVnd:field("Giá VND","number","1000"),
   imageUrl:field("Ảnh HTTPS","url",""),
