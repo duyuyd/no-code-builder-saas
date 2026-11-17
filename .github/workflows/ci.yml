@@ -34,3 +34,6 @@ jobs:
 
       - name: SEO, AI Generator, Figma and Yjs collaboration regression
         run: npm run test:growth
+
+      - name: Ecosystem component, payments and security regression
+        run: npm run test:ecosystem

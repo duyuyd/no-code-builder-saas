@@ -15,7 +15,8 @@
     "test:timeline": "node tests/timeline-regression.cjs",
     "test:npc": "node tests/npc-runtime-regression.cjs",
     "test:native": "node tests/native-workflow-regression.cjs",
-    "test:growth": "node tests/growth-regression.cjs"
+    "test:growth": "node tests/growth-regression.cjs",
+    "test:ecosystem": "node tests/ecosystem-regression.cjs"
   },
   "dependencies": {
     "next": "15.5.29",
