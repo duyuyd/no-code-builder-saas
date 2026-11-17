@@ -34,9 +34,13 @@ export function fromUnifiedChai(input:unknown):BuilderNode[]{
    const props=asObject(raw.props),style=asObject(raw.style);
    if(!props||!style)throw Error("Legacy component props or styles missing");
    n={id:block._id,type:raw.type,props:{...(props as Record<string,string>)},style:{...(style as Record<string,string>)},children:[]};
-   const edited=typeof block.content==="string"?block.content.slice(0,12000):"";
-   if(n.props.text!==undefined&&edited!==n.props.text)n.props.text=edited;
-   else if(n.props.label!==undefined&&edited!==n.props.label)n.props.label=edited;
+   const edited=typeof block.content==="string"?block.content.slice(0,12000):null;
+   // Only apply changes to fields represented by the original component.
+   // An absent Chai content property is not an instruction to erase text.
+   if(edited!==null){
+    if(n.props.text!==undefined&&edited!==n.props.text)n.props.text=edited;
+    else if(n.props.label!==undefined&&edited!==n.props.label)n.props.label=edited;
+   }
   }else{
    if(!eligible.has(block._type))throw Error("Unsupported Chai block: "+String(block._type));
    const kind:Record<string,string>={Box:"container",Row:"row",Column:"column",Heading:"heading",Text:"text",Paragraph:"paragraph",Button:"button",Link:"link",Image:"image",Divider:"divider",Form:"form",Input:"input",TextArea:"textarea",Checkbox:"checkbox",Select:"select"};
