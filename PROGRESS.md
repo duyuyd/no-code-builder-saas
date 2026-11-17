@@ -30,7 +30,9 @@ Repository: `duyuyd/no-code-builder-saas`; production branch: `main`.
 - [x] Added regression cases for duplicate IDs, missing parents and corrupt source JSON in the Chai bridge (commit `438eb5d`); this changes tests only, not production data.
 - [x] CI `44154569741` passed on `438eb5d`; CI `44154584910` passed on `71dc354`.
 - [x] Guarded Chai bridge text/label precedence so unchanged text cannot unexpectedly mutate label (commit `b1181ce`); added label-only regression coverage (commit `ba9754e`).
-- [ ] Confirm CI on the new bridge fix and finish the complete public brand audit; no Vercel READY confirmation yet.
+- [x] CI `44165494653` succeeded for checkpoint `f23b451`; CI `44165478159` succeeded for label regression `ba9754e` (verified 2026-11-18).
+- [x] Added validation rejecting numeric/blank Chai parent identifiers (commit `ab4cc0c`) and regression coverage (commit `63ca5c1`), preventing silent re-rooting of existing blocks.
+- [ ] Confirm CI for the latest parent validation change; finish public brand audit and verify Vercel READY.
 - [ ] Audit landing, README, metadata and public UI for obsolete product titles; retain historical technical references where needed.
 - [ ] Verify tests, TypeScript, build and deploy before replacing any active editor.
 
