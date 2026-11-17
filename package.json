@@ -66,5 +66,11 @@
     "postcss": "^8.4.0",
     "@types/three": "0.187.0",
     "@types/qrcode": "1.5.6"
+  },
+  "overrides": {
+    "@chaibuilder/sdk": {
+      "framer-motion": "12.23.20",
+      "motion-dom": "12.23.20"
+    }
   }
 }
