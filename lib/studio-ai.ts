@@ -1,14 +1,14 @@
 // This module is only imported by Server Actions and server components.
 // API credentials are read from process.env at request time and never passed to a client.
-export type AiProvider="gemini"|"deepseek"|"openai"|"orcarouter";
+export type AiProvider="gemini"|"deepseek"|"openai";
 export type AiMode="offline"|AiProvider;
 export type AiConfig={
  enabled:boolean;provider:AiProvider;model:string;dailyUserLimit:number;dailyGlobalLimit:number;maxOutputTokens:number;
 };
 export type ChatTurn={role:"user"|"assistant";content:string};
-const providers:AiProvider[]=["gemini","deepseek","openai","orcarouter"];
+const providers:AiProvider[]=["gemini","deepseek","openai"];
 export const AI_DEFAULT_MODELS:Record<AiProvider,string>={
- gemini:"gemini-3.5-flash-lite",deepseek:"deepseek-flash",openai:"gpt-5-mini",orcarouter:"orcarouter/free"
+ gemini:"gemini-2.5-flash",deepseek:"deepseek-chat",openai:"gpt-4o-mini"
 };
 export const AI_DEFAULT_CONFIG:AiConfig={enabled:false,provider:"gemini",model:AI_DEFAULT_MODELS.gemini,dailyUserLimit:10,dailyGlobalLimit:80,maxOutputTokens:900};
 export function validAiModel(value:string):boolean{
@@ -30,7 +30,6 @@ export function readAiConfig(raw:unknown):AiConfig{
 export function providerKey(provider:AiProvider):string{
  if(provider==="gemini")return process.env.GEMINI_API_KEY?.trim()??"";
  if(provider==="deepseek")return process.env.DEEPSEEK_API_KEY?.trim()??"";
- if(provider==="orcarouter")return process.env.ORCAROUTER_API_KEY?.trim()??"";
  return process.env.OPENAI_API_KEY?.trim()??"";
 }
 export function aiIsAvailable(config:AiConfig):boolean{
@@ -43,7 +42,7 @@ function parseResponse(provider:AiProvider,value:unknown):string{
   const candidates=v.candidates as Array<{content?:{parts?:Array<{text?:string}>}}>|undefined;
   return candidates?.[0]?.content?.parts?.map(p=>p.text??"").join("\n").trim()??"";
  }
- if(provider==="deepseek"||provider==="orcarouter"){
+ if(provider==="deepseek"){
   const choices=v.choices as Array<{message?:{content?:string}}>|undefined;
   return choices?.[0]?.message?.content?.trim()??"";
  }
@@ -53,7 +52,6 @@ function parseResponse(provider:AiProvider,value:unknown):string{
 }
 export async function askProvider(config:AiConfig,instructions:string,messages:ChatTurn[]):Promise<string>{
  const key=providerKey(config.provider);
- if(config.provider==="orcarouter"&&config.model!=="orcarouter/free")throw new Error("OrcaRouter chỉ được gọi qua model miễn phí orcarouter/free.");
  if(!key||!config.enabled)throw new Error("Nhà cung cấp AI chưa được quản trị viên bật và cấu hình API key.");
  const signal=AbortSignal.timeout(18000);
  let url:string;
@@ -74,10 +72,7 @@ export async function askProvider(config:AiConfig,instructions:string,messages:C
    model:config.model,messages:[{role:"system",content:instructions},...messages],
    thinking:{type:"disabled"},max_tokens:config.maxOutputTokens,temperature:0.45,stream:false
   };
- }else if(config.provider==="orcarouter"){
-  url="https://api.orcarouter.ai/v1/chat/completions";
-  headers.authorization="Bearer "+key;
-  body={model:"orcarouter/free",messages:[{role:"system",content:instructions},...messages],max_tokens:config.maxOutputTokens,stream:false};
+
  }else{
   url="https://api.openai.com/v1/responses";
   headers.authorization="Bearer "+key;

@@ -1,0 +1,22 @@
+name: Feature proposal
+description: Suggest an improvement to NuvoraCraft
+title: "[Feature] "
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: User problem
+      description: Explain the need rather than only the implementation
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope, API credentials and cost
+      description: Flag external services, data changes and opt-in costs

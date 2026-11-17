@@ -2,9 +2,9 @@
 import {useEffect,useRef,useState,type FormEvent} from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {BookOpen,LoaderCircle,MessageCircle,RotateCcw,Send,Sparkles,X} from "lucide-react";
-import {askStudioAssistant,getStudioAssistantStatus,type AssistantResponse,type AssistantStatus} from "@/app/builder/assistant-actions";
+import {getStudioAssistantStatus,type AssistantStatus} from "@/app/builder/assistant-actions";
 
-type Message={from:"user"|"studio";text:string;mode?:"offline"|"gemini"|"deepseek"|"openai"|"orcarouter"};
+type Message={from:"user"|"studio";text:string;mode?:"openai"};
 export default function StudioAssistant({projectId,pageId,selectedId,selectedType,blockCount,contextKind="builder"}:{
  projectId:string;pageId:string;selectedId:string|null;selectedType:string|null;blockCount:number;contextKind?:"builder"|"game"
 }){
@@ -29,9 +29,14 @@ export default function StudioAssistant({projectId,pageId,selectedId,selectedTyp
   setMessages(messages=>[...messages,{from:"user",text:q}]);
   try{
    const history=messages.slice(-10).map(m=>({role:m.from==="user"?"user" as const:"assistant" as const,content:m.text}));
-   const result:AssistantResponse=await askStudioAssistant({projectId,pageId,question:q,selectedId,contextKind,history});
-   if(result.ok){setMessages(messages=>[...messages,{from:"studio",text:result.answer,mode:result.mode}]);if(result.mode!=="offline")setStatus(prev=>prev?{...prev,active:true,provider:result.mode}:prev);}
-   else setError(result.error);
+   const response=await fetch("/api/chat",{
+    method:"POST",headers:{"content-type":"application/json"},credentials:"same-origin",
+    body:JSON.stringify({projectId,pageId,selectedId,contextKind,messages:[...history,{role:"user",content:q}]})
+   });
+   const result=await response.json() as {answer?:string;error?:string;provider?:string};
+   if(response.ok&&typeof result.answer==="string"){
+    setMessages(current=>[...current,{from:"studio",text:result.answer!,mode:"openai"}]);
+   }else setError(result.error??"OpenAI API không khả dụng.");
   }catch{setError("Không thể kết nối máy chủ. Hãy thử lại.");}
   finally{setBusy(false);}
  };
@@ -48,9 +53,9 @@ export default function StudioAssistant({projectId,pageId,selectedId,selectedTyp
    <Dialog.Content className="fixed inset-x-0 bottom-0 z-[86] flex h-[min(87dvh,810px)] flex-col overflow-hidden rounded-t-[26px] border border-slate-700 bg-[#111d2e] text-white shadow-2xl outline-none sm:bottom-5 sm:left-auto sm:right-5 sm:h-[min(82dvh,760px)] sm:w-[min(440px,calc(100vw-40px))] sm:rounded-3xl">
     <header className="flex shrink-0 items-center gap-3 border-b border-slate-700 bg-[#1b2a40] p-4">
      <div className="flex size-11 items-center justify-center rounded-xl bg-orange-500/15 text-orange-300"><Sparkles size={24}/></div>
-     <div className="min-w-0 flex-1"><Dialog.Title className="text-sm font-black">Trợ lý Studio</Dialog.Title><Dialog.Description className="mt-1 text-[11px] text-slate-400">{status?.active?
-   "AI "+status.provider+" • hiểu trang và hội thoại nhiều lượt":
-   "Offline • Admin có thể bật Gemini / DeepSeek / OpenAI / OrcaRouter"}</Dialog.Description></div>
+     <div className="min-w-0 flex-1"><Dialog.Title className="text-sm font-black">Nuvora Copilot</Dialog.Title><Dialog.Description className="mt-1 text-[11px] text-slate-400">{status?.active&&status.provider==="openai"?
+   "OpenAI GPT-4o mini · phản hồi API thật":
+   "OpenAI chưa sẵn sàng · cấu hình tại /admin/ai"}</Dialog.Description></div>
      <button type="button" onClick={()=>{setMessages([]);setError("");}} className="rounded-lg border border-slate-600 p-2 text-slate-300 hover:bg-slate-700" title="Xóa hội thoại trong phiên" aria-label="Xóa đoạn chat"><RotateCcw size={18}/></button>
      <Dialog.Close className="rounded-lg border border-slate-600 p-2 text-slate-300 hover:bg-slate-700" aria-label="Đóng trợ lý"><X size={18}/></Dialog.Close>
     </header>
@@ -60,11 +65,11 @@ export default function StudioAssistant({projectId,pageId,selectedId,selectedTyp
     <section ref={scrollRef} aria-label="Nội dung trao đổi" aria-live="polite" className="editor-scroll min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
      {messages.length===0&&<div className="rounded-2xl border border-slate-700 bg-[#1b2a40] p-5">
       <p className="mb-2 flex items-center gap-2 text-sm font-black"><BookOpen size={18} className="text-orange-300"/> Bắt đầu từ việc bạn đang làm</p>
-      <p className="text-xs leading-6 text-slate-300">Trợ lý đọc trang, thành phần đang chọn và bản đồ từ Supabase. Khi Admin bật API, trợ lý có thể trò chuyện nhiều lượt, giải thích lỗi và hướng dẫn theo công việc thực tế. Không tự ý sửa dữ liệu.</p>
+      <p className="text-xs leading-6 text-slate-300">Nuvora Copilot gửi hội thoại tới OpenAI thông qua API máy chủ, dùng ngữ cảnh dự án Supabase để hướng dẫn. Không tự sửa dữ liệu.</p>
       <div className="mt-4 flex flex-wrap gap-2">{suggestions.map(s=><button key={s} type="button" disabled={busy} onClick={()=>void send(s)} className="rounded-lg border border-orange-500/30 bg-orange-500/10 px-3 py-2 text-left text-xs leading-5 text-orange-100 hover:border-orange-400">{s}</button>)}</div>
      </div>}
      {messages.map((m,i)=><div key={i} className={"flex "+(m.from==="user"?"justify-end":"justify-start")}><div className={"max-w-[94%] rounded-2xl p-4 text-xs leading-6 "+(m.from==="user"?"rounded-br-sm bg-orange-500 text-white":"rounded-bl-sm border border-slate-700 bg-slate-800 text-slate-100")}>
-      {m.from==="studio"&&<p className="mb-2 flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-orange-300"><Sparkles size={13}/>{m.mode==="gemini"?"Google Gemini AI":m.mode==="deepseek"?"DeepSeek AI":m.mode==="openai"?"OpenAI AI":m.mode==="orcarouter"?"OrcaRouter AI":"Hướng dẫn offline (không dùng API)"}</p>}
+      {m.from==="studio"&&<p className="mb-2 flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-orange-300"><Sparkles size={13}/>OpenAI GPT-4o mini</p>}
       <p className="whitespace-pre-line">{m.text}</p>
      </div></div>)}
      {busy&&<p role="status" className="flex items-center gap-2 text-xs text-slate-300"><LoaderCircle size={16} className="animate-spin"/> Đang phân tích câu hỏi...</p>}
@@ -72,8 +77,8 @@ export default function StudioAssistant({projectId,pageId,selectedId,selectedTyp
     </section>
     <form onSubmit={submit} className="shrink-0 border-t border-slate-700 bg-[#1b2a40] p-3 sm:p-4">
      <div className="flex gap-2"><label className="min-w-0 flex-1"><span className="sr-only">Nhập câu hỏi cho trợ lý</span><input value={question} onChange={e=>setQuestion(e.target.value)} required minLength={2} maxLength={1600} placeholder="Hỏi về công cụ, game, giao diện..." className="w-full rounded-xl border border-slate-600 bg-[#0b1424] p-3 text-sm text-white outline-none focus:border-orange-500"/></label><button type="submit" disabled={busy||question.trim().length<2||question.length>1600} className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-orange-500 text-white disabled:opacity-40" aria-label="Gửi câu hỏi">{busy?<LoaderCircle size={19} className="animate-spin"/>:<Send size={19}/>}</button></div>
-     <p className="mt-2 text-[10px] leading-4 text-slate-400">{status?.notice??"Đang kiểm tra trạng thái AI..."}.
-      {status?.active?" Nội dung câu hỏi, lịch sử chat gần đây và mô tả dự án sẽ được gửi tới nhà cung cấp AI; không gửi API key.":" Chỉ Admin được phép kích hoạt dịch vụ AI."}</p>
+     <p className="mt-2 text-[10px] leading-4 text-slate-400">{status?.active&&status.provider==="openai"?"OpenAI được bật; lượt gọi có giới hạn theo tài khoản.":"Admin cần cấu hình OPENAI_API_KEY trong Vercel và bật OpenAI tại /admin/ai."}
+      {status?.active&&status.provider==="openai"?" Nội dung câu hỏi, lịch sử chat gần đây và mô tả dự án sẽ được gửi tới nhà cung cấp AI; không gửi API key.":" Chỉ Admin được phép kích hoạt dịch vụ AI."}</p>
     </form>
    </Dialog.Content>
   </Dialog.Portal>

@@ -1,7 +1,7 @@
 "use client";
 import {useState,type FormEvent} from "react";
 import {Bot,Code2,Download,LoaderCircle} from "lucide-react";
-import {generateNpcLogic,approveNpcLogic,type LogicResult} from "@/app/ai-logic/actions";
+import {approveNpcLogic,type LogicResult} from "@/app/ai-logic/actions";
 export default function NpcLogicPanel({projectId}:{projectId:string}){
  const [prompt,setPrompt]=useState("");
  const [busy,setBusy]=useState(false);
@@ -11,8 +11,12 @@ export default function NpcLogicPanel({projectId}:{projectId:string}){
  const submit=async(event:FormEvent<HTMLFormElement>)=>{
   event.preventDefault();if(busy)return;
   setBusy(true);setResult(null);setApproved(false);setApprovalError("");
-  try{setResult(await generateNpcLogic(projectId,prompt));}
-  catch{setResult({ok:false,error:"Kết nối thất bại. Hãy kiểm tra mạng."});}
+  try{
+   const response=await fetch("/api/generate-logic",{method:"POST",headers:{"content-type":"application/json"},credentials:"same-origin",body:JSON.stringify({projectId,prompt})});
+   const data=await response.json() as LogicResult|{error:string};
+   if(response.ok&&"ok" in data&&data.ok)setResult(data);
+   else setResult({ok:false,error:"error" in data?data.error:"Không thể tạo logic NPC."});
+  }catch{setResult({ok:false,error:"Kết nối OpenAI thất bại. Hãy kiểm tra mạng."});}
   finally{setBusy(false);}
  };
  const download=()=>{
@@ -28,7 +32,7 @@ export default function NpcLogicPanel({projectId}:{projectId:string}){
     placeholder="Tạo NPC đi tuần và tấn công khi phát hiện kẻ địch. Khi mất dấu thì quay lại tuần tra."
     value={prompt} onChange={e=>setPrompt(e.target.value)}
     className="w-full resize-y rounded-lg border border-slate-600 bg-slate-950 p-3 text-sm text-white outline-none focus:border-orange-400"/>
-   <p className="text-xs text-slate-400">Yêu cầu được xử lý bởi AI thật khi Admin đã bật provider và hạn mức. Kết quả là state machine có kiểm tra cấu trúc, không chạy mã JavaScript trực tiếp từ model.</p>
+   <p className="text-xs text-slate-400">Yêu cầu được gửi tới OpenAI GPT-4o mini khi Admin đã bật và có quota. Kết quả là state machine có kiểm tra cấu trúc, không chạy mã JavaScript trực tiếp từ model.</p>
    <button type="submit" disabled={busy} className="flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
     {busy?<LoaderCircle size={17} className="animate-spin"/>:<Bot size={17}/>} Tạo logic NPC</button>
   </form>

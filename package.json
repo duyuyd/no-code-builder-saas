@@ -1,5 +1,5 @@
 {
-  "name": "no-code-builder-saas",
+  "name": "nuvoracraft",
   "version": "0.1.0",
   "private": true,
   "engines": {
@@ -41,7 +41,8 @@
     "@aws-sdk/s3-request-presigner": "3.1169.0",
     "@react-three/xr": "6.6.32",
     "yjs": "^13.6.28",
-    "qrcode": "1.5.4"
+    "qrcode": "1.5.4",
+    "openai": "7.55.0"
   },
   "devDependencies": {
     "typescript": "^5.8.3",

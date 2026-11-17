@@ -29,11 +29,10 @@ export default function AdminAiForm({initial,keys}:{initial:AiConfig;keys:Record
     <option value="gemini">Google Gemini</option>
     <option value="deepseek">DeepSeek</option>
     <option value="openai">OpenAI</option>
-    <option value="orcarouter">OrcaRouter (Free)</option>
    </select>
   </label>
   <label className="block text-xs font-semibold text-slate-200">Mã model
-   <input name="model" value={model} onChange={e=>setModel(e.target.value)} readOnly={provider==="orcarouter"} maxLength={80} required className={input}/>
+   <input name="model" value={model} onChange={e=>setModel(e.target.value)} maxLength={80} required className={input}/>
    <span className="mt-1 block font-normal text-slate-400">Giá và quyền truy cập phụ thuộc tài khoản của bạn; kiểm tra trên trang nhà cung cấp trước khi bật.</span>
   </label>
   <div className={"flex items-start gap-3 rounded-xl border p-4 "+(keys[provider]?"border-emerald-800 bg-emerald-950/20":"border-amber-700/60 bg-amber-950/20")}>
@@ -45,7 +44,7 @@ export default function AdminAiForm({initial,keys}:{initial:AiConfig;keys:Record
   </div>
   <label className="flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-4 text-xs font-semibold text-white">
    <input name="enabled" type="checkbox" checked={enabled} onChange={e=>setEnabled(e.target.checked)} disabled={!keys[provider]} className="size-5 accent-orange-500"/>
-   Bật AI trả lời trực tiếp bằng {provider==="gemini"?"Gemini":provider==="deepseek"?"DeepSeek":provider==="orcarouter"?"OrcaRouter Free":"OpenAI"}
+   Bật AI trả lời trực tiếp bằng {provider==="gemini"?"Gemini":provider==="deepseek"?"DeepSeek":"OpenAI"}
   </label>
   <div className="grid gap-4 sm:grid-cols-3">
    <label className="block text-xs font-semibold text-slate-200">Lượt/người/ngày
@@ -64,7 +63,7 @@ export default function AdminAiForm({initial,keys}:{initial:AiConfig;keys:Record
   </div>
   {state.message&&<p role="status" className={"rounded-xl border p-3 text-xs leading-6 "+(state.ok?"border-emerald-700 bg-emerald-950/20 text-emerald-300":"border-rose-700 bg-rose-950/20 text-rose-200")}>{state.message}</p>}
   {testResult&&<p role="status" className={"rounded-xl border p-3 text-xs leading-6 "+(testResult.ok?"border-emerald-700 bg-emerald-950/20 text-emerald-300":"border-rose-700 bg-rose-950/20 text-rose-200")}>{testResult.message}</p>}
-  <button type="button" onClick={()=>void testConnection()} disabled={checking||pending} className="w-full rounded-xl border border-orange-500/50 px-5 py-3 text-sm font-bold text-orange-200 disabled:opacity-50">{checking?"Đang kiểm tra…":"Kiểm tra kết nối OrcaRouter Free đã lưu"}</button>
+  <button type="button" onClick={()=>void testConnection()} disabled={checking||pending} className="w-full rounded-xl border border-orange-500/50 px-5 py-3 text-sm font-bold text-orange-200 disabled:opacity-50">{checking?"Đang kiểm tra…":"Kiểm tra kết nối AI thực qua API"}</button>
   <button type="submit" disabled={pending} className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 py-3.5 text-sm font-black text-white disabled:opacity-50"><Save size={18}/>{pending?"Đang lưu":"Lưu cấu hình AI"}</button>
  </form>;
 }
