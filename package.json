@@ -17,7 +17,8 @@
     "test:native": "node tests/native-workflow-regression.cjs",
     "test:growth": "node tests/growth-regression.cjs",
     "test:ecosystem": "node tests/ecosystem-regression.cjs",
-    "test:chai": "node tests/chaibuilder-bridge-regression.cjs"
+    "test:chai": "node tests/chaibuilder-bridge-regression.cjs",
+    "test:forms": "node tests/auto-database-regression.cjs"
   },
   "dependencies": {
     "next": "15.5.29",

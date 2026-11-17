@@ -104,7 +104,7 @@ export default async function BuilderPage({ searchParams }: {
             <Link href="/sign" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">✍️ Ký tài liệu PDF</Link>
             <Link href="/characters" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🧍 Xưởng nhân vật 3D</Link>
             <Link href="/assets" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🖼️ Kho ảnh của tôi</Link>
-            <Link href={"/builder/chai-import?project="+project.id+"&page="+page.id} className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🫖 Chai Builder Import</Link><Link href="/resources" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🧩 Game Asset / Icon / Thời trang</Link>
+            <Link href={"/builder/chai-import?project="+project.id+"&page="+page.id} className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🫖 Chai Builder Import</Link><Link href="/import-figma" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🎨 Import Figma</Link><Link href={"/video-studio?project="+project.id+"&page="+page.id} className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🎬 Video Studio</Link><Link href={"/form-data?project="+project.id} className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🗃️ Auto-Database</Link><Link href="/resources" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">🧩 Game Asset / Icon / Thời trang</Link>
             <Link href="/pricing" className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-700">💳 Bảng giá</Link>
           </nav>
         </details>
