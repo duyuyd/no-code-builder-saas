@@ -86,10 +86,10 @@ export async function getStudioAssistantStatus():Promise<AssistantStatus>{
   if(!user)return {active:false,provider:"offline",model:"",notice:"Cần đăng nhập"};
   const {data}=await db.from("platform_settings").select("value").eq("key","studio_ai_config").maybeSingle();
   const cfg=readAiConfig(data?.value);
-  const active=aiIsAvailable(cfg);
+  const active=aiIsAvailable(cfg)&&cfg.provider==="openai";
   return {active,provider:active?cfg.provider:"offline",model:active?cfg.model:"",
    notice:active?"AI "+cfg.provider+" đã bật và phát hiện khóa (chưa xác minh phản hồi API) • "+cfg.model:
-    cfg.enabled?"Chưa có API key trên máy chủ; đang ở chế độ offline":"Admin chưa bật AI; đang ở chế độ offline"};
+    cfg.enabled?"Chưa có API key trên máy chủ; đang ở chế độ offline":"Admin chưa bật OpenAI; cần cấu hình API key server-side"};
  }catch{return {active:false,provider:"offline",model:"",notice:"Không kiểm tra được kết nối AI"};}
 }
 export async function askStudioAssistant(input:Input):Promise<AssistantResponse>{
