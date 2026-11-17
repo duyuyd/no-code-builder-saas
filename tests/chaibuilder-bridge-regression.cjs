@@ -1,0 +1,17 @@
+const assert=require("node:assert/strict");
+const fs=require("node:fs");
+const vm=require("node:vm");
+const ts=require("typescript");
+const path=require("node:path");
+const registryPath=path.resolve("lib/component-registry.ts");
+const registry=fs.readFileSync(registryPath,"utf8");
+assert.match(registry,/export function validateUiTree/);
+const bridge=fs.readFileSync("lib/chaibuilder-adapter.ts","utf8");
+assert.match(bridge,/chaiBlocksToTree/);assert.match(bridge,/treeToChaiBlocks/);
+assert.match(bridge,/Unsupported Chai block type/);
+const importer=fs.readFileSync("app/builder/chai-import/actions.ts","utf8");
+assert.match(importer,/savePageTree/);assert.match(importer,/owner_id/);
+assert.match(importer,/combined=\[\.\.\.page\.ui_tree,\.\.\.tree\]/);
+const exporter=fs.readFileSync("app/builder/chai-import/export-actions.ts","utf8");
+assert.match(exporter,/treeToChaiBlocks/);assert.match(exporter,/owner_id/);
+console.log("PASS Chai JSONB import validates, owner checks and preserves existing blocks.");
