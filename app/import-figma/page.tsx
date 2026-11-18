@@ -31,6 +31,6 @@ export default async function ImportFigmaPage({searchParams}:{searchParams:Promi
     </div>
     <FigmaPageImporter projectId={chosen.id} pageId={page.id}/>
    </>}
-   <p className="mt-5 text-xs leading-6 text-slate-500">Figma REST API yêu cầu token được cấu hình ở máy chủ, kể cả khi URL có thể xem công khai. Tài nguyên vector/hiệu ứng không được tái tạo chính xác sẽ cần chỉnh sửa sau khi nhập.</p>
+   <p className="mt-5 text-xs leading-6 text-slate-500">Sử dụng Personal Access Token có quyền đọc tệp Figma. Token chỉ dùng cho yêu cầu nhập hiện tại, không lưu trong cơ sở dữ liệu. Vector và hiệu ứng phức tạp có thể cần hoàn thiện trong Builder.</p>
   </div></main>;
 }
