@@ -1,4 +1,4 @@
-# Phase 7 · NPT Duy Studio Native Runtime & Publishing
+# Phase 7 · NuvoraCraft by NPTduy Native Runtime & Publishing
 
 ## Deployment scope
 - Existing 2D/3D, projects and pages are retained. No Git replacement or paid provider activation.
