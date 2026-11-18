@@ -7,7 +7,7 @@ export type UnifiedChaiBlock={
 };
 const eligible=new Set(["Box","Row","Column","Heading","Text","Paragraph","Button","Link","Image","Divider","Form","Input","TextArea","Checkbox","Select"]);
 function asObject(v:unknown):Record<string,unknown>|null{return v&&typeof v==="object"&&!Array.isArray(v)?v as Record<string,unknown>:null;}
-export function toUnifiedChai(tree:BuilderNode[]):UnifiedChaiBlock[]{
+export function migrateToChai(tree:BuilderNode[]):UnifiedChaiBlock[]{
  if(!validateUiTree(tree))throw Error("Invalid legacy ui_tree");
  const out:UnifiedChaiBlock[]=[];
  const walk=(nodes:BuilderNode[],parent:string|null)=>{
@@ -19,6 +19,8 @@ export function toUnifiedChai(tree:BuilderNode[]):UnifiedChaiBlock[]{
  };
  walk(tree,null);return out;
 }
+export const toUnifiedChai=migrateToChai;
+
 export function fromUnifiedChai(input:unknown):BuilderNode[]{
  if(!Array.isArray(input)||input.length>1500)throw Error("Too many Chai blocks");
  const flat=input as UnifiedChaiBlock[];
