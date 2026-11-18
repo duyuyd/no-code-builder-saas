@@ -27,7 +27,7 @@ if(composition.durationInFrames!==450||composition.fps!==30||composition.width!=
 console.log("RENDER_FRAMES="+composition.durationInFrames+" FPS="+composition.fps+" SIZE="+composition.width+"x"+composition.height);
 let lastProgress=-1;
 await renderMedia({serveUrl,composition,codec:"h264",outputLocation:output,inputProps,
- videoBitrate:"8M",crf:6,
+ videoBitrate:"8M",
  onProgress:({progress})=>{
   const p=Math.floor(progress*10);
   if(p>lastProgress){lastProgress=p;console.log("RENDER_PROGRESS="+(p*10)+"%");}
