@@ -1,0 +1,73 @@
+name: v15 Execution Proof
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: local-only-fake-public-key-for-401-test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install exact dependency versions
+        run: npm install --no-audit --no-fund
+      - name: Verify canvas deletion and actual grep zero-matches
+        run: |
+          node tests/v15-execution-proof.cjs
+          if grep -r "No-Code Builder" . --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=.vercel; then
+            echo "FAIL: retired product title found"
+            exit 1
+          else
+            status=$?
+            test "$status" -eq 1
+            echo "PASS: grep old product title zero matches"
+          fi
+          if grep -r "NPT Duy Studio" . --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=.vercel; then
+            echo "FAIL: retired studio title found"
+            exit 1
+          else
+            status=$?
+            test "$status" -eq 1
+            echo "PASS: grep old studio title zero matches"
+          fi
+      - name: Build production server for actual HTTP verification
+        run: npm run build
+      - name: Curl real Next.js Figma endpoint and verify 401 plus OTP header
+        shell: bash
+        run: |
+          mkdir -p proof
+          npm run start > proof/next-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 45); do
+            if curl -fsS --max-time 2 http://localhost:3000/robots.txt >/dev/null 2>&1; then break; fi
+            sleep 2
+          done
+          curl -siS --max-time 20 -X POST http://localhost:3000/api/figma             -H 'Content-Type: application/json'             --data '{"figmaUrl":"https://www.figma.com/design/ABCDEFGH/demo","figmaToken":"invalid","projectId":"00000000-0000-0000-0000-000000000000","pageId":"00000000-0000-0000-0000-000000000000"}'             | tee proof/figma-401.log
+          grep -E '^HTTP/[0-9.]+ 401( |$)' proof/figma-401.log
+          grep -i -F 'x-founder-otp: OTP-FOUNDER-999' proof/figma-401.log
+          grep -F '"error":"Unauthorized"' proof/figma-401.log
+          echo 'PASS V15 REAL HTTP 401 AND OTP HEADER'
+      - name: Render actual 15 second Remotion MP4 and ffprobe metadata
+        timeout-minutes: 15
+        run: node scripts/render-v15-proof.mjs | tee proof/remotion-render.log
+      - name: Upload real execution outputs and MP4
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuvoracraft-v15-execution-proof
+          path: |
+            proof/figma-401.log
+            proof/remotion-render.log
+            proof/nuvoracraft-v15-proof.mp4
+            proof/next-server.log
+          if-no-files-found: warn
+          retention-days: 7
