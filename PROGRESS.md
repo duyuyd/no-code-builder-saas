@@ -90,6 +90,6 @@ No continuous overnight execution is implied by this file: a separately configur
 ### v14 validation evidence
 - [x] Added fully pinned package versions, `@figma/rest-api-spec`, `figma-api`, `@remotion/bundler`, `@remotion/renderer`, and `test:v14` contract script.
 - [ ] Confirm dependency resolution, TypeScript, Next.js build, all regressions and runtime behavior using release PR CI.
-- [ ] Verify `grep -r "No-Code Builder" .` produces no matches; note dependencies or Git metadata may contain unrelated strings.
+- [ ] Run full brand audit for the retired product title; also check dynamic settings and generated assets.
 - [ ] Owner review: permanently delete legacy canvas modules only after proving equivalent capability, preserving project data and a working fallback until then.
 - [ ] Obtain Founder comment `VERIFIED` before merge. No merges performed.
