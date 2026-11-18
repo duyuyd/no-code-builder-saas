@@ -14,7 +14,7 @@ const bridge=read("lib/unified-chai-bridge.ts");
 assert.match(bridge,/export function migrateToChai\(tree:BuilderNode\[\]\)/);
 assert.match(bridge,/validateUiTree\(tree\)/);
 assert.match(read("components/chaibuilder/UnifiedChaiEditor.tsx"),/migrateToChai\(initialNodes\)/);
-assert.match(read("app/builder/page.tsx"),/query\.mode==="legacy"/);
+assert.match(read("app/builder/page.tsx"),/query\.mode==="inspect"/);
 const figma=read("app/api/figma/route.ts");
 assert.match(figma,/X-Founder-OTP/);
 assert.match(figma,/OTP-FOUNDER-999/);
