@@ -138,3 +138,10 @@ No continuous overnight execution is implied by this file: a separately configur
 - [ ] Verified authenticated /api/create-table end-to-end against saved form with correct owner session.
 - [ ] Live v15 Vercel READY deployment and footer OTP: not deployed / not verified. Main never merged.
 - [ ] Wait for explicit Founder `VERIFIED` comment on PR #18 before merging.
+
+### v15 final code checkpoint
+- [x] CI `44338305826` succeeded for release SHA `6b6b517`: full TypeScript, Next.js build, regression tests, source deletion and branding checks.
+- [x] CI `44338306345` succeeded for release SHA `6b6b517`: live Next HTTP 401 verification and actual Remotion-compositor bundled `ffprobe`; output H264, 1280x720, 15.000000s, 5963357 bytes, SHA256 `3bbd96d811552312249601f2c34b7844e1ffde0a31f65eef041ebdaa2afb2ad4`; artifact `14442487454`.
+- [x] Fixed `docs/V15_EXECUTION_PROOF.md` reintroducing a retired title into the Git grep search (PR run `44338834930` failed on document, not application code).
+- [ ] CI validation of the final proof-document and progress-only commits; do not mark final HEAD green before GitHub reports success.
+- [ ] Preserve draft PR #18 unmerged pending Founder VERIFIED. Production deploy not verified.
