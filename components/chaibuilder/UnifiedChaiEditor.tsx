@@ -3,7 +3,7 @@ import {useMemo,useRef,useState} from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import type {BuilderNode} from "@/lib/component-registry";
-import {toUnifiedChai} from "@/lib/unified-chai-bridge";
+import {migrateToChai} from "@/lib/unified-chai-bridge";
 import {saveUnifiedChai} from "@/app/builder/chai-save-actions";
 import {publishProject,unpublishProject} from "@/app/builder/actions";
 import {registerNuvoraBlocks} from "./ChaiRegistry";
@@ -12,7 +12,7 @@ export default function UnifiedChaiEditor({projectId,pageId,projectName,pagePath
  projectId:string;pageId:string;projectName:string;pagePath:string;initialNodes:BuilderNode[];initialVersion:number;initiallyPublished:boolean;
 }){
  registerNuvoraBlocks();
- const blocks=useMemo(()=>toUnifiedChai(initialNodes),[initialNodes]);
+ const blocks=useMemo(()=>migrateToChai(initialNodes),[initialNodes]);
  const version=useRef(initialVersion),base=useRef(initialNodes);
  const [published,setPublished]=useState(initiallyPublished),[notice,setNotice]=useState(""),[saving,setSaving]=useState(false);
  const save=async({blocks:updated}:{blocks:unknown[]})=>{
