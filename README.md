@@ -2,7 +2,7 @@
 
 <img src="./public/demo/nuvoracraft-banner.svg" alt="NuvoraCraft by NPTduy — build websites, apps and 3D games" width="100%" />
 
-# NuvoraCraft
+# NuvoraCraft by NPTduy
 
 **Build websites. Design apps. Create 3D worlds. Without switching tools.**
 
