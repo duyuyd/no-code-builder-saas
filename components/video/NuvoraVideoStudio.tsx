@@ -18,7 +18,7 @@ export default function NuvoraVideoStudio(props:Props){
    const compatible=await canRenderMediaOnWeb({width:1280,height:720,videoCodec:"h264",container:"mp4",muted:true});
    if(!compatible.canRender)throw new Error("Trình duyệt không hỗ trợ H.264 MP4 WebCodecs: "+compatible.issues.map(x=>x.message).join("; "));
    const job=await renderMediaOnWeb({
-    composition:{id:"NuvoraDemo",component:RenderComponent,defaultProps:{...props},durationInFrames:360,fps:30,width:1280,height:720,calculateMetadata:null},
+    composition:{id:"NuvoraDemo",component:RenderComponent,defaultProps:{...props},durationInFrames:450,fps:30,width:1280,height:720,calculateMetadata:null},
     inputProps:props,container:"mp4",videoCodec:"h264",muted:true,signal:controller.signal,
     onProgress:({progress:p})=>setProgress(Math.round(p*100)),
    });
@@ -31,10 +31,10 @@ export default function NuvoraVideoStudio(props:Props){
   finally{cancelling.current=null;setBusy(false);}
  };
  return <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_290px]">
-  <div><div className="overflow-hidden rounded-2xl border border-slate-700 bg-slate-950"><Preview component={RenderComponent} inputProps={{...props}} compositionWidth={1280} compositionHeight={720} fps={30} durationInFrames={360} controls style={{width:"100%",aspectRatio:"16/9"}}/></div><p className="mt-3 text-xs text-slate-400">Bản xem trước 12 giây lấy tên, nội dung và thứ tự các component thật từ pages.ui_tree. Không tự quay màn hình hoặc thu âm.</p></div>
+  <div><div className="overflow-hidden rounded-2xl border border-slate-700 bg-slate-950"><Preview component={RenderComponent} inputProps={{...props}} compositionWidth={1280} compositionHeight={720} fps={30} durationInFrames={450} controls style={{width:"100%",aspectRatio:"16/9"}}/></div><p className="mt-3 text-xs text-slate-400">Bản xem trước 15 giây lấy tên, nội dung và thứ tự các component thật từ pages.ui_tree. Không tự quay màn hình hoặc thu âm.</p></div>
   <aside className="space-y-4 rounded-2xl border border-slate-700 bg-slate-900 p-6">
    <Film size={30} className="text-orange-300"/><h2 className="text-xl font-bold">Tạo Video Demo</h2>
-   <p className="text-sm leading-7 text-slate-400">12 giây · 1280×720 · 30 FPS · MP4 H.264. Render trực tiếp trên thiết bị với Remotion/WebCodecs, không chiếm máy chủ hoặc tạo chi phí cloud.</p>
+   <p className="text-sm leading-7 text-slate-400">15 giây · 1280×720 · 30 FPS · MP4 H.264. Render trực tiếp trên thiết bị với Remotion/WebCodecs, không chiếm máy chủ hoặc tạo chi phí cloud.</p>
    <button onClick={()=>void generate()} disabled={busy} className="flex w-full items-center justify-center gap-3 rounded-xl bg-orange-500 px-4 py-3 font-bold disabled:opacity-50">{busy?<LoaderCircle size={17} className="animate-spin"/>:<Download size={17}/>} {busy?"Rendering "+progress+"%":"Xuất Video MP4"}</button>
    {busy&&<button type="button" onClick={()=>cancelling.current?.abort()} className="block w-full rounded-lg border border-slate-600 px-4 py-2 text-sm">Hủy render</button>}
    {downloaded&&<p role="status" className="text-sm text-emerald-300">Đã tạo và gửi tệp MP4 để tải xuống.</p>}
