@@ -124,3 +124,17 @@ No continuous overnight execution is implied by this file: a separately configur
 - [ ] Authenticated /api/create-table endpoint invoking ensure_nuvora_form via real user session tested. Current proof table was created using Supabase DDL migration.
 - [ ] Vercel deployment for v15.0 verified READY; do not treat source changes as live production.
 - [ ] Founder comments VERIFIED on release PR before merge.
+
+### Verified execution checkpoint — 2026-11-18
+
+- [x] REAL CI `44336206255` on v15 release succeeded: Typecheck, Next production build, bridge tests, exact versions, retired-brand grep, deleted old canvases, actual SHA-256 from `sha256sum`. ChaiBuilder primary; read-only source inspector remains.
+- [x] REAL CI `44336206081`: Next production server responded `HTTP/1.1 401 Unauthorized`, header `x-founder-otp: OTP-FOUNDER-999`, body `{"ok":false,"error":"Unauthorized"}`. Unauthorized test only; upstream Figma token not verified in authenticated session.
+- [x] REAL CI `44337446866`: Remotion `450` frames at `30` FPS, 1280×720, actual MP4 `5876891` bytes. `ffprobe` exit 0 reported H.264, 15.000000 seconds, size 5876891 bytes; MP4 SHA-256 `63c1c502247f445c7abc68f3d1657d6506f5ab0c31c65f8cccbe5d0b1fcc7299`. Artifact ID `14443175851`. This is local CI renderer, not Vercel runtime.
+- [x] REAL Supabase `apply_migration`: created `private_forms.v15_execution_proof_20261118`, six verified columns, RLS enabled, all client table privileges revoked. This verifies physical DDL, NOT authenticated web /api/create-table RPC.
+- [x] REAL Supabase `apply_migration`: revoked anonymous execute on 3 sensitive form RPC functions; post-migration query confirmed `anon_ensure=false`, `anon_submit=false`, `anon_list=false`, `signed_in_ensure=true`. Security advisor no longer reported anonymous executable SECURITY DEFINER functions. Tracked SQL migration `20261118_v15_revoke_anon_form_rpc.sql`.
+- [x] Detailed raw evidence and limitations captured in `docs/V15_EXECUTION_PROOF.md`.
+- [ ] Verify newest v15 HEAD GitHub Actions, including bundled ffprobe improvement, before declaring final HEAD green.
+- [ ] Verified authorized Figma API request with invalid token and real import with valid token.
+- [ ] Verified authenticated /api/create-table end-to-end against saved form with correct owner session.
+- [ ] Live v15 Vercel READY deployment and footer OTP: not deployed / not verified. Main never merged.
+- [ ] Wait for explicit Founder `VERIFIED` comment on PR #18 before merging.
