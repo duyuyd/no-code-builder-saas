@@ -46,3 +46,8 @@ jobs:
 
       - name: Absolute Lockdown v14 API and dependency contracts
         run: npm run test:v14
+
+      - name: Public branding audit
+        run: |
+          if git grep -n -F "$(printf '%s%s' No '-Code Builder')"; then echo "Retired brand string remains"; exit 1; fi
+          if git grep -n -F "$(printf '%s%s' 'NPT Duy' ' Studio')"; then echo "Retired studio string remains"; exit 1; fi
