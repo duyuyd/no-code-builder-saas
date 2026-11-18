@@ -1,7 +1,8 @@
 import {bundle} from "@remotion/bundler";
 import {ensureBrowser,selectComposition,renderMedia} from "@remotion/renderer";
-import {mkdir,readFile,stat} from "node:fs/promises";
+import {mkdir,readFile,stat,readdir,access} from "node:fs/promises";
 import {join,resolve} from "node:path";
+import {constants as fsConstants} from "node:fs";
 import {createHash} from "node:crypto";
 import {spawnSync} from "node:child_process";
 
@@ -39,7 +40,15 @@ console.log("MP4_FILE="+output);
 console.log("MP4_BYTES="+info.size);
 console.log("MP4_SHA256="+hash);
 if(data.subarray(4,8).toString("ascii")!=="ftyp")throw Error("Invalid MP4 header");
-const probe=spawnSync("ffprobe",[
+let ffprobeExecutable="ffprobe";
+const remotionDir=resolve("node_modules/@remotion");
+for(const dirname of await readdir(remotionDir)){
+ if(!dirname.startsWith("compositor-"))continue;
+ const candidate=join(remotionDir,dirname,"ffprobe");
+ try{await access(candidate,fsConstants.X_OK);ffprobeExecutable=candidate;break;}catch{}
+}
+console.log("FFPROBE_EXECUTABLE="+ffprobeExecutable);
+const probe=spawnSync(ffprobeExecutable,[
  "-v","error","-show_entries","stream=codec_name,width,height","-show_entries",
  "format=format_name,duration,size","-of","json",output
 ],{encoding:"utf8"});
