@@ -101,3 +101,10 @@ No continuous overnight execution is implied by this file: a separately configur
 - [x] Live public `site_title` is currently `NuvoraCraft`; new conditional release migration stages full `NuvoraCraft by NPTduy` title, NOT applied to live DB.
 - [x] Brand audit step added to PR CI, verifying retired titles are absent from tracked files.
 - [ ] Run complete PR CI after the TypeScript repair; perform live functional tests before Founder approval.
+
+### v14 release CI checkpoint
+- [x] CI run `44333361436` passed on `833eee4`: npm install, TypeScript, Next.js production build, all legacy regression suites and `test:v14` (GitHub Actions verified).
+- [x] Added owner-scoped Node rendering button, security origin check to Figma API, staged brand migration, and runnable test instructions in `docs/V14_RUNBOOK.md`.
+- [ ] Verify latest branch head CI after `155f7cf`; verify real 15-second video via ffprobe and >1MB, authentic Figma import, and physical table creation.
+- [ ] Legacy canvas removal still gated on full behavior parity, otherwise it would disable the only proven recovery editor.
+- [ ] Neither PR merge nor Supabase writes have occurred. Await Founder VERIFIED.
