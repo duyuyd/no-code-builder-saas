@@ -12,6 +12,9 @@ const unauthorized=()=>NextResponse.json(
 );
 
 export async function POST(request:Request){
+ const origin=request.headers.get("origin");
+ if(origin&&origin!==new URL(request.url).origin)
+  return NextResponse.json({ok:false,error:"Invalid request origin"},{status:403});
  try{
   const {data:{user},error:authError}=await (await createClient()).auth.getUser();
   if(authError||!user)return unauthorized();
