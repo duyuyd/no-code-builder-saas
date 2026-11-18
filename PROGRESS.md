@@ -79,10 +79,17 @@ No continuous overnight execution is implied by this file: a separately configur
 ## Absolute Lockdown v14 (release/v14.0; 2026-11-18 22:05 Asia/Ho_Chi_Minh)
 - [x] Created isolated release branch from `4146f055`; main untouched.
 - [x] Main CI `44203677608` completed successfully before work.
-- [ ] Task 1: Add explicit lossless `migrateToChai(tree)` adapter, protect existing JSONB and verify regression.
+- [x] Task 1: Added lossless `migrateToChai(tree)` and regression parity coverage; existing `ui_tree` remains canonical. CI verification still pending.
 - [ ] Task 1: Retire the former canvas files ONLY when import/render equivalence and replacement UI have been proven; preserve a working legacy fallback meanwhile.
 - [ ] Task 1: Audit dynamic branding sources and grep obsolete public branding.
-- [ ] Task 2: Real authenticated Figma REST endpoint, protected import and 401 contract.
-- [ ] Task 3: Remotion 15-second MP4 download with real verified media output.
-- [ ] Task 4: Owner-scoped form table creation through validated RPC; physical DDL restricted to authorized users.
+- [x] Task 2: Added authenticated `POST /api/figma`, per-request token, strict 401 response header, real API request and owner-scoped append-to-page; live token check pending.
+- [x] Task 3 code: 450 frames at 30 FPS in preview/browser, registered Remotion composition and Node MP4 render endpoint. Actual ffprobe / >1MB media verification and production Node runtime verification pending.
+- [x] Task 4 code: Added authenticated `POST /api/create-table`, validates against saved form tree, calls existing physical-DDL RPC; Chai toolbar offers a table-creation panel. Live Supabase verification pending.
 - [ ] Confirm release branch CI and human VERIFIED before any main merge. No paid services enabled.
+
+### v14 validation evidence
+- [x] Added fully pinned package versions, `@figma/rest-api-spec`, `figma-api`, `@remotion/bundler`, `@remotion/renderer`, and `test:v14` contract script.
+- [ ] Confirm dependency resolution, TypeScript, Next.js build, all regressions and runtime behavior using release PR CI.
+- [ ] Verify `grep -r "No-Code Builder" .` produces no matches; note dependencies or Git metadata may contain unrelated strings.
+- [ ] Owner review: permanently delete legacy canvas modules only after proving equivalent capability, preserving project data and a working fallback until then.
+- [ ] Obtain Founder comment `VERIFIED` before merge. No merges performed.
