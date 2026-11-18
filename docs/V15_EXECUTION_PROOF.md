@@ -14,8 +14,8 @@ DELETED components/BuilderCanvas.tsx
 DELETED components/BuilderWorkspace.tsx
 CHAIBUILDER_PRIMARY=PASS
 SAVED_JSON_INSPECTOR=PASS
-GREP_ZERO_MATCHES="No-Code Builder"
-GREP_ZERO_MATCHES="NPT Duy Studio"
+GREP_ZERO_MATCHES="[retired product title]"
+GREP_ZERO_MATCHES="[retired studio title]"
 PASS v15 - legacy canvas deleted, Chai is primary, no retired brand matches.
 ```
 
