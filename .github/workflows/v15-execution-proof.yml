@@ -22,7 +22,7 @@ jobs:
       - name: Verify canvas deletion and actual grep zero-matches
         run: |
           node tests/v15-execution-proof.cjs
-          if grep -r "No-Code Builder" . --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=.vercel; then
+          if grep -r "No-Code Builder" . --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=.vercel --exclude=v15-execution-proof.yml; then
             echo "FAIL: retired product title found"
             exit 1
           else
@@ -30,7 +30,7 @@ jobs:
             test "$status" -eq 1
             echo "PASS: grep old product title zero matches"
           fi
-          if grep -r "NPT Duy Studio" . --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=.vercel; then
+          if grep -r "NPT Duy Studio" . --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=.vercel --exclude=v15-execution-proof.yml; then
             echo "FAIL: retired studio title found"
             exit 1
           else
