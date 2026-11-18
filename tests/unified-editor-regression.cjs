@@ -16,6 +16,8 @@ root.children.find(x=>x.type==="memory").props.symbols="a|b|c";
 assert.ok(regs.validateUiTree([root]));
 const flat=bridge.toUnifiedChai([root]);
 const back=bridge.fromUnifiedChai(flat);
+assert.equal(JSON.stringify(bridge.migrateToChai([root])),JSON.stringify(flat),"migrateToChai must preserve every legacy node in the Chai model");
+assert.throws(()=>bridge.migrateToChai([{id:"invalid",type:"unknown",props:{},style:{},children:[]}]),/Invalid legacy ui_tree/);
 assert.equal(JSON.stringify(back),JSON.stringify([root]),"lossless legacy ui_tree round trip");
 assert.equal(flat.length,types.length+1);
 const missingContent=flat.map(block=>({...block}));
