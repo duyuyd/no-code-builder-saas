@@ -51,3 +51,8 @@ jobs:
         run: |
           if git grep -n -F "$(printf '%s%s' No '-Code Builder')"; then echo "Retired brand string remains"; exit 1; fi
           if git grep -n -F "$(printf '%s%s' 'NPT Duy' ' Studio')"; then echo "Retired studio string remains"; exit 1; fi
+
+      - name: v15 actual source deletion and grep regression
+        run: |
+          npm run test:v15
+          sha256sum app/builder/page.tsx components/chaibuilder/UnifiedChaiEditor.tsx app/api/figma/route.ts app/api/render-video/route.ts app/api/create-table/route.ts
