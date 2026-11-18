@@ -40,9 +40,17 @@ jobs:
           grep -i -F 'x-founder-otp: OTP-FOUNDER-999' proof/figma-401.log
           grep -F '"error":"Unauthorized"' proof/figma-401.log
           echo 'PASS V15 REAL HTTP 401 AND OTP HEADER'
+      - name: Install ffprobe for real MP4 metadata validation
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          ffprobe -version | head -n 1
       - name: Render actual 15 second Remotion MP4 and ffprobe metadata
         timeout-minutes: 15
-        run: node scripts/render-v15-proof.mjs | tee proof/remotion-render.log
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/render-v15-proof.mjs | tee proof/remotion-render.log
       - name: Upload real execution outputs and MP4
         if: always()
         uses: actions/upload-artifact@v4
