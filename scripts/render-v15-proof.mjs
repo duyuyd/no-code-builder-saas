@@ -43,6 +43,7 @@ const probe=spawnSync("ffprobe",[
  "-v","error","-show_entries","stream=codec_name,width,height","-show_entries",
  "format=format_name,duration,size","-of","json",output
 ],{encoding:"utf8"});
+if(probe.error)throw new Error("ffprobe executable unavailable: "+probe.error.message);
 console.log("FFPROBE_EXIT_CODE="+probe.status);
 console.log("FFPROBE_STDOUT_BEGIN");
 process.stdout.write(probe.stdout);
