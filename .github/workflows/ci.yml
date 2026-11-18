@@ -43,3 +43,6 @@ jobs:
         run: npm run test:forms
       - name: Unified editor data preservation regression
         run: npm run test:unified
+
+      - name: Absolute Lockdown v14 API and dependency contracts
+        run: npm run test:v14
