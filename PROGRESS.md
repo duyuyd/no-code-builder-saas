@@ -93,3 +93,11 @@ No continuous overnight execution is implied by this file: a separately configur
 - [ ] Run full brand audit for the retired product title; also check dynamic settings and generated assets.
 - [ ] Owner review: permanently delete legacy canvas modules only after proving equivalent capability, preserving project data and a working fallback until then.
 - [ ] Obtain Founder comment `VERIFIED` before merge. No merges performed.
+
+### CI and Supabase read-only checkpoint (2026-11-18)
+- [x] Main baseline run `44203677608` green, release PR draft #17 opened; main not merged.
+- [x] Release CI `44332898691` failed at Typecheck because initial pinned `@types/node 22.0.0` conflicted with Node Buffer signatures. Updated exact pin to `22.20.5` in `833eee4`; new CI not yet verified.
+- [x] Supabase read-only inspection confirmed `public.ensure_nuvora_form(uuid,text,jsonb)`, `public.nuvora_forms`, and `private_forms` schema exist; zero form metadata rows and no user form tables created during this work.
+- [x] Live public `site_title` is currently `NuvoraCraft`; new conditional release migration stages full `NuvoraCraft by NPTduy` title, NOT applied to live DB.
+- [x] Brand audit step added to PR CI, verifying retired titles are absent from tracked files.
+- [ ] Run complete PR CI after the TypeScript repair; perform live functional tests before Founder approval.
