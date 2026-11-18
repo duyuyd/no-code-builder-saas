@@ -108,3 +108,19 @@ No continuous overnight execution is implied by this file: a separately configur
 - [ ] Verify latest branch head CI after `155f7cf`; verify real 15-second video via ffprobe and >1MB, authentic Figma import, and physical table creation.
 - [ ] Legacy canvas removal still gated on full behavior parity, otherwise it would disable the only proven recovery editor.
 - [ ] Neither PR merge nor Supabase writes have occurred. Await Founder VERIFIED.
+
+## v15.0 — Execution proof (2026-11-18)
+- [x] Created release/v15.0 from v14 head; main remains untouched.
+- [x] Physically deleted components/CanvasNode.tsx, components/BuilderCanvas.tsx, components/BuilderWorkspace.tsx on release branch.
+- [x] Replaced former custom canvas URL with functional read-only JSON inspector and original-tree export; ChaiBuilder remains sole visual editor.
+- [x] Kept migrateToChai()/fromUnifiedChai() lossless bridge and historical JSONB untouched.
+- [x] Added v15 source-deletion and retired-brand regression with SHA-256 CI file hashes.
+- [x] Committed GitHub Actions workflow to execute actual curl against Next.js Figma API, render actual Remotion MP4 and run ffprobe; results not yet observed.
+- [x] Created real private_forms.v15_execution_proof_20261118 via authorized Supabase migration. Subsequent live query returned RLS=true and columns id(uuid), contact_name(text), contact_email(text), score(numeric), is_active(boolean), created_at(timestamptz). This proves physical DDL only, not authenticated create-table HTTP/RPC.
+- [x] Added requested footer marker OTP-FOUNDER-999 to release branch source; NOT live production until deployment.
+- [ ] PR CI and proof workflow execution logs verified for release/v15.0.
+- [ ] Invalid Figma-token response under a valid authenticated session tested, as distinct from an unauthenticated HTTP 401 test.
+- [ ] Actual MP4 >1MB / H264 / 15 s verified by ffprobe and stored artifact.
+- [ ] Authenticated /api/create-table endpoint invoking ensure_nuvora_form via real user session tested. Current proof table was created using Supabase DDL migration.
+- [ ] Vercel deployment for v15.0 verified READY; do not treat source changes as live production.
+- [ ] Founder comments VERIFIED on release PR before merge.
