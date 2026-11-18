@@ -75,3 +75,14 @@ Repository: `duyuyd/no-code-builder-saas`; production branch: `main`.
 5. Update this file in the same working session.
 
 No continuous overnight execution is implied by this file: a separately configured scheduled runner is required.
+
+## Absolute Lockdown v14 (release/v14.0; 2026-11-18 22:05 Asia/Ho_Chi_Minh)
+- [x] Created isolated release branch from `4146f055`; main untouched.
+- [x] Main CI `44203677608` completed successfully before work.
+- [ ] Task 1: Add explicit lossless `migrateToChai(tree)` adapter, protect existing JSONB and verify regression.
+- [ ] Task 1: Retire the former canvas files ONLY when import/render equivalence and replacement UI have been proven; preserve a working legacy fallback meanwhile.
+- [ ] Task 1: Audit dynamic branding sources and grep obsolete public branding.
+- [ ] Task 2: Real authenticated Figma REST endpoint, protected import and 401 contract.
+- [ ] Task 3: Remotion 15-second MP4 download with real verified media output.
+- [ ] Task 4: Owner-scoped form table creation through validated RPC; physical DDL restricted to authorized users.
+- [ ] Confirm release branch CI and human VERIFIED before any main merge. No paid services enabled.
