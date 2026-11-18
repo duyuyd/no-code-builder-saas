@@ -4,6 +4,8 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import type {BuilderNode} from "@/lib/component-registry";
 import {migrateToChai} from "@/lib/unified-chai-bridge";
+import {extractFormSchemas} from "@/lib/auto-database";
+import FormDatabasePanel from "./FormDatabasePanel";
 import {saveUnifiedChai} from "@/app/builder/chai-save-actions";
 import {publishProject,unpublishProject} from "@/app/builder/actions";
 import {registerNuvoraBlocks} from "./ChaiRegistry";
@@ -15,12 +17,13 @@ export default function UnifiedChaiEditor({projectId,pageId,projectName,pagePath
  const blocks=useMemo(()=>migrateToChai(initialNodes),[initialNodes]);
  const version=useRef(initialVersion),base=useRef(initialNodes);
  const [published,setPublished]=useState(initiallyPublished),[notice,setNotice]=useState(""),[saving,setSaving]=useState(false);
+ const [forms,setForms]=useState(()=>extractFormSchemas(initialNodes));
  const save=async({blocks:updated}:{blocks:unknown[]})=>{
   setSaving(true);setNotice("");
   try{
    const result=await saveUnifiedChai(projectId,pageId,updated,version.current,base.current);
    if(!result.ok){setNotice("Không lưu: "+result.error);return new Error(result.error);}
-   version.current=result.version;base.current=result.tree;
+   version.current=result.version;base.current=result.tree;setForms(extractFormSchemas(result.tree));
    setNotice(result.warnings?.length?"Đã lưu, lưu ý: "+result.warnings.join(" | "):"Đã lưu vào Supabase pages.ui_tree.");
    return true;
   }catch(e){const message=e instanceof Error?e.message:"Không thể lưu ChaiBuilder";setNotice(message);return new Error(message);}
@@ -39,6 +42,7 @@ export default function UnifiedChaiEditor({projectId,pageId,projectName,pagePath
    <Link href={"/studio-3d?project="+projectId+"&page="+pageId} className="rounded-lg border border-slate-600 px-3 py-2">3D / Timeline</Link>
    <Link href={"/import-figma?project="+projectId+"&page="+pageId} className="rounded-lg border border-slate-600 px-3 py-2">Figma</Link>
    <Link href={"/video-studio?project="+projectId+"&page="+pageId} className="rounded-lg border border-slate-600 px-3 py-2">🎬 Tạo Video Demo</Link>
+   <FormDatabasePanel projectId={projectId} pageId={pageId} forms={forms}/>
    <Link href={"/form-data?project="+projectId} className="rounded-lg border border-slate-600 px-3 py-2">Auto-Database</Link>
    <a href={"/api/projects/"+projectId+"/export"} className="rounded-lg border border-slate-600 px-3 py-2">Source ZIP</a>
    <button type="button" disabled={saving} onClick={()=>void publish()} className="rounded-lg bg-orange-500 px-3 py-2 font-bold disabled:opacity-50">{published?"Ẩn website":"Xuất bản"}</button>
