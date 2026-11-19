@@ -145,3 +145,18 @@ No continuous overnight execution is implied by this file: a separately configur
 - [x] Fixed `docs/V15_EXECUTION_PROOF.md` reintroducing a retired title into the Git grep search (PR run `44338834930` failed on document, not application code).
 - [ ] CI validation of the final proof-document and progress-only commits; do not mark final HEAD green before GitHub reports success.
 - [ ] Preserve draft PR #18 unmerged pending Founder VERIFIED. Production deploy not verified.
+
+## v16.0 production UI + visual E2E (2026-11-19)
+- [x] PR #18 was explicitly approved by Founder and merged into main at commit `5b5360b788b72b5ccb99537609b5a31fafdf35b6`. Both v15 head CI workflows passed before merging.
+- [x] Vercel production deployment `dpl_9BHc5D8FgCxdMTCBsM3mPuJK2hgG` verified READY, branch main SHA `5b5360b`, aliases `https://no-code-builder-saas.vercel.app` and `https://no-code-builder-saas-npt-duy.vercel.app`.
+- [x] Created `release/v16.0` from merged main; separate feature work not deployed to production.
+- [x] FormDatabasePanel uses authenticated real `POST /api/create-table`, disables while loading, shows animated spinner and accessible corner success/error toast.
+- [x] Figma import uses real `POST /api/figma`, masks token, disables while loading, shows animated spinner and accessible corner success/error toast.
+- [x] ChaiBuilder toolbar exposes Figma import inputs directly, preserving dedicated `/import-figma` page.
+- [x] Added pinned `@playwright/test` `1.56.1`, `playwright.config.ts`, and `tests/e2e/production.spec.ts` for real Vercel home/OTP, auth, database-create, Figma-error, published-form-submission, screenshots and video.
+- [x] Added GitHub Actions workflow that uploads Playwright HTML report, screenshots, traces, and videos to artifact.
+- [x] First Playwright CI identified unsupported default ubuntu26.04 runner. Updated workflow to supported ubuntu-24.04; browser verification pending.
+- [ ] Playwright public production smoke: verify actual screenshot/video artifact after retry.
+- [ ] Protected end-user E2E requires dedicated test credentials and a saved/published Form; without these, signed-in test explicitly SKIPs and must not count as passing. Never fabricate authenticated results.
+- [ ] Re-run all TypeScript/build/UX regressions for v16 PR and verify preview deployment.
+- [ ] Do not conflate v15 READY with v16 UI release. Require verified v16 deploy before declaring production UX done.
