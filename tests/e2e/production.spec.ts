@@ -60,7 +60,14 @@ test("signed-in production E2E: create Form table, import feedback and submit pu
  await capture(page,info,"form-database-panel");
  const button=page.getByTestId("create-database-table");
  await expect(button,"A real Form with input fields must exist on the saved page").toBeVisible();
+ const createRequest=page.waitForResponse(response=>response.url().endsWith("/api/create-table")&&response.request().method()==="POST");
  await button.click();
+ const created=await createRequest;
+ expect(created.status(),"Real PostgreSQL create-table API must return 201").toBe(201);
+ const createdRecord=await created.json() as {ok:boolean;formId:string;table:string};
+ expect(createdRecord.ok).toBe(true);
+ expect(createdRecord.formId).toMatch(/^[0-9a-f-]{36}$/i);
+ expect(createdRecord.table).toMatch(/^f_[a-f0-9]{32}$/);
  await expect(page.getByTestId("api-toast")).toContainText("Tạo bảng thành công",{timeout:30000});
  await capture(page,info,"postgres-table-created");
 
@@ -92,7 +99,14 @@ test("signed-in production E2E: create Form table, import feedback and submit pu
   await field.fill(value);
  }
  await capture(page,info,"published-form-filled");
+ const submittedRequest=page.waitForResponse(response=>response.url().endsWith("/api/forms/submit")&&response.request().method()==="POST");
  await form.getByRole("button",{name:/Submit|Gửi|Đăng ký|Liên hệ/i}).click();
+ const submitted=await submittedRequest;
+ expect(submitted.status(),"Real Form insert RPC must return HTTP 201").toBe(201);
+ const submittedRecord=await submitted.json() as {ok:boolean;submissionId:string};
+ expect(submittedRecord.ok).toBe(true);
+ expect(submittedRecord.submissionId).toMatch(/^[0-9a-f-]{36}$/i);
+ await expect(page.getByTestId("api-toast")).toContainText("Đã lưu thông tin thành công.",{timeout:30000});
  await expect(form).toContainText("Đã lưu thông tin thành công.",{timeout:30000});
  await capture(page,info,"form-submitted-success");
  }finally{
