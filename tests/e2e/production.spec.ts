@@ -1,4 +1,8 @@
 import {test,expect,type Page,type TestInfo} from "@playwright/test";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
+import {randomUUID} from "node:crypto";
+import {redactHar} from "@/lib/e2e/redact-har";
 
 const projectId=process.env.E2E_PROJECT_ID;
 const pageId=process.env.E2E_PAGE_ID;
@@ -34,8 +38,13 @@ test("public production: real homepage, founder marker, protected builder",async
  await capture(page,info,"builder-auth-required");
 });
 
-test("signed-in production E2E: create Form table, import feedback and submit published Form",async({page},info)=>{
+test("signed-in production E2E: create Form table, import feedback and submit published Form",async({browser},info)=>{
  if(!authenticatedConfigured)throw new Error("Real E2E fixture missing: "+missing.join(", "));
+ const rawHar=join(tmpdir(),"nuvora-e2e-"+randomUUID()+".har");
+ const sanitizedHar=info.outputPath("session-redacted.har");
+ const context=await browser.newContext({baseURL:process.env.E2E_BASE_URL!,recordVideo:{dir:info.outputPath("session-video")},recordHar:{path:rawHar,mode:"full",content:"omit"}});
+ const page=await context.newPage();
+ try{
  await page.goto("/login",{waitUntil:"domcontentloaded"});
  await capture(page,info,"login-before");
  await page.locator("#account-email").fill(email!);
@@ -86,4 +95,10 @@ test("signed-in production E2E: create Form table, import feedback and submit pu
  await form.getByRole("button",{name:/Submit|Gửi|Đăng ký|Liên hệ/i}).click();
  await expect(form).toContainText("Đã lưu thông tin thành công.",{timeout:30000});
  await capture(page,info,"form-submitted-success");
+ }finally{
+  await context.close();
+  await redactHar(rawHar,sanitizedHar);
+  await info.attach("redacted-real-har",{path:sanitizedHar,contentType:"application/json"});
+  if(page.video())await info.attach("authenticated-session-video",{path:await page.video()!.path(),contentType:"video/webm"});
+ }
 });
