@@ -1,0 +1,42 @@
+name: v16 Production Playwright E2E Visual Proof
+on:
+  push:
+    branches: [release/v16.0]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-visual-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      E2E_BASE_URL: https://no-code-builder-saas-npt-duy.vercel.app
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install pinned application and Playwright versions
+        run: npm install --no-audit --no-fund
+      - name: Install Chromium and system browser dependencies
+        run: npx playwright install --with-deps chromium
+      - name: Run real Vercel production visual checks with video
+        run: |
+          set -o pipefail
+          mkdir -p proof
+          npm run test:e2e 2>&1 | tee proof/playwright.log
+      - name: Upload screenshots, video, traces and Playwright HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuvoracraft-v16-production-visual-proof
+          path: |
+            test-results/
+            playwright-report/
+            proof/playwright.log
+          if-no-files-found: warn
+          retention-days: 7
