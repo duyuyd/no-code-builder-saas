@@ -21,6 +21,11 @@ assert.match(toast,/fixed bottom-5 right-5/);
 assert.match(toast,/role=\{toast.kind==="error"\?"alert":"status"\}/);
 assert.match(e2e,/test\("public production:/);
 assert.match(e2e,/test\("signed-in production E2E:/);
+assert.doesNotMatch(e2e,/test\s*\.\s*skip\s*\(/,"E2E suite must not skip real authentication");
+assert.match(e2e,/recordHar:/,"authenticated E2E must record HTTP evidence");
+assert.match(e2e,/recordVideo:/,"authenticated E2E must record browser video");
+assert.match(read(".github/workflows/v16-full-production-e2e.yml"),/SUPABASE_SERVICE_ROLE_KEY/);
+assert.match(read("scripts/e2e/seed-production.mjs"),/auth\.admin\.createUser/);
 for(const condition of ["page.screenshot","Tạo bảng thành công","form-submitted-success","x-founder-otp"]){
  assert.ok(e2e.includes(condition),"E2E contract missing: "+condition);
 }
