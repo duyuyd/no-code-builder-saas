@@ -87,3 +87,37 @@ jobs:
             proof/playwright.log
           if-no-files-found: warn
           retention-days: 7
+
+  preview-visual-proof:
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      E2E_BASE_URL: https://no-code-builder-saas-git-release-v160-npt-duy.vercel.app
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install exact Playwright and browser
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Capture real v16 Vercel preview with screenshots and video
+        run: |
+          set -o pipefail
+          mkdir -p proof
+          npm run test:e2e 2>&1 | tee proof/playwright-preview.log
+      - name: Upload actual v16 preview screenshots and video
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuvoracraft-v16-preview-visual-proof
+          path: |
+            test-results/
+            playwright-report/
+            proof/playwright-preview.log
+          if-no-files-found: warn
+          retention-days: 7
