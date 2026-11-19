@@ -31,6 +31,8 @@ export default function FigmaPageImporter({projectId,pageId,compact=false}:{proj
    setFigmaToken("");
    const message="Import Figma thành công: "+(data.count??0)+" thành phần.";
    setToast({id:Date.now(),kind:"success",message});
+   // Keep the success toast visible before moving into the updated Builder.
+   await new Promise<void>(resolve=>window.setTimeout(resolve,1100));
    router.push("/builder?project="+encodeURIComponent(projectId)+"&page="+encodeURIComponent(pageId));
    router.refresh();
   }catch{
