@@ -89,12 +89,20 @@ jobs:
           retention-days: 7
 
   preview-visual-proof:
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
+    environment: preview-e2e
     timeout-minutes: 25
     env:
       E2E_BASE_URL: https://no-code-builder-saas-git-release-v160-npt-duy.vercel.app
+      E2E_VERCEL_OIDC_TOKEN: ${{ secrets.E2E_VERCEL_OIDC_TOKEN }}
     steps:
+      - name: Require short-lived Vercel preview access token
+        run: |
+          if [ -z "$E2E_VERCEL_OIDC_TOKEN" ]; then
+            echo "::error::Preview is behind Vercel Authentication. Configure a short-lived authorized access token; do not weaken deployment protection."
+            exit 1
+          fi
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
