@@ -168,3 +168,14 @@ No continuous overnight execution is implied by this file: a separately configur
 - [x] Figma success toast stays visible briefly before Builder navigation.
 - [ ] Newest v16 head TypeScript/build, regression and Playwright public checks require completion/read-back.
 - [ ] Signed-in production UI actions require dedicated test account credentials and saved/published Form; no secrets inserted into source or GitHub from this chat. Production v15 is READY; v16 changes have NOT been merged or deployed.
+
+## v16 Zero-Skip Full Production E2E — 2026-11-19
+- [x] Replaced the authenticated Playwright test's conditional skip with an explicit failure when a real fixture is absent. Public smoke uses a separate `--grep` invocation and does not silently skip its assertions.
+- [x] Implemented `scripts/e2e/seed-production.mjs`: Supabase Admin `auth.admin.createUser` with a fresh randomized password, confirmed email, service-role authentication, and actual `projects`, `pages`, `published_pages` records with a saved Form. Fixture is re-read from Supabase before proceeding; credentials are masked and passed only through the GitHub Actions environment.
+- [x] Implemented `.github/workflows/v16-full-production-e2e.yml` triggered on main push / manual dispatch with a protected `production-e2e` environment. Missing `SUPABASE_SERVICE_ROLE_KEY` fails with a clear error; no test is marked successful for absent credentials.
+- [x] Playwright records authenticated video, captures step screenshots, and records a real HAR. Sensitive request headers, cookies, URL queries and payloads are redacted before HAR is attached/uploaded; raw HAR remains outside GitHub artifact paths.
+- [x] Added actual published Form submit success toast and assertions requiring 201 responses from both create-table and form-submit APIs with UUID result identifiers.
+- [x] Fixed Playwright public smoke title matching; zero tests found is a CI failure, not proof.
+- [ ] Verify the current release branch TypeScript/build/Playwright results before claiming latest branch green.
+- [ ] Full signed-in production E2E has NOT executed successfully: service-role GitHub environment secret availability must be confirmed by the workflow. Do not invent a service role key or publish it.
+- [ ] PR #19 remains unmerged at this checkpoint; production v16 deployment and video/HAR artifact for the authenticated run are not yet verified.
