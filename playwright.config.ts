@@ -18,6 +18,7 @@ export default defineConfig({
  use:{
   ...devices["Desktop Chrome"],
   baseURL:target.origin,
+  ...(process.env.E2E_VERCEL_OIDC_TOKEN?{extraHTTPHeaders:{"x-vercel-trusted-oidc-idp-token":process.env.E2E_VERCEL_OIDC_TOKEN}}:{}),
   screenshot:"on",
   video:"on",
   trace:"off",
