@@ -23,7 +23,7 @@ export default async function VideoStudioPage({searchParams}:{searchParams:Promi
      <form method="GET" action="/video-studio"><select name="project" defaultValue={project.id} aria-label="Dự án" className="rounded-xl border border-slate-600 bg-slate-900 p-3 text-sm">{(projects??[]).map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select><button className="ml-2 rounded-xl border border-orange-500 px-3 py-3 text-sm text-orange-300">Đổi dự án</button></form>
      {(pages??[]).map(p=><Link key={p.id} href={"/video-studio?project="+project.id+"&page="+p.id} className={"rounded-lg px-3 py-2 text-xs "+(p.id===page.id?"bg-orange-500":"bg-slate-800")}>{p.path}</Link>)}
     </div>
-    <NuvoraVideoStudio key={page.id} projectName={project.name} pagePath={page.path} nodes={page.ui_tree}/>
+    <NuvoraVideoStudio key={page.id} projectId={project.id} pageId={page.id} projectName={project.name} pagePath={page.path} nodes={page.ui_tree}/>
    </>}
   </div>
  </main>;

@@ -75,3 +75,73 @@ Repository: `duyuyd/no-code-builder-saas`; production branch: `main`.
 5. Update this file in the same working session.
 
 No continuous overnight execution is implied by this file: a separately configured scheduled runner is required.
+
+## Absolute Lockdown v14 (release/v14.0; 2026-11-18 22:05 Asia/Ho_Chi_Minh)
+- [x] Created isolated release branch from `4146f055`; main untouched.
+- [x] Main CI `44203677608` completed successfully before work.
+- [x] Task 1: Added lossless `migrateToChai(tree)` and regression parity coverage; existing `ui_tree` remains canonical. CI verification still pending.
+- [ ] Task 1: Retire the former canvas files ONLY when import/render equivalence and replacement UI have been proven; preserve a working legacy fallback meanwhile.
+- [ ] Task 1: Audit dynamic branding sources and grep obsolete public branding.
+- [x] Task 2: Added authenticated `POST /api/figma`, per-request token, strict 401 response header, real API request and owner-scoped append-to-page; live token check pending.
+- [x] Task 3 code: 450 frames at 30 FPS in preview/browser, registered Remotion composition and Node MP4 render endpoint. Actual ffprobe / >1MB media verification and production Node runtime verification pending.
+- [x] Task 4 code: Added authenticated `POST /api/create-table`, validates against saved form tree, calls existing physical-DDL RPC; Chai toolbar offers a table-creation panel. Live Supabase verification pending.
+- [ ] Confirm release branch CI and human VERIFIED before any main merge. No paid services enabled.
+
+### v14 validation evidence
+- [x] Added fully pinned package versions, `@figma/rest-api-spec`, `figma-api`, `@remotion/bundler`, `@remotion/renderer`, and `test:v14` contract script.
+- [ ] Confirm dependency resolution, TypeScript, Next.js build, all regressions and runtime behavior using release PR CI.
+- [ ] Run full brand audit for the retired product title; also check dynamic settings and generated assets.
+- [ ] Owner review: permanently delete legacy canvas modules only after proving equivalent capability, preserving project data and a working fallback until then.
+- [ ] Obtain Founder comment `VERIFIED` before merge. No merges performed.
+
+### CI and Supabase read-only checkpoint (2026-11-18)
+- [x] Main baseline run `44203677608` green, release PR draft #17 opened; main not merged.
+- [x] Release CI `44332898691` failed at Typecheck because initial pinned `@types/node 22.0.0` conflicted with Node Buffer signatures. Updated exact pin to `22.20.5` in `833eee4`; new CI not yet verified.
+- [x] Supabase read-only inspection confirmed `public.ensure_nuvora_form(uuid,text,jsonb)`, `public.nuvora_forms`, and `private_forms` schema exist; zero form metadata rows and no user form tables created during this work.
+- [x] Live public `site_title` is currently `NuvoraCraft`; new conditional release migration stages full `NuvoraCraft by NPTduy` title, NOT applied to live DB.
+- [x] Brand audit step added to PR CI, verifying retired titles are absent from tracked files.
+- [ ] Run complete PR CI after the TypeScript repair; perform live functional tests before Founder approval.
+
+### v14 release CI checkpoint
+- [x] CI run `44333361436` passed on `833eee4`: npm install, TypeScript, Next.js production build, all legacy regression suites and `test:v14` (GitHub Actions verified).
+- [x] Added owner-scoped Node rendering button, security origin check to Figma API, staged brand migration, and runnable test instructions in `docs/V14_RUNBOOK.md`.
+- [ ] Verify latest branch head CI after `155f7cf`; verify real 15-second video via ffprobe and >1MB, authentic Figma import, and physical table creation.
+- [ ] Legacy canvas removal still gated on full behavior parity, otherwise it would disable the only proven recovery editor.
+- [ ] Neither PR merge nor Supabase writes have occurred. Await Founder VERIFIED.
+
+## v15.0 — Execution proof (2026-11-18)
+- [x] Created release/v15.0 from v14 head; main remains untouched.
+- [x] Physically deleted components/CanvasNode.tsx, components/BuilderCanvas.tsx, components/BuilderWorkspace.tsx on release branch.
+- [x] Replaced former custom canvas URL with functional read-only JSON inspector and original-tree export; ChaiBuilder remains sole visual editor.
+- [x] Kept migrateToChai()/fromUnifiedChai() lossless bridge and historical JSONB untouched.
+- [x] Added v15 source-deletion and retired-brand regression with SHA-256 CI file hashes.
+- [x] Committed GitHub Actions workflow to execute actual curl against Next.js Figma API, render actual Remotion MP4 and run ffprobe; results not yet observed.
+- [x] Created real private_forms.v15_execution_proof_20261118 via authorized Supabase migration. Subsequent live query returned RLS=true and columns id(uuid), contact_name(text), contact_email(text), score(numeric), is_active(boolean), created_at(timestamptz). This proves physical DDL only, not authenticated create-table HTTP/RPC.
+- [x] Added requested footer marker OTP-FOUNDER-999 to release branch source; NOT live production until deployment.
+- [ ] PR CI and proof workflow execution logs verified for release/v15.0.
+- [ ] Invalid Figma-token response under a valid authenticated session tested, as distinct from an unauthenticated HTTP 401 test.
+- [ ] Actual MP4 >1MB / H264 / 15 s verified by ffprobe and stored artifact.
+- [ ] Authenticated /api/create-table endpoint invoking ensure_nuvora_form via real user session tested. Current proof table was created using Supabase DDL migration.
+- [ ] Vercel deployment for v15.0 verified READY; do not treat source changes as live production.
+- [ ] Founder comments VERIFIED on release PR before merge.
+
+### Verified execution checkpoint — 2026-11-18
+
+- [x] REAL CI `44336206255` on v15 release succeeded: Typecheck, Next production build, bridge tests, exact versions, retired-brand grep, deleted old canvases, actual SHA-256 from `sha256sum`. ChaiBuilder primary; read-only source inspector remains.
+- [x] REAL CI `44336206081`: Next production server responded `HTTP/1.1 401 Unauthorized`, header `x-founder-otp: OTP-FOUNDER-999`, body `{"ok":false,"error":"Unauthorized"}`. Unauthorized test only; upstream Figma token not verified in authenticated session.
+- [x] REAL CI `44337446866`: Remotion `450` frames at `30` FPS, 1280×720, actual MP4 `5876891` bytes. `ffprobe` exit 0 reported H.264, 15.000000 seconds, size 5876891 bytes; MP4 SHA-256 `63c1c502247f445c7abc68f3d1657d6506f5ab0c31c65f8cccbe5d0b1fcc7299`. Artifact ID `14443175851`. This is local CI renderer, not Vercel runtime.
+- [x] REAL Supabase `apply_migration`: created `private_forms.v15_execution_proof_20261118`, six verified columns, RLS enabled, all client table privileges revoked. This verifies physical DDL, NOT authenticated web /api/create-table RPC.
+- [x] REAL Supabase `apply_migration`: revoked anonymous execute on 3 sensitive form RPC functions; post-migration query confirmed `anon_ensure=false`, `anon_submit=false`, `anon_list=false`, `signed_in_ensure=true`. Security advisor no longer reported anonymous executable SECURITY DEFINER functions. Tracked SQL migration `20261118_v15_revoke_anon_form_rpc.sql`.
+- [x] Detailed raw evidence and limitations captured in `docs/V15_EXECUTION_PROOF.md`.
+- [ ] Verify newest v15 HEAD GitHub Actions, including bundled ffprobe improvement, before declaring final HEAD green.
+- [ ] Verified authorized Figma API request with invalid token and real import with valid token.
+- [ ] Verified authenticated /api/create-table end-to-end against saved form with correct owner session.
+- [ ] Live v15 Vercel READY deployment and footer OTP: not deployed / not verified. Main never merged.
+- [ ] Wait for explicit Founder `VERIFIED` comment on PR #18 before merging.
+
+### v15 final code checkpoint
+- [x] CI `44338305826` succeeded for release SHA `6b6b517`: full TypeScript, Next.js build, regression tests, source deletion and branding checks.
+- [x] CI `44338306345` succeeded for release SHA `6b6b517`: live Next HTTP 401 verification and actual Remotion-compositor bundled `ffprobe`; output H264, 1280x720, 15.000000s, 5963357 bytes, SHA256 `3bbd96d811552312249601f2c34b7844e1ffde0a31f65eef041ebdaa2afb2ad4`; artifact `14442487454`.
+- [x] Fixed `docs/V15_EXECUTION_PROOF.md` reintroducing a retired title into the Git grep search (PR run `44338834930` failed on document, not application code).
+- [ ] CI validation of the final proof-document and progress-only commits; do not mark final HEAD green before GitHub reports success.
+- [ ] Preserve draft PR #18 unmerged pending Founder VERIFIED. Production deploy not verified.

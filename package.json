@@ -19,14 +19,16 @@
     "test:ecosystem": "node tests/ecosystem-regression.cjs",
     "test:chai": "node tests/chaibuilder-bridge-regression.cjs",
     "test:forms": "node tests/auto-database-regression.cjs",
-    "test:unified": "node tests/unified-editor-regression.cjs"
+    "test:unified": "node tests/unified-editor-regression.cjs",
+    "test:v14": "node tests/v14-lockdown-regression.cjs",
+    "test:v15": "node tests/v15-execution-proof.cjs"
   },
   "dependencies": {
     "next": "15.5.29",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "@supabase/supabase-js": "^2.119.0",
-    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "2.119.0",
+    "@supabase/ssr": "0.12.7",
     "@dnd-kit/core": "6.3.1",
     "@dnd-kit/sortable": "10.0.0",
     "@dnd-kit/utilities": "3.2.2",
@@ -43,7 +45,7 @@
     "@aws-sdk/client-s3": "3.1169.0",
     "@aws-sdk/s3-request-presigner": "3.1169.0",
     "@react-three/xr": "6.6.32",
-    "yjs": "^13.6.28",
+    "yjs": "13.6.28",
     "qrcode": "1.5.4",
     "openai": "7.55.0",
     "playcanvas": "2.24.1",
@@ -55,18 +57,22 @@
     "remotion": "4.0.543",
     "@remotion/player": "4.0.543",
     "@remotion/web-renderer": "4.0.543",
-    "@chaibuilder/sdk": "4.0.0-beta.51"
+    "@chaibuilder/sdk": "4.0.0-beta.51",
+    "figma-api": "2.2.1-beta",
+    "@remotion/bundler": "4.0.543",
+    "@remotion/renderer": "4.0.543"
   },
   "devDependencies": {
-    "typescript": "^5.8.3",
-    "@types/node": "^22.0.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "tailwindcss": "^4.1.0",
-    "@tailwindcss/postcss": "^4.1.0",
-    "postcss": "^8.4.0",
+    "typescript": "5.8.3",
+    "@types/node": "22.20.5",
+    "@types/react": "19.0.0",
+    "@types/react-dom": "19.0.0",
+    "tailwindcss": "4.1.0",
+    "@tailwindcss/postcss": "4.1.0",
+    "postcss": "8.4.0",
     "@types/three": "0.187.0",
-    "@types/qrcode": "1.5.6"
+    "@types/qrcode": "1.5.6",
+    "@figma/rest-api-spec": "0.47.0"
   },
   "overrides": {
     "motion-dom": "12.23.20"

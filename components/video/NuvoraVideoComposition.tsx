@@ -16,8 +16,8 @@ export function NuvoraVideoComposition({projectName,pagePath,nodes}:VideoProps){
  const blocks:{type:string;text:string;color:string}[]=[];
  collect(nodes,blocks);
  const enter=interpolate(frame,[0,30],[0,1],{extrapolateLeft:"clamp",extrapolateRight:"clamp"});
- const travel=interpolate(frame,[40,320],[0,-Math.max(0,blocks.length*62-380)],{extrapolateLeft:"clamp",extrapolateRight:"clamp",easing:Easing.inOut(Easing.cubic)});
- const progress=interpolate(frame,[0,359],[0,100],{extrapolateRight:"clamp"});
+ const travel=interpolate(frame,[40,410],[0,-Math.max(0,blocks.length*62-380)],{extrapolateLeft:"clamp",extrapolateRight:"clamp",easing:Easing.inOut(Easing.cubic)});
+ const progress=interpolate(frame,[0,449],[0,100],{extrapolateRight:"clamp"});
  return <AbsoluteFill style={{background:"linear-gradient(140deg,#080f20 0%,#15253b 54%,#2f170c 100%)",fontFamily:"Arial,sans-serif",color:"#fff"}}>
   <div style={{position:"absolute",top:70,left:75,right:75,display:"flex",justifyContent:"space-between",alignItems:"center",opacity:enter}}>
    <div style={{fontSize:26,fontWeight:800,letterSpacing:2}}>NUVORACRAFT</div><div style={{fontSize:16,color:"#fdba74"}}>WEBSITE DEMO · {pagePath}</div>
