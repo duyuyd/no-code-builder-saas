@@ -35,8 +35,7 @@ test("public production: real homepage, founder marker, protected builder",async
 });
 
 test("signed-in production E2E: create Form table, import feedback and submit published Form",async({page},info)=>{
- test.skip(!authenticatedConfigured,
-  "Not executed: protected production E2E requires "+missing.join(", ")+" in a dedicated test account, project and saved Form.");
+ if(!authenticatedConfigured)throw new Error("Real E2E fixture missing: "+missing.join(", "));
  await page.goto("/login",{waitUntil:"domcontentloaded"});
  await capture(page,info,"login-before");
  await page.locator("#account-email").fill(email!);
