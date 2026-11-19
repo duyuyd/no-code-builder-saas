@@ -1,0 +1,36 @@
+const fs=require("node:fs"),assert=require("node:assert/strict");
+const read=p=>fs.readFileSync(p,"utf8");
+const database=read("components/chaibuilder/FormDatabasePanel.tsx");
+const figma=read("components/studio/FigmaPageImporter.tsx");
+const chai=read("components/chaibuilder/UnifiedChaiEditor.tsx");
+const toast=read("components/feedback/StatusToast.tsx");
+const e2e=read("tests/e2e/production.spec.ts");
+const workflow=read(".github/workflows/v16-production-e2e.yml");
+const pkg=JSON.parse(read("package.json"));
+assert.equal(pkg.devDependencies["@playwright/test"],"1.56.1");
+assert.match(database,/fetch\("\/api\/create-table"/);
+assert.match(database,/Tạo bảng thành công/);
+assert.match(database,/LoaderCircle/);
+assert.match(database,/data-testid="create-database-table"/);
+assert.match(figma,/fetch\("\/api\/figma"/);
+assert.match(figma,/figmaToken/);
+assert.match(figma,/LoaderCircle/);
+assert.match(figma,/data-testid="figma-import-submit"/);
+assert.match(chai,/<FigmaPageImporter projectId=\{projectId\} pageId=\{pageId\} compact\/>/);
+assert.match(toast,/fixed bottom-5 right-5/);
+assert.match(toast,/role=\{toast.kind==="error"\?"alert":"status"\}/);
+assert.match(e2e,/test\("public production:/);
+assert.match(e2e,/test\("signed-in production E2E:/);
+assert.doesNotMatch(e2e,/test\s*\.\s*skip\s*\(/,"E2E suite must not skip real authentication");
+assert.match(e2e,/recordHar:/,"authenticated E2E must record HTTP evidence");
+assert.match(e2e,/recordVideo:/,"authenticated E2E must record browser video");
+assert.match(read(".github/workflows/v16-full-production-e2e.yml"),/SUPABASE_SERVICE_ROLE_KEY/);
+assert.match(read("scripts/e2e/seed-production.mjs"),/auth\.admin\.createUser/);
+for(const condition of ["page.screenshot","Tạo bảng thành công","form-submitted-success","x-founder-otp"]){
+ assert.ok(e2e.includes(condition),"E2E contract missing: "+condition);
+}
+assert.match(workflow,/actions\/upload-artifact@v4/);
+assert.match(workflow,/test-results\//);
+assert.match(workflow,/playwright-report\//);
+assert.match(read("playwright.config.ts"),/video:"on"/);
+console.log("PASS v16 real create-table and Figma API UX, loading/toast and Playwright artifact contracts");

@@ -6,6 +6,7 @@ import type {BuilderNode} from "@/lib/component-registry";
 import {migrateToChai} from "@/lib/unified-chai-bridge";
 import {extractFormSchemas} from "@/lib/auto-database";
 import FormDatabasePanel from "./FormDatabasePanel";
+import FigmaPageImporter from "@/components/studio/FigmaPageImporter";
 import {saveUnifiedChai} from "@/app/builder/chai-save-actions";
 import {publishProject,unpublishProject} from "@/app/builder/actions";
 import {registerNuvoraBlocks} from "./ChaiRegistry";
@@ -40,7 +41,7 @@ export default function UnifiedChaiEditor({projectId,pageId,projectName,pagePath
    <span className="mr-auto min-w-0 truncate font-bold">{projectName} · {pagePath} · ChaiBuilder</span>
    <Link href={"/builder?project="+encodeURIComponent(projectId)+"&page="+encodeURIComponent(pageId)+"&mode=inspect"} className="rounded-lg border border-amber-500/60 px-3 py-2 text-amber-200">Xem JSON bản gốc</Link>
    <Link href={"/studio-3d?project="+projectId+"&page="+pageId} className="rounded-lg border border-slate-600 px-3 py-2">3D / Timeline</Link>
-   <Link href={"/import-figma?project="+projectId+"&page="+pageId} className="rounded-lg border border-slate-600 px-3 py-2">Figma</Link>
+   <details className="relative"><summary className="cursor-pointer rounded-lg border border-slate-600 px-3 py-2">Import Figma</summary><div className="absolute right-0 top-full z-50 mt-2 w-[360px] max-w-[92vw] rounded-xl border border-slate-600 bg-slate-900 shadow-2xl"><FigmaPageImporter projectId={projectId} pageId={pageId} compact/></div></details>
    <Link href={"/video-studio?project="+projectId+"&page="+pageId} className="rounded-lg border border-slate-600 px-3 py-2">🎬 Tạo Video Demo</Link>
    <FormDatabasePanel projectId={projectId} pageId={pageId} forms={forms}/>
    <Link href={"/form-data?project="+projectId} className="rounded-lg border border-slate-600 px-3 py-2">Auto-Database</Link>

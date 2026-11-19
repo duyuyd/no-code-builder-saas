@@ -56,3 +56,6 @@ jobs:
         run: |
           npm run test:v15
           sha256sum app/builder/page.tsx components/chaibuilder/UnifiedChaiEditor.tsx app/api/figma/route.ts app/api/render-video/route.ts app/api/create-table/route.ts
+
+      - name: v16 Form/Figma loading, toasts and browser proof contracts
+        run: npm run test:v16

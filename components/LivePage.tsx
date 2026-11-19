@@ -6,6 +6,7 @@ import { ArrowRight, RotateCcw, Trophy, Image as ImageIcon } from "lucide-react"
 import { getDefinition, nodeCss, safeUrl, sanitizeNumeric, type BuilderNode } from "@/lib/component-registry";
 import { responsiveLayoutClass } from "@/lib/responsive-layout";
 import {formFieldName} from "@/lib/auto-database";
+import StatusToast,{type ToastState} from "@/components/feedback/StatusToast";
 import dynamic from "next/dynamic";
 const MemoryMatchGame = dynamic(() => import("./MemoryMatchGame"), { ssr: false, loading: () => <div className="rounded-2xl bg-slate-900 p-6 text-sm text-slate-300">Đang tải trò chơi...</div> });
 
@@ -24,7 +25,7 @@ function Quiz({node}:{node:BuilderNode}) {
  </section>;
 }
 function Item({node,projectId,onNavigate}:{node:BuilderNode;projectId?:string;onNavigate?:(path:string)=>void}) {
- const def=getDefinition(node.type); const [feedback,setFeedback]=useState(""); if(!def)return null;
+ const def=getDefinition(node.type); const [feedback,setFeedback]=useState(""); const [formToast,setFormToast]=useState<ToastState|null>(null); if(!def)return null;
  const p=node.props,s=nodeCss(node) as CSSProperties,src=safeUrl(p.src??""),href=safeUrl(p.href??"");
  const url=href.startsWith("/")&&projectId?"/s/"+projectId+(href==="/"? "":href):href;
  const navigate=(event:MouseEvent<HTMLAnchorElement>)=>{if(href.startsWith("/")&&onNavigate){event.preventDefault();onNavigate(href)}};
@@ -65,10 +66,10 @@ function Item({node,projectId,onNavigate}:{node:BuilderNode;projectId?:string;on
       const res=await fetch("/api/forms/submit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({projectId,nodeId:node.id,values})});
       const result=await res.json() as {ok?:boolean;error?:string};
       if(!res.ok||!result.ok){if(res.status===401&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.recipientEmail??"")){const recipient=p.recipientEmail!.trim();const message=Object.entries(values).map(([k,v])=>k+": "+String(v)).join("\n");window.location.href="mailto:"+recipient+"?subject="+encodeURIComponent("Liên hệ từ website")+"&body="+encodeURIComponent(message.slice(0,6000));setFeedback("Chưa đăng nhập: đã mở ứng dụng email để gửi liên hệ.");return;}setFeedback(result.error??"Không thể gửi biểu mẫu.");return;}
-      form.reset();setFeedback("Đã lưu thông tin thành công.");
+      form.reset();setFeedback("Đã lưu thông tin thành công.");setFormToast({id:Date.now(),kind:"success",message:"Đã lưu thông tin thành công."});
      }catch{setFeedback("Không kết nối được hệ thống lưu biểu mẫu.");}
     };
-    return <form onSubmit={submit} style={s} className="flex min-w-0 flex-col gap-3 rounded-xl">{children}{feedback&&<p role="alert" className="text-xs text-rose-600">{feedback}</p>}</form>;
+    return <><form onSubmit={submit} style={s} className="flex min-w-0 flex-col gap-3 rounded-xl">{children}{feedback&&<p role="status" className="text-xs text-slate-700">{feedback}</p>}</form><StatusToast toast={formToast} onDismiss={()=>setFormToast(null)}/></>;
    }
    return createElement(def.tag,{style:s,className:"min-w-0 max-w-full rounded-xl "+responsiveLayoutClass(node.type,"studio-responsive")},children);
   }

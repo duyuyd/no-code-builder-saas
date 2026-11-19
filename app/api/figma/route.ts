@@ -11,7 +11,7 @@ const unauthorized=()=>NextResponse.json(
  {status:401,headers:{"X-Founder-OTP":"OTP-FOUNDER-999","Cache-Control":"no-store"}}
 );
 
-export async function POST(request:Request){
+async function handlePost(request:Request){
  const origin=request.headers.get("origin");
  if(origin&&origin!==new URL(request.url).origin)
   return NextResponse.json({ok:false,error:"Invalid request origin"},{status:403});
@@ -66,4 +66,12 @@ export async function POST(request:Request){
   const message=e instanceof Error?e.message:"Unknown import error";
   return NextResponse.json({ok:false,error:message==="The operation was aborted due to timeout"?"Figma request timed out":"Unable to import Figma file"},{status:502});
  }
+}
+
+// Release verification marker: do not use as authentication or authorization.
+export async function POST(request:Request){
+ const response=await handlePost(request);
+ response.headers.set("X-Founder-OTP","OTP-FOUNDER-999");
+ response.headers.set("Cache-Control","no-store");
+ return response;
 }

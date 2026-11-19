@@ -145,3 +145,37 @@ No continuous overnight execution is implied by this file: a separately configur
 - [x] Fixed `docs/V15_EXECUTION_PROOF.md` reintroducing a retired title into the Git grep search (PR run `44338834930` failed on document, not application code).
 - [ ] CI validation of the final proof-document and progress-only commits; do not mark final HEAD green before GitHub reports success.
 - [ ] Preserve draft PR #18 unmerged pending Founder VERIFIED. Production deploy not verified.
+
+## v16.0 production UI + visual E2E (2026-11-19)
+- [x] PR #18 was explicitly approved by Founder and merged into main at commit `5b5360b788b72b5ccb99537609b5a31fafdf35b6`. Both v15 head CI workflows passed before merging.
+- [x] Vercel production deployment `dpl_9BHc5D8FgCxdMTCBsM3mPuJK2hgG` verified READY, branch main SHA `5b5360b`, aliases `https://no-code-builder-saas.vercel.app` and `https://no-code-builder-saas-npt-duy.vercel.app`.
+- [x] Created `release/v16.0` from merged main; separate feature work not deployed to production.
+- [x] FormDatabasePanel uses authenticated real `POST /api/create-table`, disables while loading, shows animated spinner and accessible corner success/error toast.
+- [x] Figma import uses real `POST /api/figma`, masks token, disables while loading, shows animated spinner and accessible corner success/error toast.
+- [x] ChaiBuilder toolbar exposes Figma import inputs directly, preserving dedicated `/import-figma` page.
+- [x] Added pinned `@playwright/test` `1.56.1`, `playwright.config.ts`, and `tests/e2e/production.spec.ts` for real Vercel home/OTP, auth, database-create, Figma-error, published-form-submission, screenshots and video.
+- [x] Added GitHub Actions workflow that uploads Playwright HTML report, screenshots, traces, and videos to artifact.
+- [x] First Playwright CI identified unsupported default ubuntu26.04 runner. Updated workflow to supported ubuntu-24.04; browser verification pending.
+- [ ] Playwright public production smoke: verify actual screenshot/video artifact after retry.
+- [ ] Protected end-user E2E requires dedicated test credentials and a saved/published Form; without these, signed-in test explicitly SKIPs and must not count as passing. Never fabricate authenticated results.
+- [ ] Re-run all TypeScript/build/UX regressions for v16 PR and verify preview deployment.
+- [ ] Do not conflate v15 READY with v16 UI release. Require verified v16 deploy before declaring production UX done.
+
+### v16 real browser checkpoint — 2026-11-19
+- [x] GitHub Actions public Chromium E2E `44545994129` SUCCESS: production homepage returned HTTP 200, founder footer marker visible, Figma unauthenticated API returned HTTP 401 with marker header, /builder redirected to login. Actual output: 1 passed, 1 skipped (signed-in test not configured). Screenshots, video, and Playwright report uploaded to artifact `14540048420` (~3.6MB), URL `https://github.com/duyuyd/no-code-builder-saas/actions/runs/44545994129/artifacts/14540048420`.
+- [x] GitHub Actions Typecheck/production build `44545993916` SUCCESS for v16 branch SHA `df4a902`, prior to last API response header and toast refinements.
+- [x] API `/api/figma` and `/api/create-table` now set immutable release verification response marker on every status without treating that marker as authentication.
+- [x] Figma success toast stays visible briefly before Builder navigation.
+- [ ] Newest v16 head TypeScript/build, regression and Playwright public checks require completion/read-back.
+- [ ] Signed-in production UI actions require dedicated test account credentials and saved/published Form; no secrets inserted into source or GitHub from this chat. Production v15 is READY; v16 changes have NOT been merged or deployed.
+
+## v16 Zero-Skip Full Production E2E — 2026-11-19
+- [x] Replaced the authenticated Playwright test's conditional skip with an explicit failure when a real fixture is absent. Public smoke uses a separate `--grep` invocation and does not silently skip its assertions.
+- [x] Implemented `scripts/e2e/seed-production.mjs`: Supabase Admin `auth.admin.createUser` with a fresh randomized password, confirmed email, service-role authentication, and actual `projects`, `pages`, `published_pages` records with a saved Form. Fixture is re-read from Supabase before proceeding; credentials are masked and passed only through the GitHub Actions environment.
+- [x] Implemented `.github/workflows/v16-full-production-e2e.yml` triggered on main push / manual dispatch with a protected `production-e2e` environment. Missing `SUPABASE_SERVICE_ROLE_KEY` fails with a clear error; no test is marked successful for absent credentials.
+- [x] Playwright records authenticated video, captures step screenshots, and records a real HAR. Sensitive request headers, cookies, URL queries and payloads are redacted before HAR is attached/uploaded; raw HAR remains outside GitHub artifact paths.
+- [x] Added actual published Form submit success toast and assertions requiring 201 responses from both create-table and form-submit APIs with UUID result identifiers.
+- [x] Fixed Playwright public smoke title matching; zero tests found is a CI failure, not proof.
+- [ ] Verify the current release branch TypeScript/build/Playwright results before claiming latest branch green.
+- [ ] Full signed-in production E2E has NOT executed successfully: service-role GitHub environment secret availability must be confirmed by the workflow. Do not invent a service role key or publish it.
+- [ ] PR #19 remains unmerged at this checkpoint; production v16 deployment and video/HAR artifact for the authenticated run are not yet verified.

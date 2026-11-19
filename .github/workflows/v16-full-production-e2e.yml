@@ -1,0 +1,52 @@
+name: v16 Full Production Auth E2E - Zero Skip
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  full-production-e2e:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    environment: production-e2e
+    env:
+      E2E_BASE_URL: https://no-code-builder-saas.vercel.app
+      E2E_SUPABASE_URL: https://vfavjxfodmtqaewtftmd.supabase.co
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Require service-role key for production E2E
+        run: |
+          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::Missing protected SUPABASE_SERVICE_ROLE_KEY. Real Auth user cannot be created. Test is FAILED, never skipped."
+            exit 1
+          fi
+      - name: Install exact dependencies
+        run: npm install --no-audit --no-fund
+      - name: Provision real authenticated Supabase test account and Form
+        run: node scripts/e2e/seed-production.mjs
+      - name: Install Playwright Chromium with OS dependencies
+        run: npx playwright install --with-deps chromium
+      - name: Browser E2E login, real DDL, form submit and Figma toast
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p proof
+          npm run test:e2e 2>&1 | tee proof/full-production-e2e.log
+      - name: Upload screenshots, full video and sanitized network HAR
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuvoracraft-v16-full-auth-production-e2e
+          path: |
+            test-results/
+            playwright-report/
+            proof/full-production-e2e.log
+          if-no-files-found: warn
+          retention-days: 7
