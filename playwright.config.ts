@@ -20,7 +20,7 @@ export default defineConfig({
   baseURL:target.origin,
   screenshot:"on",
   video:"on",
-  trace:"retain-on-failure",
+  trace:"off",
   actionTimeout:30000,
   navigationTimeout:60000
  }
