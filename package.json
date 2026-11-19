@@ -22,7 +22,8 @@
     "test:unified": "node tests/unified-editor-regression.cjs",
     "test:v14": "node tests/v14-lockdown-regression.cjs",
     "test:v15": "node tests/v15-execution-proof.cjs",
-    "test:e2e": "playwright test --config=playwright.config.ts"
+    "test:e2e": "playwright test --config=playwright.config.ts",
+    "test:v16": "node tests/v16-ux-regression.cjs"
   },
   "dependencies": {
     "next": "15.5.29",
