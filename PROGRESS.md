@@ -160,3 +160,11 @@ No continuous overnight execution is implied by this file: a separately configur
 - [ ] Protected end-user E2E requires dedicated test credentials and a saved/published Form; without these, signed-in test explicitly SKIPs and must not count as passing. Never fabricate authenticated results.
 - [ ] Re-run all TypeScript/build/UX regressions for v16 PR and verify preview deployment.
 - [ ] Do not conflate v15 READY with v16 UI release. Require verified v16 deploy before declaring production UX done.
+
+### v16 real browser checkpoint — 2026-11-19
+- [x] GitHub Actions public Chromium E2E `44545994129` SUCCESS: production homepage returned HTTP 200, founder footer marker visible, Figma unauthenticated API returned HTTP 401 with marker header, /builder redirected to login. Actual output: 1 passed, 1 skipped (signed-in test not configured). Screenshots, video, and Playwright report uploaded to artifact `14540048420` (~3.6MB), URL `https://github.com/duyuyd/no-code-builder-saas/actions/runs/44545994129/artifacts/14540048420`.
+- [x] GitHub Actions Typecheck/production build `44545993916` SUCCESS for v16 branch SHA `df4a902`, prior to last API response header and toast refinements.
+- [x] API `/api/figma` and `/api/create-table` now set immutable release verification response marker on every status without treating that marker as authentication.
+- [x] Figma success toast stays visible briefly before Builder navigation.
+- [ ] Newest v16 head TypeScript/build, regression and Playwright public checks require completion/read-back.
+- [ ] Signed-in production UI actions require dedicated test account credentials and saved/published Form; no secrets inserted into source or GitHub from this chat. Production v15 is READY; v16 changes have NOT been merged or deployed.
