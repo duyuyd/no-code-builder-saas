@@ -28,7 +28,7 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p proof
-          npx playwright test --grep "^public production:" 2>&1 | tee proof/playwright.log
+          npx playwright test --grep "public production:" 2>&1 | tee proof/playwright.log
       - name: Upload public screenshots, video and Playwright HTML report
         if: always()
         uses: actions/upload-artifact@v4
