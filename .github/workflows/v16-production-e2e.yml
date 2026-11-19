@@ -40,3 +40,50 @@ jobs:
             proof/playwright.log
           if-no-files-found: warn
           retention-days: 7
+
+  authenticated-production-proof:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment: production-e2e
+    env:
+      E2E_BASE_URL: https://no-code-builder-saas-npt-duy.vercel.app
+      E2E_LOGIN_EMAIL: ${{ secrets.E2E_LOGIN_EMAIL }}
+      E2E_LOGIN_PASSWORD: ${{ secrets.E2E_LOGIN_PASSWORD }}
+      E2E_PROJECT_ID: ${{ vars.E2E_PROJECT_ID }}
+      E2E_PAGE_ID: ${{ vars.E2E_PAGE_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Require dedicated real E2E test account and saved Form
+        run: |
+          for key in E2E_LOGIN_EMAIL E2E_LOGIN_PASSWORD E2E_PROJECT_ID E2E_PAGE_ID; do
+            if [ -z "${!key}" ]; then
+              echo "::error::Missing protected production E2E credential or fixture: $key"
+              exit 1
+            fi
+          done
+      - name: Install pinned app and Chromium
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Run complete production browser E2E
+        run: |
+          set -o pipefail
+          mkdir -p proof
+          npm run test:e2e 2>&1 | tee proof/playwright.log
+      - name: Upload signed-in screenshots and full-session video
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuvoracraft-v16-authenticated-production-visual-proof
+          path: |
+            test-results/
+            playwright-report/
+            proof/playwright.log
+          if-no-files-found: warn
+          retention-days: 7
