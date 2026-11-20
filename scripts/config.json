@@ -1,0 +1,15 @@
+{
+  "owner": "duyuyd",
+  "branch": "feat/standardization-auto",
+  "replacements": [
+    {
+      "old_name": "NPT Duy Studio",
+      "new_name": "NuvoraCraft"
+    },
+    {
+      "old_name": "No-Code Builder",
+      "new_name": "ChaiBuilder"
+    }
+  ],
+  "skipRepos": []
+}
