@@ -1,7 +1,7 @@
 name: Guardian - CodeQL security analysis
 on:
   push:
-    branches: [main, feat/github-guardian-platform]
+    branches: [main]
   pull_request:
     branches: [main]
   schedule:
