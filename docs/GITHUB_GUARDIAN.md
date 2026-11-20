@@ -62,3 +62,7 @@ GitHub Guardian CodeQL advanced workflow; first scan succeeded. Avoid installing
 - Dependency Review: https://github.com/duyuyd/no-code-builder-saas/actions/runs/44789062511
 - Lighthouse: https://github.com/duyuyd/no-code-builder-saas/actions/runs/44789288759
 - Scorecard: configured to run **only on main**, as the OSSF action refuses branch previews.
+
+## Integrated website page
+
+After Founder-approved merge and deployment from this source, visit `/github-guardian`. Its Server Component retrieves **real public GitHub Actions workflow runs** from GitHub REST (up to 24 latest, no fabricated data) with a 300-second cache, displays successes, failures, pending jobs and direct run links. A GitHub API outage/rate limit is displayed as an error instead of a fake success. This dashboard is read-only: launching workflows or changing permissions would require a separately reviewed, authenticated server-side integration.
