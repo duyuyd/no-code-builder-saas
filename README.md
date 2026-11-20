@@ -113,3 +113,7 @@ New to the codebase? A documentation correction or responsive UI improvement is 
 **Current source:** [github.com/duyuyd/no-code-builder-saas](https://github.com/duyuyd/no-code-builder-saas) · **Status:** active development
 
 > Public repository does not automatically grant a software license. Project owners will select an explicit open-source license before external distribution rights are offered.
+
+## Android APK / Puter.js (standardization PR)
+
+NuvoraCraft's production Next.js requires Supabase, Server Actions and a real server, so the Capacitor APK runs as a **hybrid remote-web client** of https://no-code-builder-saas.vercel.app, not a fake static export. Debug APKs are published as a **public GitHub pre-release** under `v0.2.0-main-apk-rc48`, targeting the current `main` commit (website production) without merging feature-branch source. The existing native build pipeline and database are unchanged. The StudioAssistant UI uses Puter.js for browser-based chat; other server AI integrations remain as designed. Puter usage may require sign-in/limits. `APK_WEB_URL` may override the domain in repository Actions variables. Feature changes remain PR-only pending Founder `VERIFIED`.
