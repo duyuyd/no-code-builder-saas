@@ -113,3 +113,7 @@ New to the codebase? A documentation correction or responsive UI improvement is 
 **Current source:** [github.com/duyuyd/no-code-builder-saas](https://github.com/duyuyd/no-code-builder-saas) · **Status:** active development
 
 > Public repository does not automatically grant a software license. Project owners will select an explicit open-source license before external distribution rights are offered.
+
+## GitHub Guardian — DevSecOps & real production audits
+
+The project has security, supply-chain and live-site checks through GitHub Actions. The implementation and **measured** Lighthouse baseline are documented in [GitHub Guardian](docs/GITHUB_GUARDIAN.md). No workflow automatically merges, deploys, alters customer data or changes mobile signing keys.
