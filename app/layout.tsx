@@ -1,4 +1,5 @@
 import "./globals.css";
+import Script from "next/script";
 import type {CSSProperties,ReactNode} from "react";
 import type {Metadata,Viewport} from "next";
 import {getSiteSettings} from "@/lib/platform-settings";
@@ -27,5 +28,5 @@ export default async function RootLayout({children}:{children:ReactNode}){
  const root=tenant?new URL("https://"+tenant.host):siteUrl();
  const style={"--brand-primary":tenant?.primaryColor??primaryColor} as CSSProperties;
  const data={"@context":"https://schema.org","@type":"SoftwareApplication",name:tenant?.name??siteTitle,description:"NuvoraCraft by NPTduy visual creation platform for web, mobile apps, 3D games and animations",url:root.href,applicationCategory:"DeveloperApplication",operatingSystem:"Web",creator:{"@type":"Person",name:"NPTduy"},offers:{"@type":"Offer",price:"0",priceCurrency:"USD",description:"Free plan available"}};
- return <html lang="en" style={style}><body>{children}<script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(data).replace(/</g,"\\u003c")}}/></body></html>;
+ return <html lang="en" style={style}><body>{children}<script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(data).replace(/</g,"\\u003c")}}/><Script src="https://js.puter.com/v2/" strategy="afterInteractive"/></body></html>;
 }
