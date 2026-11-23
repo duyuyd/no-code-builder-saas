@@ -42,7 +42,7 @@ export async function saveKeylessGeneratedWebsite(raw:string):Promise<GenerateRe
   const db=await createClient();
   const {data:{user},error:authError}=await db.auth.getUser();
   if(authError||!user)return {ok:false,reason:"signin",error:"Sign in before saving a project."};
-  const {data:allowed,error:quotaError}=await db.rpc("studio_ai_claim_slot");
+  const {data:allowed,error:quotaError}=await db.rpc("studio_ai_consume_slot");
   if(quotaError||allowed!==true)return {ok:false,reason:"configuration",error:"AI project daily limit reached."};
   let site;
   try{site=parseAiWebsiteResponse(raw);}catch(error){
