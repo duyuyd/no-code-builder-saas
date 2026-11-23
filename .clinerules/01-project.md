@@ -1,6 +1,6 @@
 # NuvoraCraft — repository architecture and priorities
 
-Project: duyuyd/no-code-builder-saas (NuvoraCraft / No-Code Builder SaaS). Edit this repo, not a similarly named new repository.
+Project: duyuyd/no-code-builder-saas (NuvoraCraft platform). Edit this repo, not a similarly named new repository.
 
 - Next.js 15 App Router, React 19, TypeScript strict, Tailwind CSS v4, Framer Motion, Lucide React and @dnd-kit; follow package.json and existing patterns.
 - Supabase is the authoritative source for all user/project/page data. Maintain RLS, auth boundaries and server-side authorization. No front-end mock arrays.
