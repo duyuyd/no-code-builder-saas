@@ -34,3 +34,25 @@ Each node must have type, props, style, children. Children only for layout nodes
   return {ok:true,projectId:project.id};
  }catch{return {ok:false,reason:"storage",error:"Cannot access the current session or database."};}
 }
+
+/** Store validated JSON generated in the user's browser using Puter; no provider API key. */
+export async function saveKeylessGeneratedWebsite(raw:string):Promise<GenerateResult>{
+ if(typeof raw!=="string"||raw.length>45000)return {ok:false,reason:"generation",error:"Invalid AI output size."};
+ try{
+  const db=await createClient();
+  const {data:{user},error:authError}=await db.auth.getUser();
+  if(authError||!user)return {ok:false,reason:"signin",error:"Sign in before saving a project."};
+  const {data:allowed,error:quotaError}=await db.rpc("studio_ai_claim_slot");
+  if(quotaError||allowed!==true)return {ok:false,reason:"configuration",error:"AI project daily limit reached."};
+  let site;
+  try{site=parseAiWebsiteResponse(raw);}catch(error){
+   return {ok:false,reason:"generation",error:error instanceof Error?error.message:"AI returned invalid UI tree."};
+  }
+  const {data:project,error:projectError}=await db.from("projects").insert({owner_id:user.id,name:site.name,kind:"website"}).select("id").single();
+  if(projectError||!project)return {ok:false,reason:"storage",error:projectError?.message??"Cannot create project."};
+  const {error:pageError}=await db.from("pages").insert({project_id:project.id,path:"/",ui_tree:site.tree});
+  if(pageError){await db.from("projects").delete().eq("id",project.id);
+   return {ok:false,reason:"storage",error:"Cannot save AI page: "+pageError.message};}
+  return {ok:true,projectId:project.id};
+ }catch{return {ok:false,reason:"storage",error:"Supabase session or storage unavailable."};}
+}
