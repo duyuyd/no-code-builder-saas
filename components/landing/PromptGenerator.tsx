@@ -2,17 +2,15 @@
 import {useState,type FormEvent} from "react";
 import {useRouter} from "next/navigation";
 import {ArrowUpRight,LoaderCircle,Sparkles} from "lucide-react";
-import {generateWebsiteFromPrompt} from "@/app/generate/actions";
+
 export default function PromptGenerator({placeholder}:{placeholder:string}){
  const router=useRouter(),[prompt,setPrompt]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState("");
  const submit=async(event:FormEvent<HTMLFormElement>)=>{
   event.preventDefault();if(busy||prompt.trim().length<12)return;setBusy(true);setError("");
   try{
-   const result=await generateWebsiteFromPrompt(prompt.trim());
-   if(result.ok){router.push("/builder?project="+encodeURIComponent(result.projectId));return;}
-   if(result.reason==="signin"){router.push("/login?mode=register");return;}
-   setError(result.error);
-  }catch{setError("Unable to generate your website right now.");}
+   router.push("/ai-builder?prompt="+encodeURIComponent(prompt.trim()));
+   return;
+   }catch{setError("Unable to generate your website right now.");}
   finally{setBusy(false);}
  };
  return <form onSubmit={submit} className="relative mt-8 max-w-xl">
@@ -24,7 +22,7 @@ export default function PromptGenerator({placeholder}:{placeholder:string}){
     {busy?<LoaderCircle size={17} className="animate-spin"/>:<Sparkles size={17}/>} Generate <ArrowUpRight size={17}/>
    </button>
   </div>
-  <p className="mt-2 text-xs text-slate-500">Requires an account and an AI provider enabled by the administrator. No demo-generated content is passed off as real AI.</p>
+  <p className="mt-2 text-xs text-slate-500">Tạo trang bằng AI Puter không cần API key. Đăng nhập NuvoraCraft khi lưu dự án.</p>
   {error&&<p role="alert" className="mt-2 text-xs text-rose-300">{error}</p>}
  </form>;
 }
