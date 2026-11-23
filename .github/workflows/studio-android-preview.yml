@@ -1,0 +1,52 @@
+name: NuvoraCraft Studio Android APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'mobile/studio-android/**'
+      - '.github/workflows/studio-android-preview.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Build installable debug APK
+        run: |
+          set -euo pipefail
+          gradle -p mobile/studio-android :app:assembleDebug --no-daemon
+          mkdir -p mobile/studio-android/release
+          cp mobile/studio-android/app/build/outputs/apk/debug/app-debug.apk mobile/studio-android/release/NuvoraCraft_Studio_Android_1.0.0_Preview.apk
+          test -s mobile/studio-android/release/NuvoraCraft_Studio_Android_1.0.0_Preview.apk
+          unzip -t mobile/studio-android/release/NuvoraCraft_Studio_Android_1.0.0_Preview.apk >/dev/null
+          cd mobile/studio-android/release
+          sha256sum NuvoraCraft_Studio_Android_1.0.0_Preview.apk > SHA256SUMS.txt
+          sha256sum -c SHA256SUMS.txt
+      - name: Store APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuvoracraft-studio-android-1.0.0-apk
+          path: mobile/studio-android/release/*
+          retention-days: 14
+          if-no-files-found: error
+      - name: Publish GitHub prerelease
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: nuvoracraft-studio-android-v1.0.0
+        run: |
+          set -euo pipefail
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" --target "$GITHUB_SHA" --prerelease --title "NuvoraCraft Studio Android 1.0.0 · NPT Duy" --notes-file mobile/studio-android/README.md
+          fi
+          gh release upload "$TAG" mobile/studio-android/release/* --clobber
